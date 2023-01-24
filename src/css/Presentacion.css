@@ -1,0 +1,56 @@
+.titulo{
+  color: #977F2F;  
+  padding-top: 2%!important;
+}
+
+.d-block {
+  margin-top: 10px;
+  height: 65vh;
+}
+
+.text{
+  color: black;
+}
+
+.princi7{
+  color: #977F2F;
+  font-family: "Cormorant Garamond", serif !important;
+  font-size: medium;
+  margin-top: 10px;
+  margin-bottom: 10px !important;
+}
+
+.princi9{
+  color: #977F2F;
+  font-family: "Cormorant Garamond", serif !important;
+  margin-bottom: 20px !important;
+}
+
+.cargar{
+  color: #70AAAA;
+  font-family: Roboto, sans-serif;
+  font-size: large;
+  margin-top: 10px;
+}
+
+.grafi{
+  margin-top: 10px;
+  color: #977F2F;
+}
+
+.parr{
+  color: #fff;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.link{
+  /* color: #977F2F !important; */
+  color: #2e5d8f;
+}
+
+.textt{
+font-size: 22px !important;
+opacity: .7;
+font-family: "Cormorant Garamond", serif !important;
+}

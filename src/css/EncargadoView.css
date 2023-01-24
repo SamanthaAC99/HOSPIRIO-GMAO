@@ -1,0 +1,95 @@
+.header-ev{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #598ec7;
+    border-radius: 10px 10px 0px 0px;
+    width: 100%;
+    padding: 2%;
+    
+}
+.titulo-ev{
+    font-family: sans-serif;
+    color: #e9efef;
+    font-size: 1.2rem;
+    line-height: 1rem;
+    letter-spacing: normal;
+    font-weight: 700;
+    width: 70%;
+    height: 100%;
+    text-align: left;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    margin-left: 6%;
+}
+
+
+.texticone{
+    margin-left: 20px;
+    margin-top: 10px;
+    font-family: sans-serif;
+    letter-spacing: normal;
+    font-size: 20px;
+}
+
+.text-area-encargado{
+    width: 100%;
+    border-radius: 4px;
+    padding: 0.7rem;
+}
+
+
+.cardtabla-tecnico{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    height: 600px;
+    width: auto;
+    background: #ffff;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8.5px);
+    border-radius: 10px;
+    color: #ffffff;
+    letter-spacing: 0.4rem;
+}
+
+.ScrollStyleDT {
+    max-height: 500px;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    /* padding-right: 25px; */
+    background-color: #fff;
+    width: 100% !important;
+}
+
+
+.boton-modal-d{
+    width: 25%;
+    height: 40px;
+    /* background-color: rgb(89 142 199) !important; */
+    font-size: 16px !important;
+    font-weight: 500!important;
+    margin-left: 5px!important;
+}
+
+.boton-modal-d2{
+    width: 25%;
+    height: 50px;
+    font-size: 14px !important;
+    font-weight: 500!important;
+    margin-right: 5px!important;
+}
+
+.boton-modal-pdf{
+    width: 25%;
+    height: 40px;
+    background-color: rgb(89 142 199) !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px !important;
+    font-weight: 500!important;
+    margin-left: 5px!important;
+}

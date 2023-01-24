@@ -1,0 +1,49 @@
+.filtrar{
+    height: 56px;
+    width: auto;
+    font-size: 18px !important;
+    color: #9CB4CC !important;
+    border-color:  #9CB4CC !important;
+}
+
+.esignificativos{
+    height: 56px;
+    width: auto;
+    font-size: 18px !important;
+    color: #fff !important;
+    border-color:  #9CB4CC !important;
+    background-color: #598ec7!important;
+}
+
+
+.header-ev-dis{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #598ec7;
+    border-radius: 10px 10px 0px 0px;
+    width: 100%;
+    padding: 2%;
+}
+
+.indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    font-size: 2.2em;
+    font-weight: 100;
+    color: #555;
+    user-select: none;
+}
+
+.svg1{
+    width: 3.2rem;
+    height: 40rem;
+}

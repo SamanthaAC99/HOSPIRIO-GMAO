@@ -1,0 +1,5 @@
+.i-informacion{
+    display: flex;
+    text-align: center;
+    flex-direction: row;
+}

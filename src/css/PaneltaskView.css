@@ -1,0 +1,98 @@
+.card-container{
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    align-self: flex-start;
+    height: auto;
+    width: auto;
+ 
+}
+
+
+.container-paneltask{
+    display: flex;
+    flex-direction: column;
+
+}
+.ScrollStyle
+{
+    max-height: 1000px;
+    overflow-y: scroll;
+    padding-right: 25px;
+    background-color: #ffffff !important;
+    width: 100%  !important;
+}
+
+.pantalla-container {
+    background-color: white ;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    font-family: "Raleway", sans-serif;
+  }
+
+  .princi{
+    /* color: #977F2F; */
+    color: #2e5d8f;
+    font-family: "Cormorant Garamond", serif !important;
+    font-size: 30px !important;
+    padding-top: 25px;
+    padding-bottom: 20px;
+  }
+  
+@media only screen and (max-width: 480px) {
+    .ScrollStyle{
+        width:100%;
+        height: 100%;
+    }
+  }
+ 
+  @media only screen and (max-width: 540px) {
+    .ScrollStyle{
+        width:100%;
+        height: 100%;
+    }
+}
+
+.titulo{
+    height: auto;
+    width: auto;
+}
+
+.seleccionador{
+    height: auto;
+    width: 100%;
+    padding-left: 25px;
+    padding-right: 25px;
+}
+
+
+.form-select1{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    height: auto;
+    width: 30vw;
+    backdrop-filter: blur(8.5px);
+    -webkit-backdrop-filter: blur(8.5px);
+    border-radius: 5px;
+    color: black !important;
+    border: 3px solid #BDB18E !important;
+    font-size: 18px;
+   
+}
+
+@media only screen and (max-width: 480px) {
+    .form-select1{
+        width:100%;
+    }
+  }
+ 
+  @media only screen and (max-width: 540px) {
+    .form-select1{
+        width:100%;
+    }
+}
