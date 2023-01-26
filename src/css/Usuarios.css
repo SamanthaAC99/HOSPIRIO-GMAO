@@ -1,0 +1,58 @@
+.cargar{
+    /* color: #70AAAA; */
+    color: #2e5d8f;
+    font-family: Roboto, sans-serif;
+    font-size: large;
+    margin-top: 5px;
+    margin-bottom: 2px;
+  }
+
+.titulou{
+  color: #70AAAA;
+  margin-top: 8px;
+    margin-bottom: 1px !important;
+}
+.panelg{
+  border-radius: 0.3rem;
+  padding: 1px;
+  margin-bottom: 2px;
+  background-color: hsla(180, 8%, 95%, 0.025) ;
+  ;
+    border-style:groove;
+    border-color: hsla(180, 8%, 95%, 0.025) ;
+  }
+
+.panelp{
+  border-radius: 0.3rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fff;
+    border-style:groove;
+    border-color: hsla(180, 8%, 95%, 0.025) ;
+}
+
+.panelp2{
+  border-radius: 0.3rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fff;
+    border-style:groove;
+    background-color:hsla(180, 8%, 95%, 0.025) ;
+}
+
+.panelt3 {
+  border-radius: 0.3rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fff;
+    border-style:groove;
+    border-color: hsla(180, 8%, 95%, 0.025);
+  }
+
+
+.imagen-usuarios{
+  margin-top:0px;
+  padding: 0px;
+  height: 20vh;
+  border-radius: 10px;
+  }

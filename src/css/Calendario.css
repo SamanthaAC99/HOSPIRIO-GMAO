@@ -1,0 +1,59 @@
+.boton-calendario{
+    width: 30%;
+    height: 56px;
+    background-color: #3174ad !important;
+    font-size: 16px !important;
+    font-weight: 700!important;
+    margin-top: 20px !important;
+}
+
+.boton-agregar{
+    width: 30%;
+    height: 56px;
+    background-color: #3174ad !important;
+    font-size: 16px !important;
+    font-weight: 700!important;
+}
+
+
+.boton-cancelar{
+    width: 30%;
+    height: 56px;
+    font-size: 16px !important;
+    margin-right: 10px !important;
+}
+
+
+.rbc-header {
+    overflow: hidden;
+    flex: 1 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 3px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    font-size: 90%;
+    min-height: 0;
+    border-bottom: 1px solid #ddd;
+    text-transform: capitalize;
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+    flex-grow: 1;
+    padding: 0 10px;
+    text-align: center;
+    text-transform: uppercase;
+    color: #3174ad;
+    /* color: indigo; */
+}
+
+.rbc-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    
+}

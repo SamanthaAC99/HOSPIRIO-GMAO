@@ -1,0 +1,73 @@
+.boton-principal{
+    width: 90%;
+    height: 56px;
+    background-color: rgb(89 142 199) !important;
+    font-size: 16px !important;
+    font-weight: 700!important;
+    padding-left: 0px !important;
+    margin-bottom: 7px !important;
+}
+
+.boton-secundarios{
+    width: 90%;
+    height: 56px;
+    font-size: 16px !important;
+    margin-bottom: 7px !important;
+}
+
+
+.boton-info{
+    width: 90%;
+    height: 30px;
+    font-size: 16px !important;
+    margin-bottom: 7px !important;
+}
+
+
+.boton-modal{
+    width: 25%;
+    height: 50px;
+    background-color: rgb(89 142 199) !important;
+    font-size: 16px !important;
+    font-weight: 500!important;
+    margin-left: 5px!important;
+}
+
+.boton-modal2{
+    width: 25%;
+    height: 50px;
+    font-size: 16px !important;
+    font-weight: 500!important;
+    margin-right: 5px!important;
+}
+
+.form-control-inv {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    appearance: none;
+    border-radius: 0.375rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+.card-tabla-hv{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    height: auto;
+    width: auto;
+    background: #ffff;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8.5px);
+    border-radius: 10px;
+    color: #ffffff;
+    letter-spacing: 0.4rem;
+    margin-top: 15px;
+}

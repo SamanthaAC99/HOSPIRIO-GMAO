@@ -1,0 +1,32 @@
+.mantenimiento-container{
+    padding-top: 2%;
+    padding-bottom: 2%;
+}
+.button-orden{
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.panel-ace {
+    border-radius: 0.3rem;
+    border: 1px solid #C4C4C4 !important;
+    color:#030303 !important ;
+    background-color: #fff !important;
+    width: auto !important;
+}
+
+
+.panel-ace {
+    border-radius: 0.3rem;
+    border: 1px solid #C4C4C4 !important;
+    color: #030303 !important;
+    background-color: #fff !important;
+    width: auto !important;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}

@@ -1,0 +1,24 @@
+
+.texticondash {
+    margin-left: 20px;
+    margin-top: 10px;
+    font-family: sans-serif;
+    letter-spacing: normal;
+    font-size: 20px;
+}
+
+
+.conchale{
+    align-self:center;
+    justify-content:center;
+}
+.jefe-btn{
+    align-items:center ;
+    height: auto;
+    justify-content: center;
+    margin-top: 35% !important;
+    padding: 0;
+}
+.contenedor-dashboardjs{
+    padding: 20px;
+}

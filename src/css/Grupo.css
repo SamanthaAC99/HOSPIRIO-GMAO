@@ -1,0 +1,51 @@
+.contenedor-indicadores-dispi {
+    padding-left: 5%;
+    padding-right: 5%;
+    padding-top: 2%;
+    padding-bottom: 2%;
+}
+
+.Scroll
+{
+    max-height: 300px !important;
+    overflow-y: scroll;
+    background-color: #ffffff !important;
+}
+
+@media only screen and (max-width: 480px) {
+    .Scroll{
+        width:100%;
+        height: 100%;
+    }
+  }
+ 
+  @media only screen and (max-width: 540px) {
+    .Scroll{
+        width:100%;
+        height: 100%;
+    }
+}
+
+
+.card-tabla-dis{
+        color: black !important;
+        /* margin-top: 10px; */
+        -webkit-user-select: none;
+        user-select: none;
+        height: 300px;
+        padding: 10px 5px 5px 5px;
+        width: 100%;
+        background-color: #ffffff !important;
+        align-items: center;
+}
+
+
+.card-bodyd {
+    color: black !important;
+    -webkit-user-select: none;
+    user-select: none;
+    height: auto;
+    width: 100%;
+    background-color: #ffffff !important;
+    align-items: center;
+}

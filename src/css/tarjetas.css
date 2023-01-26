@@ -1,0 +1,89 @@
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+.card-h{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    vertical-align: middle;
+    margin-right: 20px;
+}
+.card{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    height: auto;
+    width: auto;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(8.5px);
+    -webkit-backdrop-filter: blur(8.5px);
+    border-radius: 10px 10px 0px 0px;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.4rem;
+    margin-top: 40px;
+    margin-left: 20px;
+}
+
+.alinear{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+
+
+.card-header{
+    border-bottom: 0;
+    color: white;
+    height: 30%;
+    width: 90%;
+    margin-top: 10px;
+}    
+
+.CRITICA{
+    background: -moz-linear-gradient(to right,  #c41432 0%,#fc5a44 100%); background: -webkit-linear-gradient(to right,  #c41432 0%,#fc5a44 100%); background: linear-gradient(to right,  #c41432 0%,#fc5a44 100%);
+    color:black !important;
+}
+.ALTA{
+    background: #ff9411; background: -moz-linear-gradient(-121deg,  #ff9411 0%,#ffb04f 100%); background: -webkit-linear-gradient(-121deg,  #ff9411 0%,#ffb04f 100%); background: linear-gradient(-121deg,  #ff9411 0%,#ffb04f 100%);
+    color:black !important;
+}
+.MEDIA{
+    background: #f8d800; background: -moz-linear-gradient(45deg,  #f8d800 0%,#fdeb71 100%); background: -webkit-linear-gradient(45deg,  #f8d800 0%,#fdeb71 100%); background: linear-gradient(45deg,  #f8d800 0%,#fdeb71 100%);
+    color:black !important;
+}
+.BAJA{
+    background: #00b870; background: -moz-linear-gradient(-162deg,  #00b870 0%,#11eb96 100%); background: -webkit-linear-gradient(-162deg,  #00b870 0%,#11eb96 100%); background: linear-gradient(-162deg,  #00b870 0%,#11eb96 100%);
+    color:black !important;
+}       
+.card-body{
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    color:black !important;
+    border-top: 0;
+    user-select: none;
+    height: 60%;
+    padding: 10px 5px 5px 5px;
+    width: 90%;
+}
+
+.card-footer{
+    border-bottom: 0;
+    color: white;
+    height: 30%;
+    width: 90%;
+    margin-bottom: 10px;
+    border-radius: 0px 0px 5px 5px;
+}
+
+
+
+
