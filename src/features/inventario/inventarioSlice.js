@@ -21,6 +21,7 @@ export const inventarioSlice = createSlice({
         indice:"",
         situacion:"",
         //valores que cambiaran en el futuro
+        codigos_historial:[],
         mantenimientos: [],
         mtbf: "",
         mttr: "",
@@ -48,6 +49,7 @@ export const inventarioSlice = createSlice({
             state.indice = action.payload.indice
             state.situacion = action.payload.situacion
             //valores que cambian en el futuro
+            state.codigos_historial = action.payload.codigos_historial
             state.mantenimientos = action.payload.mantenimientos
             state.mtbf = action.payload.mtbf
             state.mttr = action.payload.mttr

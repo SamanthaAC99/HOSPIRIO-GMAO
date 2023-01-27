@@ -33,7 +33,8 @@ function App() {
       },
 
       crema: {
-        main: "#dec5ad"
+        main: "#dec5ad",
+        contrastText: '#fff',
       },
 
       enviar: {

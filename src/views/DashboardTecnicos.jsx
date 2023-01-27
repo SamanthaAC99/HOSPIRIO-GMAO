@@ -405,10 +405,10 @@ export default function DashboardTecnicos() {
     const selectEquipo = (val) => {
         const equipos2 = inventario.find(item => item.codigo === val)
         const equipos = inventario.find(item => item.codigo === val)
-        setEquipment(equipos2);
-        setCequipo(equipos.equipo);
+        console.log(equipos)
+        setEquipment(equipos2.equipo);
+        setCequipo(equipos.equipo.nombre);
         setCodigoe(val);
-        console.log(equipos2)
 
     }
     const filterbyId = (item) => {

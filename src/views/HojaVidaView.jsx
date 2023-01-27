@@ -17,6 +17,9 @@ import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import ReplyAllIcon from '@mui/icons-material/ReplyAll';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import { lightBlue, teal, blue, cyan } from '@mui/material/colors';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+
 // import TextareaAutosize from '@mui/material/TextareaAutosize';
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
 import { useSelector } from "react-redux";
@@ -45,6 +48,7 @@ export default function HojaVidaView() {
     const [currentreport, setCurrentreport] = useState({});
     // const [externos, setExternos] = useState([]);
     // const [internos, setInternos] = useState([]);
+    
     const [preventivo, setPreventivo] = useState(0);
     const [correctivo, setCorrectivo] = useState(0);
     // const [calibraciones, setCalibraciones] = useState(0);
@@ -56,6 +60,7 @@ export default function HojaVidaView() {
     const externos = useRef([])
     // const [porcentajeCalibraciones, setPorcentajeCalibraciones] = useState(0);
     const [modalInformacion, setModalinformacion] = useState(false);
+    const [codigoSelect,setCodigoSelect] = useState("")
     // const [ctdMantenimientos, setCtdMantenimientos] = useState({
     //     correctivo: 4,
     //     preventivo: 1,
@@ -235,7 +240,7 @@ export default function HojaVidaView() {
                         <Grid container spacing={{ xs: 3, md: 3 }}>
                             <Grid item xs={12} sm={6} md={12}>
                                 <div className="card12" style={{height:"100%"}} >
-                                
+
                                         <div className="header-tarjeta-8">
                                             <h5 className="titui-ges">Información Equipo</h5>
                                             <Avatar sx={{ bgcolor: lightBlue[100] }} >
@@ -243,9 +248,19 @@ export default function HojaVidaView() {
                                             </Avatar>
                                         </div>
                                         <div className="card-body-info small">
-                                            <div className="borde-codigo">{currentInventario.codigo}</div>
-                                            <h1 className="informacion"><b>Departamento:</b> {currentInventario.departamento}</h1>
-                                            <h1 className="informacion"><b>Equipo:</b>{currentInventario.equipo}</h1>
+                                        <Autocomplete
+                                            disablePortal
+                                            id="combo-box-demo"
+                                            value={currentInventario.codigo}
+                                            options={currentInventario.codigos_historial}
+                                            fullWidth
+                                            sx={{marginBottom:3,marginTop:1}}
+                                            onChange={(event,newValue)=>{setCodigoSelect(newValue)}}
+                                            renderInput={(params) => <TextField focused {...params} label="Codigos" />}
+                                            />
+                                            {/* <div className="borde-codigo">{currentInventario.codigo}</div> */}
+                                            <h1 className="informacion"><b>Departamento:</b> {currentInventario.departamento.nombre}</h1>
+                                            <h1 className="informacion"><b>Equipo:</b>{currentInventario.equipo.nombre}</h1>
                                             <h1 className="informacion"><b>Marca:</b>{currentInventario.marca}</h1>
                                             <h1 className="informacion"><b>Modelo:</b>{currentInventario.modelo}</h1>
                                             <h1 className="informacion"><b>Serie:</b>{currentInventario.serie}</h1>
