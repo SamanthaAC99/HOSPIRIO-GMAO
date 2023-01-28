@@ -225,6 +225,7 @@ export default function HojaVidaView() {
     };
 
     useEffect(() => {
+        setCodigoSelect(currentInventario.codigo)
         getReportes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
@@ -251,7 +252,8 @@ export default function HojaVidaView() {
                                         <Autocomplete
                                             disablePortal
                                             id="combo-box-demo"
-                                            value={currentInventario.codigo}
+                                            
+                                            value={codigoSelect}
                                             options={currentInventario.codigos_historial}
                                             fullWidth
                                             sx={{marginBottom:3,marginTop:1}}
@@ -356,7 +358,7 @@ export default function HojaVidaView() {
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
-                                                {reportesTotales.filter(item => item.codigoe === currentInventario.codigo).map((reporte, index) => (
+                                                {reportesTotales.filter(item => item.codigoe === codigoSelect).map((reporte, index) => (
                                                     <Tr key={index} >
                                                         <Td>
                                                             {index + 1}

@@ -482,6 +482,7 @@ export default function Inventarioview() {
 			codigos_historial: aux_historial,
 			codigo:newCodigo,
 		});
+		setModalReubicar(false)
 		
 	}
 

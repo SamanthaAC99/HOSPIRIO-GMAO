@@ -405,8 +405,7 @@ export default function DashboardTecnicos() {
     const selectEquipo = (val) => {
         const equipos2 = inventario.find(item => item.codigo === val)
         const equipos = inventario.find(item => item.codigo === val)
-        console.log(equipos)
-        setEquipment(equipos2.equipo);
+        setEquipment(equipos2);
         setCequipo(equipos.equipo.nombre);
         setCodigoe(val);
 
@@ -463,7 +462,7 @@ export default function DashboardTecnicos() {
         re['razonp'] = currentOrden.razonp;
         re['importancia'] = equipment.importancia;
         re['indice'] = new Date().getTime();
-        
+        let newReporte
         let tecnicos_aux =  JSON.parse(JSON.stringify(currentOrden.tecnicos))
 
         let tiempos_aux = []
@@ -479,25 +478,47 @@ export default function DashboardTecnicos() {
         re['tiempo'] = calcularTiempos(tiempos_aux);
 
 
-        Swal.fire(
-            'Completado',
-            'Reporte Agregado con éxito',
-            'success'
-        )
-        const newReporte = await addDoc(collection(db, "reportesint"), re);
+        console.log(re)
+
+        try {
+            newReporte = await addDoc(collection(db, "reportesint"), re);
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se agrego el reporte a la orden error:'+error,
+            })
+        }
         if (newReporte.id !== null) {
             console.log(newReporte.id)
-            const reference = doc(db, "ordenes", `${currentOrden.id}`);
+
             var reportesID = currentOrden.reporteId
             reportesID.push(newReporte.id)
-            updateDoc(reference, {
-                reporte: true,
-                reporteId: reportesID,
-            });
-            const reference2 = doc(db, "reportesint", `${newReporte.id}`);
-            updateDoc(reference2, {
-                id: newReporte.id,
-            });
+            try {
+                const reference = doc(db, "ordenes", `${currentOrden.id}`);
+                updateDoc(reference, {
+                    reporte: true,
+                    reporteId: reportesID,
+                });
+                const reference2 = doc(db, "reportesint", `${newReporte.id}`);
+                updateDoc(reference2, {
+                    id: newReporte.id,
+                });
+                Swal.fire(
+                    'Completado',
+                    'Reporte Agregado con éxito',
+                    'success'
+                )
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'No se agrego el reporte a la orden',
+                })
+            }
+           
+            
+          
         } else {
             Swal.fire({
                 icon: 'error',

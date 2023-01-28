@@ -183,9 +183,9 @@ export default function EquiposInactivosView() {
               <Tr key={dato.indice}>
                 <Td>{index + 1}</Td>
                 <Td>{dato.codigo}</Td>
-                <Td>{dato.equipo}</Td>
-                <Td>{dato.departamento}</Td>
-                <Td>{dato.responsable}</Td>
+                <Td>{dato.equipo.nombre}</Td>
+                <Td>{dato.departamento.nombre}</Td>
+                <Td>{dato.responsable.nombre}</Td>
                 <Td> <Button variant="contained" color='morado' onClick={()=> {ActivarN(dato)}} >Activar</Button>
                 </Td>
                 <Td>
@@ -210,27 +210,27 @@ export default function EquiposInactivosView() {
             <Grid container>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Ubicacion:</strong><p style={{ margin:0 }}>{currentEquipo.ubicacion}</p>
+                  <strong style={{ marginRight: 4 }}>Ubicacion:</strong><p style={{ margin:0 }}>{currentEquipo.ubicacion.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Equipo:</strong><p style={{ margin:0 }}>{currentEquipo.equipo}</p>
+                  <strong style={{ marginRight: 4 }}>Equipo:</strong><p style={{ margin:0 }}>{currentEquipo.equipo.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin:0 }}>{currentEquipo.departamento}</p>
+                  <strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin:0 }}>{currentEquipo.departamento.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin:0 }}>{currentEquipo.tipo_equipo}</p>
+                  <strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin:0 }}>{currentEquipo.tipo_equipo.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentEquipo.responsable}</p>
+                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentEquipo.responsable.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>

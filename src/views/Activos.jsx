@@ -19,8 +19,8 @@ import Button from '@mui/material/Button';
 
 export default function Activosview() {
   const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
-  const [elementosin, setElementosin] = useState([{propietario:{nombre:""}}]);
-  const [currentform, setCurrenform] = useState({});
+  const [elementosin, setElementosin] = useState([]);
+  const [currentform, setCurrenform] = useState(initialData[0]);
   const [url, setUrl] = useState("");
   const [accesorios, setAccesorios] = useState([]);
   const [accesoriosEquipo, setAccesoriosEquipo] = useState([]);
@@ -39,7 +39,6 @@ export default function Activosview() {
 
   const vistainformacion1 = (data) => {
     setCurrenform(data);
-    console.log(currentform);
     descargararchivo(data.nameImg);
     setAccesoriosEquipo(data.accesorios)
     setModalinformacion1(true);
@@ -84,8 +83,8 @@ export default function Activosview() {
             {elementosin.sort((a, b) => (a.indice - b.indice)).map((ingresos, index) => (
               <Tr key={index} >
                  <Td>{ingresos.codigo}</Td>
-                <Td>{ingresos.equipo}</Td>
-                <Td>{ingresos.departamento}</Td>
+                <Td>{ingresos.equipo.nombre}</Td>
+                <Td>{ingresos.departamento.nombre}</Td>
                 <Td>{ingresos.propietario.nombre}</Td>
                 <Checkbox
                 {...label}
@@ -117,27 +116,27 @@ export default function Activosview() {
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Ubicación:</strong><p style={{ margin:0 }}>{currentform.ubicacion}</p>
+                  <strong style={{ marginRight: 4 }}>Ubicación:</strong><p style={{ margin:0 }}>{currentform.ubicacion.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Equipo:</strong><p style={{ margin:0 }}>{currentform.equipo}</p>
+                  <strong style={{ marginRight: 4 }}>Equipo:</strong><p style={{ margin:0 }}>{currentform.equipo.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin:0 }}>{currentform.departamento}</p>
+                  <strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin:0 }}>{currentform.departamento.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin:0 }}>{currentform.tipo_equipo}</p>
+                  <strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin:0 }}>{currentform.tipo_equipo.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentform.responsable}</p>
+                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentform.responsable.nombre}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>
@@ -225,3 +224,13 @@ export default function Activosview() {
 
 
 
+const initialData = [
+{
+propietario:{nombre:""},
+equipo:{nombre:""},
+departamento:{nombre:""},
+ubicacion:{nombre:""},
+tipo_equipo:{nombre:""},
+responsable:{nombre:""},
+}
+]
