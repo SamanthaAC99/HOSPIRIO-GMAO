@@ -158,7 +158,6 @@ export default function ReportesExternosView() {
         }
     }
     const filtrobyCodigo =(_reporte)=>{
-      
         if (_reporte.codigoe === codigo) {
             return _reporte
         }

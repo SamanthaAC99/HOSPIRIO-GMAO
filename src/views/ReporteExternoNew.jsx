@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
 import { collection, setDoc, query, doc, deleteDoc, onSnapshot, updateDoc,addDoc,getDoc} from "firebase/firestore";
 import Grid from "@mui/material/Grid";
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Swal from 'sweetalert2';
 import EditIcon from '@mui/icons-material/Edit';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
@@ -28,7 +31,7 @@ import {
 } from "reactstrap";
 import { v4 as uuidv4 } from 'uuid';
 import Stack from '@mui/material/Stack';
-
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 export default function Contactosempresas() {
     const [data, setData] = useState([]);
@@ -38,9 +41,15 @@ export default function Contactosempresas() {
     const [file, setFile] = useState(null);
     const [url, setUrl] = useState("");
     const [form, setForm] = useState({});
-
+    const reportes =  useRef([])
     const [empresa2, setEmpresa2] = useState([]);
     const [cequipo, setCequipo] = useState("");
+    const equipos = useRef([])
+    const [nombresEquipos,setNombresEquipos] = useState([])
+    const [codigosEquipos,setCodigosEquipos] = useState([]);
+    const [codigo,setCodigo] = useState("");
+    const [time1, setTime1] = useState(new Date('Sat Dec 31 2022 24:00:00 GMT-0500'));
+    const [time2, setTime2] = useState(new Date('Sun Dec 31 2023 23:59:59 GMT-0500'));
     const [codigoe, setCodigoe] = useState("");
     const [codigosEquipo, setCodigosEquipo] = useState([]);
     const [inventario, setInventario] = useState([]);
@@ -50,6 +59,7 @@ export default function Contactosempresas() {
     const [modalEditarReporte,setModalEditarReporte] = useState(false);
     const [modalReportexistente, setModalReportexistente] = useState(false);
     const [currentReporte, setCurrentReporte] = useState({});
+    const [reset,setReset] = useState(false);
     const [nreporte, setNreporte] = useState({
         nombreT: '',
         codigoe: '',
@@ -71,6 +81,12 @@ export default function Contactosempresas() {
     });
 
     const getData = async () => {
+      const refe3 = query(collection(db, "reportesext"));
+        onSnapshot(refe3, (querySnapshot) => {
+            let temp = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
+            setData(temp);
+            reportes.current = temp
+        });
         const reference = query(collection(db, "ingreso"));
         onSnapshot(reference, (querySnapshot) => {
             var inventarioD = [];
@@ -88,15 +104,65 @@ export default function Contactosempresas() {
                 querySnapshot.docs.map((doc) => ({ ...doc.data() }))
             );
         });
+    
+        onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
+            setNombresEquipos(doc.data().equipos)
+          });
+          const refe4 = query(collection(db, "ingreso"));
+          onSnapshot(refe4, (querySnapshot) => {
 
-        const refe3 = query(collection(db, "reportesext"));
-        onSnapshot(refe3, (querySnapshot) => {
-            setData(
-                querySnapshot.docs.map((doc) => ({ ...doc.data() }))
-            );
-        });
-        console.log("data",data);
+             equipos.current = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
+           
+          });
     };
+    const SelectFecha1 = (newValue) => {
+        setTime1(newValue);
+    };
+    const SelectFecha2 = (newValue) => {
+        setTime2(newValue);
+    };
+
+    const filteryByDateReportes = (_reporte) => {
+        //console.log(ordenes)
+        const aux1 = new Date(time1)
+        const fechaInicio = aux1.getTime()
+        const aux2 = new Date(time2)
+        const fechaFinal = aux2.getTime()
+        const fechaOrden = new Date(_reporte.indice).getTime()
+
+        if (fechaOrden >= fechaInicio && fechaOrden <= fechaFinal) {
+            return _reporte
+        } else {
+            return null;
+        }
+    }
+    const filtrobyCodigo =(_reporte)=>{
+      
+        if (_reporte.codigoe === codigo) {
+            return _reporte
+        }
+        else {
+            return null;
+        }   
+}
+const seleccionarEquipo =(_data)=> {
+    let aux = equipos.current.filter(item =>  item.equipo === _data).map(item => (item.codigo))
+    setCodigosEquipos(aux)
+}
+
+    const filtrarReportes = () =>{
+        let aux = JSON.parse(JSON.stringify(reportes.current))
+        if (codigo!==""){
+        let datos_filtrados = aux.filter(filteryByDateReportes).filter(filtrobyCodigo)
+        setData(datos_filtrados)
+        setReset(!reset);
+        setCodigo("") } else{
+        let datos_filtrados = JSON.parse(JSON.stringify(reportes.current))
+        setData(datos_filtrados)
+        setReset(!reset);
+        console.log(datos_filtrados)
+        }
+    }
 
     const ActualizarReporte=()=>{
     let horasAux=parseInt(currentReporte.horasi)
@@ -322,13 +388,63 @@ export default function Contactosempresas() {
                 <Typography component="div" variant="h4" className="princi3" >
                     REPORTES EXTERNOS
                 </Typography>
-                <Grid container >
+                <Grid container spacing={2} >
                     <Grid item xs={12} md={12} sm={3}>
                         <Button variant="contained"
                             className="boton-modal-d"
                             onClick={() => mostrarModalInsertar()}>Agregar Reporte
                         </Button>
                     </Grid>
+                    <Grid item xs={2.4}>
+                <Autocomplete
+                            disableClearable
+                            key={reset}
+                            id="combo-box-demo"
+                            options={nombresEquipos}
+                            getOptionLabel={(option) => {
+                                return option.nombre;
+                              }}
+                            onChange={(event, newvalue) => seleccionarEquipo(newvalue.nombre)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="EQUIPO"  type="text" />}
+                        />
+                </Grid >
+                <Grid item xs={2.4}>
+                <Autocomplete
+                            disableClearable
+                            key={reset}
+                            id="combo-box-demo"
+                            options={codigosEquipos}
+                            onChange={(event, newvalue) => setCodigo(newvalue)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="CODIGO"  type="text"  />}
+                        />
+                </Grid >
+                   <Grid item xs={12} sm={12} md={2.4}>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DesktopDatePicker
+                                label={"Desde"}
+                                inputFormat="MM/dd/yyyy"
+                                value={time1}
+                                onChange={SelectFecha1}
+                                renderInput={(params) => <TextField {...params} fullWidth />}
+                            />
+                        </LocalizationProvider>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={2.4}>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DesktopDatePicker
+                                label={"Hasta"}
+                                inputFormat="MM/dd/yyyy"
+                                value={time2}
+                                onChange={SelectFecha2}
+                                renderInput={(params) => <TextField {...params} fullWidth />}
+                            />
+                        </LocalizationProvider>
+                    </Grid>
+                <Grid item xs={2.4}>
+                <Button  variant="contained" className="boton-gestion" onClick={filtrarReportes}  endIcon={<FilterAltIcon />}>
+                        Filtrar
+                    </Button>
+                </Grid >
                 </Grid>
                 <br />
                 <Table className='table table-ligh table-hover'>
