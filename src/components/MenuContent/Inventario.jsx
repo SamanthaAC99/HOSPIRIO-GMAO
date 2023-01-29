@@ -48,12 +48,12 @@ export default function InventarioMenu(){
                                 <ListItemText primary="Equipos Inactivos" />
                             </ListItemButton>
                             
-                            {/* <ListItemButton onClick={() =>Changeview('inventario/solicitudcompra')} sx={{ pl: 4 }}>
+                            <ListItemButton onClick={() =>Changeview('inventario/equipos_reubicados')} sx={{ pl: 4 }}>
                                 <ListItemIcon>
                                     <StarBorder />
                                 </ListItemIcon>
-                                <ListItemText primary="Inventario Accesorios" />
-                            </ListItemButton> */}
+                                <ListItemText primary="Equipos Reubicados" />
+                            </ListItemButton> 
 
                             <ListItemButton onClick={() =>Changeview('inventario/contratos')} sx={{ pl: 4 }}>
                                 <ListItemIcon>

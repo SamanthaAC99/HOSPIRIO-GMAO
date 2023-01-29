@@ -293,6 +293,7 @@ export default function Inventarioview() {
 			indice: Date.now(),
 			situacion: "Activo",
 			//valores que cambiaran en el futuro
+			reubicado:false,
 			codigos_historial: [code],
 			mantenimientos: [],
 			mtbf: "",
@@ -481,6 +482,7 @@ export default function Inventarioview() {
 		updateDoc(ref, {
 			codigos_historial: aux_historial,
 			codigo:newCodigo,
+			reubicado:true,
 		});
 		setModalReubicar(false)
 		

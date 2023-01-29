@@ -37,6 +37,7 @@ import PruebasView from "./PruebasView";
 import IndicadoresOT from "./IndicadoresOT";
 import DubicacionView from "./DubicacionView";
 import DtipoEquipoView from "./DtipoEquipoView";
+import EquiposReubicadosView from "./EquiposReubicadosView";
 import HojaVidaView from "./HojaVidaView";
 import DispEquipo from "./DisEquipo";
 import DisGrupo from "./DisGrupo";
@@ -201,7 +202,10 @@ export default function MultiView() {
                     element={
                         <PrivateRoute auth={currentUser.permisions.gestioni}><EquiposInactivosView/></PrivateRoute>
                     }/>   
-
+                    <Route path="inventario/equipos_reubicados/"
+                    element={
+                        <PrivateRoute auth={currentUser.permisions.gestioni}><EquiposReubicadosView/></PrivateRoute>
+                    }/>   
                 <Route path="inventario/invequipos/declarar_responsable"
                     element={<PrivateRoute auth={currentUser.permisions.gestioni}><ResponsableView /></PrivateRoute>}
                     />
