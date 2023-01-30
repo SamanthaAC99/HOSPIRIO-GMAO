@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import { query, collection, getDocs,onSnapshot,doc } from "firebase/firestore";
 import { db } from "../firebase/firebase-config";
 import InfoIcon from '@mui/icons-material/Info';
@@ -16,26 +16,36 @@ import '../css/Ordentrabajo.css';
 import '../css/Presentacion.css';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 export default function Activosview() {
   const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
   const [elementosin, setElementosin] = useState([]);
   const [currentform, setCurrenform] = useState(initialData[0]);
   const [url, setUrl] = useState("");
   const [accesorios, setAccesorios] = useState([]);
+  const [reset,setReset] = useState(false);
   const [accesoriosEquipo, setAccesoriosEquipo] = useState([]);
+  const [codigosFiltrados, setCodigosFiltrados] = useState([])
   const [modalInformacion1, setModalinformacion1] = useState(false);
+  const [codigoSeleccionado, setCodigoSeleccionado] = useState("")
+  const [equipos, setEquipos] = useState([]);
+  const equiposFiltro = useRef("")
+  const equipos_totales = useRef([])
   const getData7 = async () => {
     const reference = query(collection(db, "ingreso"));
     const data = await getDocs(reference);
     setElementosin(
       data.docs.map((doc) => ({ ...doc.data() }))
     );
+    equipos_totales.current = data.docs.map((doc) => ({ ...doc.data() }))
     onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
       setAccesorios(doc.data().accesorios)
+      setEquipos(doc.data().equipos)
     });
   }
 
+  
 
   const vistainformacion1 = (data) => {
     setCurrenform(data);
@@ -43,7 +53,14 @@ export default function Activosview() {
     setAccesoriosEquipo(data.accesorios)
     setModalinformacion1(true);
   }
-
+	const filtrarInventario = () => {
+		let aux = JSON.parse(JSON.stringify(equipos_totales.current))
+		let filtrados = aux.filter(filterByNombre).filter(filterByCodigo)
+    setElementosin(filtrados)
+		setCodigoSeleccionado("")
+		equiposFiltro.current = ""
+		setReset(!reset)
+	}
   const descargararchivo = (nombre) => {
     getDownloadURL(ref(storage, `inventario/${nombre}`)).then((url) => {
         console.log(url);
@@ -51,23 +68,90 @@ export default function Activosview() {
     })
 };
 
+const filterByNombre = (_equipo) => {
+  if (equiposFiltro.current !== "") {
+    if (_equipo.equipo.nombre === equiposFiltro.current) {
+      return _equipo
+    } else {
+      return null
+    }
+  } else {
+    return _equipo
+  }
+}
+const filterByCodigo = (_equipo) => {
+  if (codigoSeleccionado !== "") {
+    if (_equipo.codigo === codigoSeleccionado) {
+      return _equipo
+    } else {
+      return null
+    }
+  } else {
+    return _equipo
+  }
+}
+
   const cerrarmodalinf = () => {
     setModalinformacion1(false);
   }
+  const traerCodigos = (value) => {
+		let codigos_equipos = equipos_totales.current.filter(item => item.equipo.nombre === value.nombre && item.situacion === "Activo")
+		let codigos_fifltrados = codigos_equipos.map(item => (item.codigo))
+		setCodigosFiltrados(codigos_fifltrados)
+		equiposFiltro.current = value.nombre
+	}
   useEffect(() => {
     getData7();
   }, [])
   return (
     <>
-
       <Container>
         <Typography component="div" variant="h4" className="princi3" >
           INVENTARIO EQUIPOS
         </Typography>
         <Typography component="div" variant="h5" className="princi9" >
-          Médicos - Industriales
+          Médicos - Industrialesss
         </Typography>
-        <Table className='table table-ligh table-hover'>
+        <Grid container spacing={{ xs: 2 }} sx={{marginY:2}} columns={{ xs: 4, sm: 8, md: 12 }}>
+					<Grid item xs={12} sm={12} md={3}>
+						<Autocomplete
+							disablePortal
+							id="combo-box-demo"
+              key={reset}
+							options={equipos}
+							getOptionLabel={(option) => {
+								return option.nombre;
+							}}
+							isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+							onChange={(event, newvalue) => traerCodigos(newvalue)}
+							renderInput={(params) => <TextField {...params} label="Equipos" type="text" />}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={12} md={3}>
+						<Autocomplete
+							disablePortal
+							id="combo-box-demo"
+							key={reset}
+							options={codigosFiltrados}
+							onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
+							 renderInput={(params) => <TextField {...params} label="Codigo" type="text" />}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={12} md={3}>
+
+						<Button
+							variant="contained"
+							fullWidth
+							sx={{ height: "100%" }}
+							color='azul1'
+							// endIcon={<FilterAltIcon sx={{ fontSize: 90 }} />}
+							onClick={filtrarInventario}
+
+						>Filtrar</Button>
+
+					</Grid>
+          </Grid>
+        <Table className='table table-ligh table-hover' >
           <Thead>
             <Tr>
               <Th>Código</Th>
