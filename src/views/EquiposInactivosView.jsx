@@ -16,6 +16,8 @@ import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
 import { useNavigate } from 'react-router-dom';
 import 'react-super-responsive-table/dist/SuperResponsiveTableStyle.css';
 import { setEquipoState } from '../features/inventario/inventarioSlice';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 import '../css/Inventario.css';
 import Button from '@mui/material/Button';
 import * as XLSX from 'xlsx';
@@ -150,19 +152,57 @@ export default function EquiposInactivosView() {
 
 
   return (
-    <>
+    <>   
+    <Container>
       <Typography component="div" variant="h4" className="princi3" >
-        INVENTARIO EQUIPOS
+        INVENTARIO EQUIPOS INACTIVOS
       </Typography>
       <Typography component="div" variant="h5" className="princi9" >
         Médicos - Industriales
       </Typography>
-      <Grid container>
-              <Grid item xs={12} md={12}>
-              <Button onClick={crearExcel} color='verde2' variant="contained">GENERAR EXCEL</Button>
+      <Grid container  spacing={{ xs: 2 }} columns={{ xs: 4, sm: 8, md: 12 }} >
+      <Grid item xs={12} sm={12} md={3}>
+						<Autocomplete
+							disablePortal
+							id="combo-box-demo"
+							// key={reset}
+							// options={equipos}
+							getOptionLabel={(option) => {
+								return option.nombre;
+							}}
+							// isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+							// onChange={(event, newvalue) => traerCodigos(newvalue)}
+							renderInput={(params) => <TextField {...params} label="Equipos" type="text" />}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={12} md={3}>
+						<Autocomplete
+							disablePortal
+							id="combo-box-demo"
+							// key={reset}
+							// options={codigosFiltrados}
+							// onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
+							renderInput={(params) => <TextField {...params} label="Codigo" type="text" />}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={12} md={3}>
+
+						<Button
+							variant="contained"
+							fullWidth
+							sx={{ height: "100%" }}
+							color='azul1'
+							// endIcon={<FilterAltIcon sx={{ fontSize: 90 }} />}
+							// onClick={filtrarInventario}
+
+						>Filtrar</Button>
+
+					</Grid>
+              <Grid item xs={12} md={3}>
+              <Button onClick={crearExcel} sx={{ height: "100%" }} fullWidth color='verde2' variant="contained">GENERAR EXCEL</Button>
               </Grid>
       </Grid>
-      <Container>
+
         <br />
         <Table className='table table-ligh table-hover'>
           <Thead>

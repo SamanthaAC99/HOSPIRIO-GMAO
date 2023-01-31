@@ -27,12 +27,10 @@ import {
 } from "reactstrap";
 import Stack from '@mui/material/Stack';
 
-import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 // configuracion de los reloges
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import DownloadIcon from '@mui/icons-material/Download';
 
@@ -720,7 +718,7 @@ export default function Plan() {
     }
     const filterbyNombre = (_equipo) => {
         if (nombre !== "") {
-            if (_equipo.equipo === nombre) {
+            if (_equipo.equipo.nombre === nombre) {
                 return _equipo
             }else{
                 return null;
@@ -785,9 +783,10 @@ const buscarMantenimiento = () => {
 
 const nombreSeleccionado = (_nombre) => {
     setNombre(_nombre)
-    const codigos_obtenidos = equipos.filter(item => item.equipo === _nombre)
+    const codigos_obtenidos = equipos.filter(item => item.equipo.nombre === _nombre)
     const codigos_finales = codigos_obtenidos.filter(item => item.situacion === "Activo").map(item => (item.codigo))
     setCodigos(codigos_finales);
+
 }
 const equipoSeleccionado = (dato) => {
     console.log("equipo", dato);
@@ -942,6 +941,7 @@ return (
                         <th>Inicio Mantenimiento</th>
                         <th>Finaliza Mantenimiento</th>
                         <th>Equipo</th>
+                        <th>Codigo</th>
                         <th>Acciones</th>
                         <th>Validar</th>
                     </tr>
@@ -954,6 +954,7 @@ return (
                             <td>{plan.start}</td>
                             <td>{plan.end}</td>
                             <td>{plan.title}</td>
+                            <td>{plan.codigo_equipo}</td>
                             <td>
                                 <Stack direction="row" spacing={2} alignitems="center" justifyContent="center" >
                                     <button className="btn btn-outline-danger" onClick={() => { eliminarMantenimiento(plan) }}>Eliminar</button>
