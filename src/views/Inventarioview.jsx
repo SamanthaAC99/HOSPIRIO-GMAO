@@ -421,7 +421,7 @@ export default function Inventarioview() {
 	}
 	const filterByNombre = (_equipo) => {
 		if (equiposFiltro.current !== "") {
-			if (_equipo.equipo === equiposFiltro.current) {
+			if (_equipo.equipo.nombre === equiposFiltro.current) {
 				return _equipo
 			} else {
 				return null
@@ -442,7 +442,7 @@ export default function Inventarioview() {
 		}
 	}
 	const traerCodigos = (value) => {
-		let codigos_equipos = equipos_totales.current.filter(item => item.equipo === value.nombre)
+		let codigos_equipos = equipos_totales.current.filter(item => item.equipo.nombre === value.nombre && item.situacion === "Activo")
 		let codigos_fifltrados = codigos_equipos.map(item => (item.codigo))
 		setCodigosFiltrados(codigos_fifltrados)
 		equiposFiltro.current = value.nombre
