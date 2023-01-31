@@ -406,6 +406,7 @@ export default function DashboardTecnicos() {
         const equipos2 = inventario.find(item => item.codigo === val)
         const equipos = inventario.find(item => item.codigo === val)
         setEquipment(equipos2);
+
         setCequipo(equipos.equipo.nombre);
         setCodigoe(val);
 
@@ -455,6 +456,7 @@ export default function DashboardTecnicos() {
         re['nombreT'] = currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname;
         re['equipo'] = cequipo;
         re['codigoe'] = codigoe;
+        re['equipo_id'] = equipment.id;
         re['tmantenimiento'] = rtmantenimiento;
         re['estadof'] = estadof;
         re['fecha'] = new Date().toLocaleString("en-US");

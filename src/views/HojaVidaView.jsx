@@ -54,6 +54,7 @@ export default function HojaVidaView() {
     // const [calibraciones, setCalibraciones] = useState(0);
     const [porcentajePreventivo, setPorcentajePreventivo] = useState(0);
     const [porcentajeCorrectivo, setPorcentajeCorrectivo] = useState(0);
+    const codigosEquipo = useRef("");
     // const [internos,setInternos] = useState([]);
     // const [externos,setExternos] = useState([]);
     const internos = useRef([])
@@ -101,7 +102,7 @@ export default function HojaVidaView() {
         console.log("ordenes unidas", ordenesUnidas);
         setReportesTotales(ordenesUnidas);
 
-        const reportesFiltrados = ordenesUnidas.filter(reporte => reporte.codigoe === currentInventario.codigo) //filtro por id
+        const reportesFiltrados = ordenesUnidas.filter(filterBycodigo) //filtro por id
         const filtradosTotal = reportesFiltrados.length
         const filtradosPreventivo = reportesFiltrados.filter(filterPreventivo).length
         const filtradosCorrectivo = reportesFiltrados.filter(filterCorrectivo).length
@@ -129,7 +130,22 @@ export default function HojaVidaView() {
     };
 
 
+    const filterBycodigo = (_reporte) =>{
+        if(codigosEquipo.current === 'TODOS'){
 
+            if(_reporte.equipo_id === currentInventario.id){
+                return _reporte
+            }else{
+                return null
+            }
+        }else{
+            if(_reporte.codigoe === codigosEquipo.current){
+                return _reporte
+            }else{
+                return null
+            }
+        }
+    }
     // const Dona = () => {
     //     const reportesFiltrados = reportesTotales.filter(reporte => reporte.codigoe === currentInventario.codigo) //filtro por id
 
@@ -219,6 +235,11 @@ export default function HojaVidaView() {
         setCurrentreport(report);
         setModalinformacion(true);
     };
+    const changeCodigo = (_data)=>{
+        setCodigoSelect(_data) ;
+        codigosEquipo.current = _data;
+        calcularParamIniciales();
+    }
 
     const cerrarModalInformacion = () => {
         setModalinformacion(false);
@@ -257,7 +278,7 @@ export default function HojaVidaView() {
                                             options={currentInventario.codigos_historial}
                                             fullWidth
                                             sx={{marginBottom:3,marginTop:1}}
-                                            onChange={(event,newValue)=>{setCodigoSelect(newValue)}}
+                                            onChange={(event,newValue)=>{changeCodigo(newValue) }}
                                             renderInput={(params) => <TextField focused {...params} label="Codigos" />}
                                             />
                                             {/* <div className="borde-codigo">{currentInventario.codigo}</div> */}
@@ -358,7 +379,7 @@ export default function HojaVidaView() {
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
-                                                {reportesTotales.filter(item => item.codigoe === codigoSelect).map((reporte, index) => (
+                                                {reportesTotales.filter(filterBycodigo).map((reporte, index) => (
                                                     <Tr key={index} >
                                                         <Td>
                                                             {index + 1}

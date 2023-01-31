@@ -17,6 +17,8 @@ import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import ReplyAllIcon from '@mui/icons-material/ReplyAll';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import { lightBlue, teal, blue, cyan } from '@mui/material/colors';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 // import TextareaAutosize from '@mui/material/TextareaAutosize';
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
 import { useSelector } from "react-redux";
@@ -33,7 +35,7 @@ import { useNavigate } from 'react-router-dom';
 import { useParams } from "react-router-dom";
 
 export default function HojaVidaInactivos() {
-
+  
     const currentInventario = useSelector(state => state.inventarios);
     // console.log(currentInventario)
     // console.log(currentInventario.codigoe)
@@ -45,17 +47,20 @@ export default function HojaVidaInactivos() {
     const [currentreport, setCurrentreport] = useState({});
     // const [externos, setExternos] = useState([]);
     // const [internos, setInternos] = useState([]);
+    
     const [preventivo, setPreventivo] = useState(0);
     const [correctivo, setCorrectivo] = useState(0);
     // const [calibraciones, setCalibraciones] = useState(0);
     const [porcentajePreventivo, setPorcentajePreventivo] = useState(0);
     const [porcentajeCorrectivo, setPorcentajeCorrectivo] = useState(0);
+    const codigosEquipo = useRef("");
     // const [internos,setInternos] = useState([]);
     // const [externos,setExternos] = useState([]);
     const internos = useRef([])
     const externos = useRef([])
     // const [porcentajeCalibraciones, setPorcentajeCalibraciones] = useState(0);
     const [modalInformacion, setModalinformacion] = useState(false);
+    const [codigoSelect,setCodigoSelect] = useState("")
     // const [ctdMantenimientos, setCtdMantenimientos] = useState({
     //     correctivo: 4,
     //     preventivo: 1,
@@ -96,7 +101,7 @@ export default function HojaVidaInactivos() {
         console.log("ordenes unidas", ordenesUnidas);
         setReportesTotales(ordenesUnidas);
 
-        const reportesFiltrados = ordenesUnidas.filter(reporte => reporte.codigoe === currentInventario.codigo) //filtro por id
+        const reportesFiltrados = ordenesUnidas.filter(filterBycodigo) //filtro por id
         const filtradosTotal = reportesFiltrados.length
         const filtradosPreventivo = reportesFiltrados.filter(filterPreventivo).length
         const filtradosCorrectivo = reportesFiltrados.filter(filterCorrectivo).length
@@ -124,7 +129,22 @@ export default function HojaVidaInactivos() {
     };
 
 
+    const filterBycodigo = (_reporte) =>{
+        if(codigosEquipo.current === 'TODOS'){
 
+            if(_reporte.equipo_id === currentInventario.id){
+                return _reporte
+            }else{
+                return null
+            }
+        }else{
+            if(_reporte.codigoe === codigosEquipo.current){
+                return _reporte
+            }else{
+                return null
+            }
+        }
+    }
     // const Dona = () => {
     //     const reportesFiltrados = reportesTotales.filter(reporte => reporte.codigoe === currentInventario.codigo) //filtro por id
 
@@ -214,12 +234,18 @@ export default function HojaVidaInactivos() {
         setCurrentreport(report);
         setModalinformacion(true);
     };
+    const changeCodigo = (_data)=>{
+        setCodigoSelect(_data) ;
+        codigosEquipo.current = _data;
+        calcularParamIniciales();
+    }
 
     const cerrarModalInformacion = () => {
         setModalinformacion(false);
     };
 
     useEffect(() => {
+        setCodigoSelect(currentInventario.codigo)
         getReportes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
@@ -235,7 +261,7 @@ export default function HojaVidaInactivos() {
                         <Grid container spacing={{ xs: 3, md: 3 }}>
                             <Grid item xs={12} sm={6} md={12}>
                                 <div className="card12" style={{height:"100%"}} >
-                                
+
                                         <div className="header-tarjeta-8">
                                             <h5 className="titui-ges">Información Equipo</h5>
                                             <Avatar sx={{ bgcolor: lightBlue[100] }} >
@@ -243,9 +269,20 @@ export default function HojaVidaInactivos() {
                                             </Avatar>
                                         </div>
                                         <div className="card-body-info small">
-                                            <div className="borde-codigo">{currentInventario.codigo}</div>
-                                            <h1 className="informacion"><b>Departamento:</b> {currentInventario.departamento}</h1>
-                                            <h1 className="informacion"><b>Equipo:</b>{currentInventario.equipo}</h1>
+                                        <Autocomplete
+                                            disablePortal
+                                            id="combo-box-demo"
+                                            
+                                            value={codigoSelect}
+                                            options={currentInventario.codigos_historial}
+                                            fullWidth
+                                            sx={{marginBottom:3,marginTop:1}}
+                                            onChange={(event,newValue)=>{changeCodigo(newValue) }}
+                                            renderInput={(params) => <TextField focused {...params} label="Codigos" />}
+                                            />
+                                            {/* <div className="borde-codigo">{currentInventario.codigo}</div> */}
+                                            <h1 className="informacion"><b>Departamento:</b> {currentInventario.departamento.nombre}</h1>
+                                            <h1 className="informacion"><b>Equipo:</b>{currentInventario.equipo.nombre}</h1>
                                             <h1 className="informacion"><b>Marca:</b>{currentInventario.marca}</h1>
                                             <h1 className="informacion"><b>Modelo:</b>{currentInventario.modelo}</h1>
                                             <h1 className="informacion"><b>Serie:</b>{currentInventario.serie}</h1>
@@ -341,7 +378,7 @@ export default function HojaVidaInactivos() {
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
-                                                {reportesTotales.filter(item => item.codigoe === currentInventario.codigo).map((reporte, index) => (
+                                                {reportesTotales.filter(filterBycodigo).map((reporte, index) => (
                                                     <Tr key={index} >
                                                         <Td>
                                                             {index + 1}

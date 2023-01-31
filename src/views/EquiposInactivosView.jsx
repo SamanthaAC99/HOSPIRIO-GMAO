@@ -3,7 +3,7 @@ import '../css/Ordentrabajo.css';
 import '../css/Presentacion.css';
 import '../css/InventarioView.css';
 import Typography from '@mui/material/Typography';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import InfoIcon from '@mui/icons-material/Info';
 import Swal from 'sweetalert2';
 import IconButton from '@mui/material/IconButton';
@@ -37,12 +37,22 @@ export default function EquiposInactivosView() {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [modalInformacion, setModalinformacion] = useState(false);
-
+  const [equipos,setEquipos] = useState([])
   const [accesoriosEquipo, setAccesoriosEquipo] = useState([]);
-
+  const [reset,setReset] = useState(false);
+  const equipos_totales = useRef([])
+  const [codigosFiltrados,setCodigosFiltrados] = useState([]);
+  const equiposFiltro = useRef("")
+  const [codigoSeleccionado,setCodigoSeleccionado] = useState("");
+ 
   //variables de declaracion de equipo
 
-
+	const traerCodigos = (value) => {
+		let codigos_equipos = equipos_totales.current.filter(item => item.equipo.nombre === value.nombre && item.situacion === "Activo")
+		let codigos_fifltrados = codigos_equipos.map(item => (item.codigo))
+		setCodigosFiltrados(codigos_fifltrados)
+		equiposFiltro.current = value.nombre
+	}
   const [currentEquipo, setCurrentEquipo] = useState(initialData);
 
 
@@ -53,16 +63,17 @@ export default function EquiposInactivosView() {
       setData(
         querySnapshot.docs.map((doc) => ({ ...doc.data() }))
       );
+      equipos_totales.current = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
     });
+    onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
 
+			setEquipos(doc.data().equipos)
+
+		});
 
   }
 
-
 //metodos para gestionar los equipos activos de los que ya no estan operativos
-
-
-
  const FilterBySituacion = (_item) =>{
   if(_item.situacion === "Inactivo"){
     return _item
@@ -72,14 +83,7 @@ export default function EquiposInactivosView() {
  }
 //metodos para subir imagenes
 
-
-
-
-
-
-
-
-  const mostrarModalInformacion = (_dato) => {
+const mostrarModalInformacion = (_dato) => {
     setCurrentEquipo(_dato)
     setAccesoriosEquipo(_dato.accesorios)
     setModalinformacion(true);
@@ -89,20 +93,13 @@ export default function EquiposInactivosView() {
     setModalinformacion(false);
   };
 
+const hojavida = (data) => {
+  let aux = JSON.parse(JSON.stringify(data))
+  let temp = aux.codigos_historial
+  temp.unshift('TODOS')
 
-
-
-
-
-
-
-
-
-
-
-  const hojavida = (data) => {
-    dispatch(setEquipoState(data))
-    navigate('hojadevida')
+  dispatch(setEquipoState(aux))
+  navigate('hojadevida')
   }
 
 
@@ -165,13 +162,13 @@ export default function EquiposInactivosView() {
 						<Autocomplete
 							disablePortal
 							id="combo-box-demo"
-							// key={reset}
-							// options={equipos}
+							key={reset}
+							options={equipos}
 							getOptionLabel={(option) => {
 								return option.nombre;
 							}}
 							// isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
-							// onChange={(event, newvalue) => traerCodigos(newvalue)}
+							onChange={(event, newvalue) => traerCodigos(newvalue)}
 							renderInput={(params) => <TextField {...params} label="Equipos" type="text" />}
 						/>
 					</Grid>
@@ -179,9 +176,9 @@ export default function EquiposInactivosView() {
 						<Autocomplete
 							disablePortal
 							id="combo-box-demo"
-							// key={reset}
-							// options={codigosFiltrados}
-							// onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
+							key={reset}
+							options={codigosFiltrados}
+							onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
 							renderInput={(params) => <TextField {...params} label="Codigo" type="text" />}
 						/>
 					</Grid>

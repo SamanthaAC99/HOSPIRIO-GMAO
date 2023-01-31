@@ -368,7 +368,11 @@ export default function Inventarioview() {
 
 
 	const hojavida = (data) => {
-		dispatch(setEquipoState(data))
+		let aux = JSON.parse(JSON.stringify(data))
+		let temp = aux.codigos_historial
+		temp.unshift('TODOS')
+	
+		dispatch(setEquipoState(aux))
 		navigate('hojadevida')
 	}
 	const agregarAccesorio = () => {
