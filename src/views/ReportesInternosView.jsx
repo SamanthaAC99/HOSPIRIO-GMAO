@@ -100,7 +100,7 @@ export default function ReportesInternosView(){
     }
 
     const seleccionarEquipo =(_data)=> {
-        let aux = equipos.current.filter(item =>  item.equipo === _data).map(item => (item.codigo))
+        let aux = equipos.current.filter(item =>  item.equipo.nombre === _data).map(item => (item.codigo))
         // aux.push("TODOS")
         setCodigosEquipos(aux)
     }

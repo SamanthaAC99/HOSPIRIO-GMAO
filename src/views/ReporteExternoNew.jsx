@@ -146,7 +146,7 @@ export default function Contactosempresas() {
         }   
 }
 const seleccionarEquipo =(_data)=> {
-    let aux = equipos.current.filter(item =>  item.equipo === _data).map(item => (item.codigo))
+    let aux = equipos.current.filter(item =>  item.equipo.nombre === _data).map(item => (item.codigo))
     setCodigosEquipos(aux)
 }
 
