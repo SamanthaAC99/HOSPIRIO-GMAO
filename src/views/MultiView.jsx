@@ -38,6 +38,7 @@ import IndicadoresOT from "./IndicadoresOT";
 import DubicacionView from "./DubicacionView";
 import DtipoEquipoView from "./DtipoEquipoView";
 import EquiposReubicadosView from "./EquiposReubicadosView";
+import IndicadoresExternos from "./IndicadoresExternos";
 import HojaVidaView from "./HojaVidaView";
 import DispEquipo from "./DisEquipo";
 import DisGrupo from "./DisGrupo";
@@ -177,6 +178,14 @@ export default function MultiView() {
                             <DispEquipo />
                         </PrivateRoute>
                     } />
+                
+                <Route path='indicadores/disponibilidad_externos'
+                    element={
+                        <PrivateRoute auth={currentUser.permisions.gestioni}>
+                            <IndicadoresExternos />
+                        </PrivateRoute>
+                    } />
+
 
                 <Route path='indicadores/idisponibilidad'
                     element={

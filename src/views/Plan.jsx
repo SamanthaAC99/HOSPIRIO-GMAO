@@ -44,7 +44,6 @@ export default function Plan() {
     const [equipo, setEquipo] = useState({
 
     });
-    const [file, setFile] = useState(null);
     const [url, setUrl] = useState("");
     const [currentform, setCurrentform] = useState({});
     //variables de mantenimiento

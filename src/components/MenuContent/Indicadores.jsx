@@ -54,6 +54,13 @@ export default function IndicadoresA(){
                                 </ListItemIcon>
                                 <ListItemText primary="Disponibilidad Total" />
                             </ListItemButton>
+                            <ListItemButton onClick={() =>Changeview('indicadores/disponibilidad_externos')} sx={{ pl: 4 }}>
+                            {/* <ListItemButton target="_blank"  href="indicadores/idisponibilidad" sx={{ pl: 4 }}> */}
+                                <ListItemIcon>
+                                    <StarBorder />
+                                </ListItemIcon>
+                                <ListItemText primary="Disponibilidad Externos" />
+                            </ListItemButton>
                         </List>
                     </Collapse>
             </>
