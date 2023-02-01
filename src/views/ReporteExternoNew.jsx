@@ -59,6 +59,7 @@ export default function Contactosempresas() {
     const [modalEditarReporte,setModalEditarReporte] = useState(false);
     const [modalReportexistente, setModalReportexistente] = useState(false);
     const [currentReporte, setCurrentReporte] = useState({});
+    const equipoObjeto = useRef();
     const [reset,setReset] = useState(false);
     const [nreporte, setNreporte] = useState({
         nombreT: '',
@@ -93,7 +94,8 @@ export default function Contactosempresas() {
             querySnapshot.forEach((doc) => {
                 inventarioD.push(doc.data());
             });
-            var codigos = inventarioD.map(item => item.codigo)
+            var codigos = inventarioD.filter(item=> item.situacion === 'Activo').map(item => item.codigo)
+           
             setInventario(inventarioD);
             setCodigosEquipo(codigos);
 
@@ -123,7 +125,7 @@ export default function Contactosempresas() {
     };
 
     const filteryByDateReportes = (_reporte) => {
-        //console.log(ordenes)
+       
         const aux1 = new Date(time1)
         const fechaInicio = aux1.getTime()
         const aux2 = new Date(time2)
@@ -174,30 +176,7 @@ const seleccionarEquipo =(_data)=> {
     console.log("h",h)  
 
     
-    // const ref = doc(db, "reportesext", `${currentReporte.id}`);
-    //     updateDoc(ref, {
-    //         horas:h,
-    //         nombreT:empresa,
-    //         estadof:estadof,
-    //         tmantenimiento:rtmantenimiento,
-    //         costo: currentReporte.costo,
-    //         horasi:currentReporte.horasi,
-    //         min:currentReporte.min,
-    //         falla:currentReporte.falla,
-    //         causas:currentReporte.causas,
-    //         actividadesR:currentReporte.actividadesR,
-    //         repuestos:currentReporte.repuestos,
-    //         observaciones:currentReporte.observaciones,
-    //     });
-    //     setModalEditarReporte(false)
-        
-    //     Swal.fire({
-    //         icon: 'warning',
-    //         title: '¡Reporte Actualizado!',
-    //         showConfirmButton: false,
-    //         timer: 2000
 
-    //     })
         
     }
 
@@ -217,32 +196,7 @@ const seleccionarEquipo =(_data)=> {
             [event.target.name]: event.target.value,
         });
     }
-      const sendReportFirebase = async () => {
-        const re = nreporte;
-        re['nombreT'] = empresa;
-        re['equipo'] = cequipo;
-        re['codigoe'] = codigoe;
-        re['tmantenimiento'] = rtmantenimiento;
-        re['estadof'] = estadof;
-        re['fecha'] = new Date().toLocaleDateString();
-        console.log(re)
-        const newReporte = await addDoc(collection(db, "reportesext"), re);
-        if (newReporte.id !== null) {
-            console.log(newReporte.id)
-            const reference2 = doc(db, "reportesext", `${newReporte.id}`);
-            updateDoc(reference2, {
-                id: newReporte.id,
-            });
-            sendStorage(newReporte.id)
-       
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'No se agrego el reporte a la orden',
-            })
-        }
-    }
+  
 
     const sendStorage = (cod) => {
         //pasar parametros variables
@@ -309,13 +263,13 @@ const seleccionarEquipo =(_data)=> {
        let h=(horasAux+tiempom).toFixed(2);
        const re = nreporte;
        re['nombreT'] = empresa;
-       re['equipo'] = cequipo;
+       re['equipo'] = cequipo.nombre;
        re['codigoe'] = codigoe;
-    //    re['id_equipo'] = e;
+        re['id_equipo'] = equipoObjeto.current;
        re['tmantenimiento'] = rtmantenimiento;
        re['estadof'] = estadof;
        re['fecha'] = new Date().toLocaleDateString();
-       re['horas']=h
+       re['horas']= parseFloat(h)
        re['tiempo'] = `${horasAux}h${Math.round(minAux)}m`
        console.log(re)
        const newReporte = await addDoc(collection(db, "reportesext"), re);
@@ -333,31 +287,19 @@ const seleccionarEquipo =(_data)=> {
                 text: 'No se agrego el reporte a la orden',
             })
         }
+        setModalinsertar(false)
     }
     const selectEquipo = (val) => {
         console.log(val);
         const equipos = inventario.find(item => item.codigo === val)
         setCequipo(equipos.equipo);
+        equipoObjeto.current= equipos
         setCodigoe(val);
-        console.log(equipos.equipo)
+     
 
     }
 
-    const handleChange = (e) => {
-        setForm(
-            {
-                ...form,
-                [e.target.name]: e.target.value,
-            },
-        )
-    };
 
-    const descargararchivo = (nombre) => {
-        getDownloadURL(ref(storage, `evaluaciones/${nombre}`)).then((url) => {
-            setUrl(url);
-        })
-
-    };
 
     const createReport = (event) => {
         setNreporte({
@@ -370,9 +312,7 @@ const seleccionarEquipo =(_data)=> {
         setCurrentReporte(dato);
     };
 
-    const cerrarModalInformacion = () => {
-        setModalinformacion(false);
-    };
+   
 
     const EditarReporte= async(_data)=>{    
                 setCurrentReporte(_data);

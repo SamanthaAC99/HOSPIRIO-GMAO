@@ -507,7 +507,7 @@ export default function IndicadoresOT() {
                     </Grid>
                     <Grid item xs={12} sm={12} md={2.4}>
                         <div className="card-container">
-                            <TarjetaIndicadores icono={< PendingActionsIcon />} valor={pendientes} bgicon={blue[700]} titulo={'N° Ordenes Iniciadas '} colort={"#598ec7"} />
+                            <TarjetaIndicadores icono={< PendingActionsIcon />} valor={iniciadas} bgicon={blue[700]} titulo={'N° Ordenes Iniciadas '} colort={"#598ec7"} />
                         </div>
                     </Grid>
                     <Grid item xs={12} sm={12} md={2.4}>

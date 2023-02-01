@@ -33,7 +33,7 @@ const options = {
 
     title: {
       display: true,
-      text: 'Horas hombre/trabajo',
+      text: 'Horas hombre/mes',
       color: 'black',
             font: {
               size: 16,

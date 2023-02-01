@@ -170,9 +170,9 @@ export default function DispEquipo() {
         const filtercodigo =filterFechas.filter(filterByCodigo)
         const filtermantenimiento =filtercodigo.filter(filterCorrectivo)
         // const filteralerta =filtermantenimiento.filter(filterbyAlerta)
-       
+       let aux_mantenimiento = JSON.parse(JSON.stringify(filtermantenimiento))
         const numeroalerta =filtermantenimiento.length
-        const horasalerta =filtermantenimiento.map(state => state.horas).reduce((a, b) => a + b, 0)
+        const horasalerta =aux_mantenimiento.map(state => state.horas).reduce((a, b) => a + b, 0)
         const mttr =(horasalerta/numeroalerta).toFixed(2);
 
 
@@ -278,7 +278,7 @@ export default function DispEquipo() {
         let aux_equipos = JSON.parse(JSON.stringify(data))
         console.log(aux_equipos)
         setSelecEquipo(dato)
-        const codigos_obtenidos = aux_equipos.filter(item => item.equipo === dato)
+        const codigos_obtenidos = aux_equipos.filter(item=> item.situacion === 'Activo').filter(item => item.equipo.nombre === dato)
         setCodigos(codigos_obtenidos)
         console.log(codigos_obtenidos)
     }
