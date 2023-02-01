@@ -270,6 +270,7 @@ const seleccionarEquipo =(_data)=> {
        re['estadof'] = estadof;
        re['fecha'] = new Date().toLocaleDateString();
        re['horas']= parseFloat(h)
+       re['indice'] = new Date().getTime();
        re['tiempo'] = `${horasAux}h${Math.round(minAux)}m`
        console.log(re)
        const newReporte = await addDoc(collection(db, "reportesext"), re);
