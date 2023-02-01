@@ -125,18 +125,11 @@ export default function Ordentrabajoview() {
   const sendFirestore = async (_orden) => {
     try {
       console.log(_orden)
-      //await addDoc(collection(db, "ordenes"), _orden);
-      // console.log("Document written with ID: ", docRef.id);
-      // const washingtonRef = doc(db, "ordenes", docRef.id);
-      // await updateDoc(washingtonRef, {
-      //   id: docRef.id
-      // });
-
       await setDoc(doc(db, "ordenes", _orden.id), _orden);
       setDeshabilitar(false);
       Swal.fire({
         icon: 'success',
-        title: '¡Orden envida con éxito!',
+        title: '¡Orden enviada con éxito!',
         showConfirmButton: false,
         timer: 1500
       })
@@ -227,9 +220,6 @@ export default function Ordentrabajoview() {
                 <div className="col-md-8">
                   <div className="panelt2">
                     <Grid container spacing={4}>
-                      {/* <Grid item xs={12}>
-                        <TextField value={cedula} color={cedula !== '' ? "gris" : "oficial"} fullWidth label="CÉDULA SOLICITANTE" type="number" onChange={(e) => setCedula(e.target.value)} />
-                      </Grid> */}
                       <Grid item xs={12}>
                         <TextField inputProps={{ style: { textTransform: "uppercase", maxLength: 30 } }} value={asunto} color={asunto !== '' ? "gris" : "oficial"} fullWidth label="ASUNTO" type="text" onChange={(e) => setAsunto(e.target.value)} />
                       </Grid>

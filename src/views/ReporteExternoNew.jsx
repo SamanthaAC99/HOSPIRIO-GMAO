@@ -311,6 +311,7 @@ const seleccionarEquipo =(_data)=> {
        re['nombreT'] = empresa;
        re['equipo'] = cequipo;
        re['codigoe'] = codigoe;
+    //    re['id_equipo'] = e;
        re['tmantenimiento'] = rtmantenimiento;
        re['estadof'] = estadof;
        re['fecha'] = new Date().toLocaleDateString();
@@ -512,21 +513,21 @@ const seleccionarEquipo =(_data)=> {
                             </Grid>
                             <Grid item xs={6}>
 
-<Autocomplete
-    disableClearable
-    id="combo-box-demo"
-    className='seleccionadortabla'
+                            <Autocomplete
+                                disableClearable
+                                id="combo-box-demo"
+                                className='seleccionadortabla'
 
-    onChange={(event, newValue) => {
-        selectEquipo(newValue);
-    }}
-    value={codigoe}
-    options={codigosEquipo}
-    renderInput={(params) => <TextField {...params} fullWidth label="CÓDIGO EQUIPO" type="text" />}
-/>
-</Grid>
-<Grid item xs={6}>
-                                <TextField id="outlined-basic" label="EQUIPO" variant="outlined" InputProps={{ readOnly: true }} value={cequipo} fullWidth />
+                                onChange={(event, newValue) => {
+                                    selectEquipo(newValue);
+                                }}
+                                value={codigoe}
+                                options={codigosEquipo}
+                                renderInput={(params) => <TextField {...params} fullWidth label="CÓDIGO EQUIPO" type="text" />}
+                            />
+                            </Grid>
+                                <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="EQUIPO" variant="outlined" InputProps={{ readOnly: true }} value={cequipo.nombre} fullWidth />
                             </Grid>
                             <Grid item xs={6}>
                                 <Autocomplete
@@ -652,9 +653,9 @@ const seleccionarEquipo =(_data)=> {
                     <ModalBody>
                         <Grid container spacing={2}>
                         <Grid item xs={12}>
-                                            <div className="name-outlined">{currentReporte.id}</div>
-                                        </Grid >
-                                        <Grid item xs={12}>
+                                    <div className="name-outlined">{currentReporte.id}</div>
+                         </Grid >
+                            <Grid item xs={12}>
                                 <label>
                                     <b>Estado:  </b>
                                     {currentReporte.estadof}

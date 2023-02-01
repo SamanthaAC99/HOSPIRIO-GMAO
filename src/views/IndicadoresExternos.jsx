@@ -5,24 +5,17 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import TextField from '@mui/material/TextField';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import Grid from '@mui/material/Grid';
 import DeleteIcon from '@mui/icons-material/Delete';
-import GraficaDona from "../components/GraficoDona";
-import BarChart from "../components/Graficabarras";
 import Example from "../components/MenuContent/ProgressBar";
 
-import Avatar from '@mui/material/Avatar';
-import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import StackedBarChartIcon from '@mui/icons-material/StackedBarChart';
-import { blue, deepPurple, green, pink, orange } from '@mui/material/colors';
+import { blue} from '@mui/material/colors';
 import TarjetaIndicadores from "../components/TarjetasIndicadores";
 
 import Button from '@mui/material/Button';
 import { useSelector } from "react-redux";
 
-import Autocomplete from '@mui/material/Autocomplete';
 import {
     CircularProgressbarWithChildren,
     buildStyles
@@ -34,21 +27,15 @@ import GraficaDisponibilidadTotal from "../components/GraficaDisponibilidadT";
 
 export default function IndicadoresExternos() {
     const currentUser = useSelector(state => state.auths);
-    const currentInventario = useSelector(state => state.inventarios);
     const [user, setUser] = useState({});
-    const [mttr, setMttr] = useState(0);
-    const [reportes, setReportes] = useState([]);
-    const [ctdad, setCtdad] = useState(0);
+
     const [time1, setTime1] = useState(new Date('Wen Nov 02 2022 24:00:00 GMT-0500'));
     const [time2, setTime2] = useState(new Date('Wen Nov 04 2022 23:59:59 GMT-0500'));
-    const [ordenes, setOrdenes] = useState([]);
-    const [departamentos, setDepartamentos] = useState([]);
-    const [departamento, setDepartamento] = useState("ALL");
+
     const [data, setData] = useState([]);
     const [equipos, setEquipos] = useState([]);
     const [selecEquipo, setSelecEquipo] = useState([]);
     const [codigose, setCodigose] = useState([]);
-    const [reportesTotales, setReportesTotales] = useState([]);
     const [externos, setExternos] = useState([]);
     const [internos, setInternos] = useState([]);
     const [ingreso, setIngreso] = useState([]);
@@ -69,10 +56,8 @@ export default function IndicadoresExternos() {
     };
 
     const handleReportes = () => {
-        // const reportes = internos.concat(externos)
-        let aux_internos=JSON.parse(JSON.stringify(internos))
         let aux_externos=JSON.parse(JSON.stringify(externos))
-        const reportes=aux_internos.concat(aux_externos)
+        const reportes= aux_externos
         const reportesnum=reportes.length
         console.log("reportesnum",reportesnum)
         console.log("r",reportes)
@@ -80,7 +65,6 @@ export default function IndicadoresExternos() {
         console.log("fechas",filterFechas)
         const filtroImportancia =filterFechas.filter(filterByImportancia)
         const num=data.filter(filterByImportancia).length
-        // const filteralerta =filtroImportancia.filter(filterbyAlerta)
         const sumatoriamantenimientos =filterFechas.map(state => state.horas).reduce((a, b) => a + b, 0)
         
         const feInicio = new Date(time1).getTime() / 1000
@@ -93,9 +77,6 @@ export default function IndicadoresExternos() {
 
         const disTotal=(Math.round(((horas*numeroequipos)-sumatoriamantenimientos)/(horas*numeroequipos))*100)
         console.log(disTotal)
-
-
-        //TARJETAS
         const correctivos =filterFechas.filter(filterCorrectivo)
         const numerocorrectivos =correctivos.length
         const preventivos =filterFechas.filter(filterPreventivo)
@@ -103,7 +84,6 @@ export default function IndicadoresExternos() {
         const calibraciones =filterFechas.filter(filterCalibraciones)
         const numerocalibraciones =calibraciones.length
 
-        //FIABILIDAD
         const horasmantenimientocorrectivos = correctivos.map(state => state.horas).reduce((a, b) => a + b, 0)
         const fiabilidad = (Math.round(((horas*numeroequipos)-horasmantenimientocorrectivos)/(horas*numeroequipos))*100)
 
@@ -447,35 +427,23 @@ export default function IndicadoresExternos() {
                                 renderInput={(params) => <TextField {...params} fullWidth />}
                             />
                         </LocalizationProvider>
-
                     </Grid>
-
-                    <Grid item xs={6} sm={6} md={0.5}>
-
-
-                        <Button variant="outlined" startIcon={<DeleteIcon />} className="filtrar"  onClick={handleReportes} >
-                            Filtrar</Button>
-                    </Grid>
+                        <Grid item xs={6} sm={6} md={0.5}>
+                            <Button variant="outlined" startIcon={<DeleteIcon />} className="filtrar"  onClick={handleReportes} >
+                                Filtrar
+                            </Button>
+                        </Grid>
                     <Grid item xs={12} sm={12} md={6}></Grid>
 
                     <Grid item xs={12} sm={12} md={6}>
                         <div className="card12" >
-
-                            {
                                 <div className="card-body12 small ">
-                                    {/* <LineChart labels={['Ene', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov','Dec']} datos={[1,2,3,4,5,6,7,8,9,10,11,12]}/> */}
                                     <GraficaDisponibilidadTotal labels={['Ene', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dec',]} info={grafica} />
                                 </div>
-                            }
-
                         </div>
                     </Grid>
-              
-
                     <Grid item xs={12} sm={12} md={3}>
                         <div className="card12" >
-
-                            {
                                 <div className="card-body12 small ">
                                     <Example>
                                         <p className="titulo-card-g">Disponibilidad</p>
@@ -487,20 +455,15 @@ export default function IndicadoresExternos() {
                                                 strokeLinecap: "butt"
                                             })}
                                         >
-
                                         </CircularProgressbarWithChildren>
                                     </Example>
 
                                 </div>
-                            }
-
                         </div>
                     </Grid>
 
                     <Grid item xs={12} sm={12} md={3}>
                         <div className="card12" >
-
-                            {
                                 <div className="card-body12 small ">
                                     <Example>
                                         <p className="titulo-card-g">Fiabilidad</p>
@@ -512,19 +475,11 @@ export default function IndicadoresExternos() {
                                                 strokeLinecap: "butt"
                                             })}
                                         >
-
                                         </CircularProgressbarWithChildren>
                                     </Example>
-
                                 </div>
-                            }
-
                         </div>
                     </Grid>
-
-
-               
-
                     <Grid item xs={6} sm={6} md={12}>
                         <Grid container spacing={{ xs: 4 }}>
 
@@ -543,11 +498,7 @@ export default function IndicadoresExternos() {
                                     <TarjetaIndicadores icono={<StackedBarChartIcon />} valor={correctivasn} bgicon={blue[700]} titulo={'MTTO Correctivos'} colort={"#598ec7"} />
                                 </div>
                             </Grid>
-                            {/* <Grid item xs={6} sm={6} md={3}>
-                                <div className="card-container">
-                                    <TarjetaIndicadores icono={< StackedBarChartIcon />} valor={calibracionesn} bgicon={blue[700]} titulo={'Calibraciones'} colort={"#598ec7"} />
-                                </div>
-                            </Grid> */}
+           
 
                         </Grid>
                     </Grid>

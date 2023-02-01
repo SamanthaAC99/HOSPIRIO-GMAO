@@ -473,18 +473,7 @@ export default function ReportesInternosView(){
                             />
                         </LocalizationProvider>
                     </Grid>
-                {/* <Grid item xs={3}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DesktopDatePicker
-                                key={reset}
-                                label={"Filtrar Fecha"}
-                                value={time1}
-                                onChange={SelectFecha1}
-                                inputFormat="MM/dd/yyyy"
-                                renderInput={(params) => <TextField  fullWidth {...params} />}
-                            />
-                        </LocalizationProvider>
-                </Grid > */}
+          
                 <Grid item xs={2.4}>
                 <Button  variant="contained" className="boton-gestion" onClick={filtrarReportes}  endIcon={<FilterAltIcon />}>
                         Filtrar
@@ -500,7 +489,6 @@ export default function ReportesInternosView(){
                             <Th>Duración</Th>
                             <Th>Equipo</Th>
                             <Th>Código Equipo</Th>
-                            {/* <Th>Acciones</Th> */}
                             <Th>Información</Th>
 
                         </Tr>
@@ -514,13 +502,6 @@ export default function ReportesInternosView(){
                                 <Td>{dato.tiempo}</Td>
                                 <Td>{dato.equipo}</Td>
                                 <Td>{dato.codigoe}</Td>
-                                {/* <Td>
-                                    <Stack direction="row" spacing={0.5} alignitems="center" justifyContent="center" >
-
-                                        {/* <button className="btn btn-outline-warning" onClick={() => mostrarModalActualizar(dato)}>Editar</button> */}
-                                        {/* <button className="btn btn-outline-danger" onClick={() => eliminar(dato)}>Eliminar</button>
-                                    </Stack> */}
-                                {/* </Td>  */}
                                 <Td>
                                     <IconButton aria-label="delete" color="gris" onClick={() => mostrarModalInformacion(dato)}><InfoIcon /></IconButton>
                                 </Td>
