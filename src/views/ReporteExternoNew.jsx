@@ -262,9 +262,9 @@ const seleccionarEquipo =(_data)=> {
        let tiempom=minAux/60
        let h=(horasAux+tiempom).toFixed(2);
        const re = nreporte;
-       re['nombreT'] = empresa;
-       re['equipo'] = cequipo.nombre;
-       re['codigoe'] = codigoe;
+        re['empresa'] = empresa;
+        re['equipo'] = cequipo.nombre;
+        re['codigoe'] = codigoe;
         re['id_equipo'] = equipoObjeto.current;
        re['tmantenimiento'] = rtmantenimiento;
        re['estadof'] = estadof;
@@ -409,7 +409,7 @@ const seleccionarEquipo =(_data)=> {
                                 <Td>{index + 1}</Td>
                                 <Td>{contactos.fecha}</Td>
                                 <Td>{contactos.tmantenimiento}</Td>
-                                <Td>{contactos.nombreT}</Td>
+                                <Td>{contactos.empresa}</Td>
                                 <Td>{contactos.equipo}</Td>
                                 <Td>{contactos.codigoe}</Td>
                                 <Td>
@@ -605,7 +605,7 @@ const seleccionarEquipo =(_data)=> {
                             <Grid item xs={12}>
                                 <label>
                                     <b>Empresa: </b>
-                                    {currentReporte.nombreT}
+                                    {currentReporte.empresa}
                                 </label>
                             </Grid >
                             <Grid item xs={12}>

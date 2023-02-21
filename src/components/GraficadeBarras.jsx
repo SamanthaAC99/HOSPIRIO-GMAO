@@ -18,7 +18,7 @@ ChartJS.register(
   Legend
 );
 
-export default function GraficaDisponibilidadTotal(props){
+export default function GraficadeBarras(props){
   const options = {
     responsive: true,
     plugins: {
@@ -61,7 +61,7 @@ export default function GraficaDisponibilidadTotal(props){
     const data = {
         // labels: [props.equipo],
         // label:'Tiempo Medio de Resolución O/T',
-        labels: props.labels,
+        labels: props.data.map(item =>(item.nombre)),
       
         datasets: [
           // {
@@ -81,7 +81,7 @@ export default function GraficaDisponibilidadTotal(props){
           // },
           {
             label: 'Dataset 2',
-            data: props.info,
+            data: props.data.map(item =>(item.value)),
             backgroundColor: [
               'rgba(54, 162, 235, 1)',
         'rgba(255, 206, 86, 1)',
