@@ -21,10 +21,9 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
 
-export default function Ordentrabajoview() {
+export default function OrdenTrabajoView() {
   const navigate = useNavigate();
   let params = useParams();
-  const [cedula, setCedula] = useState('');
   const [asunto,setAsunto] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [descripcion,setDescripcion] = useState('');
@@ -33,7 +32,6 @@ export default function Ordentrabajoview() {
   const [deshabilitar,setDeshabilitar] = useState(false);
   const [cantidad, setCantidad] = useState(0);
   const [reloadAuto,setReloadAuto] = useState(false);
-  const [departamentos,setDepartamentos] = useState([])
   const currentUser = useSelector(state => state.auths);
 
   const getData =  () => {
@@ -45,14 +43,6 @@ export default function Ordentrabajoview() {
       });
       setCantidad(ordenes.length)
     });
-    onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
-
-      setDepartamentos(doc.data().departamentos)
-
-    });
-
-
-
   }
 
   const navegarView = (ruta) => {
@@ -148,8 +138,7 @@ export default function Ordentrabajoview() {
   };
 
   const limpiarCampos = () =>{
-    setReloadAuto(!reloadAuto);
-    setCedula("");    
+    setReloadAuto(!reloadAuto);  
     setDescripcion("");
     setProblematica("");
     setObservaciones("");
