@@ -15,7 +15,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import * as XLSX from 'xlsx';
 import ClearIcon from '@mui/icons-material/Clear';
 import '../css/Plan.css'
-import { collection, setDoc, query, doc, deleteDoc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
+import { collection, query, doc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 import {
     Table,
     Container,
@@ -44,7 +44,6 @@ export default function Plan() {
     const [equipo, setEquipo] = useState({
 
     });
-    const [file, setFile] = useState(null);
     const [url, setUrl] = useState("");
     const [currentform, setCurrentform] = useState({});
     //variables de mantenimiento
@@ -56,13 +55,7 @@ export default function Plan() {
     const [validados, setValidados] = useState("");
     const [deshabilitar,setDeshabilitar] = useState(false);
     const [currentPlan ,setCurrentPlan] = useState({})
-    const [eventos, setEventos] = useState([{
-        start: '',
-        end: '',
-        title: '',
-        id: '',
-        verificacion: '',
-    }]);
+    const [eventos, setEventos] = useState([]);
     // variables para editar la fecha
     const [currentMan, setCurrentMan] = useState({});
     const [equipoEmpresa, setEquipoEmpresa] = useState('');
@@ -658,20 +651,23 @@ export default function Plan() {
        setEquipo(null)
     }
     const getData = async () => {
-        // const reference = query(collection(db, "planes"));
-        // onSnapshot(reference, (querySnapshot) => {
-        //     console.log(querySnapshot.docs)
-        //     setData(
-        //         querySnapshot.docs.map((doc) => ({ ...doc.data() }))
-        //     );
-        // });
+      
         const reference2 = query(collection(db, "ingreso"));
         onSnapshot(reference2, (querySnapshot) => {
-
+            let newArray = []
             let dataR = querySnapshot.docs.map((doc) => ({ ...doc.data() }));
-            aux_equipos.current = dataR.filter(filterbysituacion);
+            let dataFilter = dataR.filter(filterbysituacion);
+            aux_equipos.current = dataFilter
             setEquipos(dataR);
             setNombresActivos(equipos.filter(filterbysituacion))
+            for (let i = 0; i < dataFilter.length; i++) {
+                let aux1 = dataFilter[i].mantenimientos
+                for (let j = 0; j < aux1.length; j++) {
+                    newArray.push(aux1[j])
+                }
+            }
+  
+            setEventos(newArray);
 
         });
         const reference3 = query(collection(db, "empresas"));

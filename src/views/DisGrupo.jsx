@@ -79,7 +79,7 @@ export default function DisGrupo() {
         // const reportes = internos.concat(externos)
         let aux_internos=JSON.parse(JSON.stringify(internos))
         let aux_externos=JSON.parse(JSON.stringify(externos))
-        const reportes=aux_internos.concat(aux_externos)
+        const reportes=aux_internos
         const reportesnum=reportes.length
         console.log("reportesnum",reportesnum)
         console.log("r",reportes)
@@ -386,17 +386,17 @@ export default function DisGrupo() {
         // onSnapshot(doc(db, "informacion", "ksCkGtZm1u2I0y5YoC4g"), (doc) => {
         //     setEquipos(doc.data().equipos)
         // });
-        const ref1 = query(collection(db, "reportesext"));
-        onSnapshot(ref1, (querySnapshot) => {
+        // const ref1 = query(collection(db, "reportesext"));
+        // onSnapshot(ref1, (querySnapshot) => {
            
-            querySnapshot.forEach((doc) => {
-                externo.push(doc.data());
-            });
-            setExternos(externo);
+        //     querySnapshot.forEach((doc) => {
+        //         externo.push(doc.data());
+        //     });
+        //     setExternos(externo);
          
-            // setReportesUnidos(externo.concat(interno))
+        //     // setReportesUnidos(externo.concat(interno))
         
-        });
+        // });
 
         const ref2 = query(collection(db, "reportesint"));
         onSnapshot(ref2, (querySnapshot) => {

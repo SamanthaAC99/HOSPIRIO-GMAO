@@ -7,14 +7,14 @@ import Inventarioview from "./Inventarioview";
 import ReportesInternosView from "./ReportesInternosView";
 import PersonalView from "./PersonalView"
 import TercerizacionView from "./TercerizacionView"
-import Ordentrabajoview from "./ordentrabajo";
+import OrdenTrabajoView from "./OrdenTrabajoView";
 import Comprasview from "./Compras";
 import Informeview from "./Informeview";
 import Contactosempresas from "./Empresacontactos";
 import Cuestionario from "./Empresas";
 import DaccesoriosView from "./DaccesoriosView";
 import DeclararPropietario from "./DeclararPropietario";
-import ReportesExternosView from "./ReportesExternosView";
+//import ReportesExternosView from "./ReportesExternosView"; este modulo ya no se utiliza
 import Contratosview from "./Contratos";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Vistacontratos from "./Vistacontratos";
@@ -38,6 +38,7 @@ import IndicadoresOT from "./IndicadoresOT";
 import DubicacionView from "./DubicacionView";
 import DtipoEquipoView from "./DtipoEquipoView";
 import EquiposReubicadosView from "./EquiposReubicadosView";
+import IndicadoresExternos from "./IndicadoresExternos";
 import HojaVidaView from "./HojaVidaView";
 import DispEquipo from "./DisEquipo";
 import DisGrupo from "./DisGrupo";
@@ -63,7 +64,6 @@ export default function MultiView() {
     const getUserFromFirebase = ()=>{
  
         onSnapshot(doc(db, "usuarios", currentUser.uid), (doc) => {
-            console.log(doc.data())
             flagAuth.current = doc.data()
 
             if(!flagAuth.current.situacion){
@@ -75,10 +75,8 @@ export default function MultiView() {
     }
     useEffect(() => {
         getUserFromFirebase();
-        // const interval = setInterval(() => {
-        //     console.log('This will run every second!');
-        //   }, 1000);
-        //   return () => clearInterval(interval);
+        
+        // eslint-disable-next-line
     }, []);
 
     return (
@@ -177,6 +175,14 @@ export default function MultiView() {
                             <DispEquipo />
                         </PrivateRoute>
                     } />
+                
+                <Route path='indicadores/disponibilidad_externos'
+                    element={
+                        <PrivateRoute auth={currentUser.permisions.gestioni}>
+                            <IndicadoresExternos />
+                        </PrivateRoute>
+                    } />
+
 
                 <Route path='indicadores/idisponibilidad'
                     element={
@@ -312,7 +318,7 @@ export default function MultiView() {
                 <Route path="OTS"
                     element={
                         <PrivateRoute auth={currentUser.permisions.otrabajo}>
-                            <Ordentrabajoview />
+                            <OrdenTrabajoView />
                         </PrivateRoute>
                     }
                 />

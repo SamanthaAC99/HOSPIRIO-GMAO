@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import '../css/Mantenimiento.css';
-import { query, collection, doc, onSnapshot } from "firebase/firestore";
+import {collection, doc,getDoc,getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebase-config";
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -46,11 +46,6 @@ const estados = [
     { label: 'Solventado' },
     { label: 'Iniciada'},
     { label: 'Pendiente' },
-    // { label: 'Compras' },
-    // { label: 'ICH Proceso' },
-    // { label: 'Disp. Área' },
-    // { label: 'Externo' },
-    // { label: 'Constructivo' },
     { label: 'Rechazada' },
 ]
 
@@ -81,6 +76,10 @@ export default function Mantenimientoview() {
         setTime1(datoFormat2);
     };
     const getData = async () => {
+
+        
+
+        /*
         const reference = query(collection(db, "ordenes"));
         onSnapshot(reference, (querySnapshot) => {
 
@@ -96,10 +95,24 @@ export default function Mantenimientoview() {
             setOrdenes(
                 ordenesFecha
             );
-        });
+        }); */
+        const ref_ordenes = await getDocs(collection(db, "ordenes"));
+        let aux_ordenes =  ref_ordenes.docs.map((doc) => ({ ...doc.data() }))
+        aux_ordenes.sort((a, b) => (b.indice - a.indice))
+        setElementosfb(aux_ordenes);
+        setOrdenes(aux_ordenes);
+
+        const ref_empresas = await getDoc(doc(db, "informacion", "parametros"));
+        let aux_empresas = ref_empresas.data().departamentos.map((doc) => ({ ...doc }))
+        setDepartamentos(aux_empresas)
+        // esta funcion de acabajo esta con observador sin embargo por conveniencia 
+        // es mas factible que se recarge una vez
+        /*
         onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
             setDepartamentos(doc.data().departamentos)
           });
+          
+        */
       
     }
 

@@ -46,9 +46,39 @@ export default function EquiposInactivosView() {
   const [codigoSeleccionado,setCodigoSeleccionado] = useState("");
  
   //variables de declaracion de equipo
+	const filtrarInventario = () => {
+		let aux = JSON.parse(JSON.stringify(equipos_totales.current))
+		let filtrados = aux.filter(filterByNombre).filter(filterByCodigo)
+		setData(filtrados)
+		setCodigoSeleccionado("")
+		equiposFiltro.current = ""
+		setReset(!reset)
+	}
+  const filterByNombre = (_equipo) => {
+		if (equiposFiltro.current !== "") {
+			if (_equipo.equipo.nombre === equiposFiltro.current) {
+				return _equipo
+			} else {
+				return null
+			}
+		} else {
+			return _equipo
+		}
+	}
+	const filterByCodigo = (_equipo) => {
+		if (codigoSeleccionado !== "") {
+			if (_equipo.codigo === codigoSeleccionado) {
+				return _equipo
+			} else {
+				return null
+			}
+		} else {
+			return _equipo
+		}
+	}
 
 	const traerCodigos = (value) => {
-		let codigos_equipos = equipos_totales.current.filter(item => item.equipo.nombre === value.nombre && item.situacion === "Activo")
+		let codigos_equipos = equipos_totales.current.filter(item => item.equipo.nombre === value.nombre && item.situacion === "Inactivo")
 		let codigos_fifltrados = codigos_equipos.map(item => (item.codigo))
 		setCodigosFiltrados(codigos_fifltrados)
 		equiposFiltro.current = value.nombre
@@ -190,7 +220,7 @@ const hojavida = (data) => {
 							sx={{ height: "100%" }}
 							color='azul1'
 							// endIcon={<FilterAltIcon sx={{ fontSize: 90 }} />}
-							// onClick={filtrarInventario}
+							onClick={filtrarInventario}
 
 						>Filtrar</Button>
 

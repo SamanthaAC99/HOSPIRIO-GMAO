@@ -21,10 +21,9 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 
 
-export default function Ordentrabajoview() {
+export default function OrdenTrabajoView() {
   const navigate = useNavigate();
   let params = useParams();
-  const [cedula, setCedula] = useState('');
   const [asunto,setAsunto] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [descripcion,setDescripcion] = useState('');
@@ -33,7 +32,6 @@ export default function Ordentrabajoview() {
   const [deshabilitar,setDeshabilitar] = useState(false);
   const [cantidad, setCantidad] = useState(0);
   const [reloadAuto,setReloadAuto] = useState(false);
-  const [departamentos,setDepartamentos] = useState([])
   const currentUser = useSelector(state => state.auths);
 
   const getData =  () => {
@@ -45,14 +43,6 @@ export default function Ordentrabajoview() {
       });
       setCantidad(ordenes.length)
     });
-    onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
-
-      setDepartamentos(doc.data().departamentos)
-
-    });
-
-
-
   }
 
   const navegarView = (ruta) => {
@@ -125,18 +115,11 @@ export default function Ordentrabajoview() {
   const sendFirestore = async (_orden) => {
     try {
       console.log(_orden)
-      //await addDoc(collection(db, "ordenes"), _orden);
-      // console.log("Document written with ID: ", docRef.id);
-      // const washingtonRef = doc(db, "ordenes", docRef.id);
-      // await updateDoc(washingtonRef, {
-      //   id: docRef.id
-      // });
-
       await setDoc(doc(db, "ordenes", _orden.id), _orden);
       setDeshabilitar(false);
       Swal.fire({
         icon: 'success',
-        title: '¡Orden envida con éxito!',
+        title: '¡Orden enviada con éxito!',
         showConfirmButton: false,
         timer: 1500
       })
@@ -155,8 +138,7 @@ export default function Ordentrabajoview() {
   };
 
   const limpiarCampos = () =>{
-    setReloadAuto(!reloadAuto);
-    setCedula("");    
+    setReloadAuto(!reloadAuto);  
     setDescripcion("");
     setProblematica("");
     setObservaciones("");
@@ -227,9 +209,6 @@ export default function Ordentrabajoview() {
                 <div className="col-md-8">
                   <div className="panelt2">
                     <Grid container spacing={4}>
-                      {/* <Grid item xs={12}>
-                        <TextField value={cedula} color={cedula !== '' ? "gris" : "oficial"} fullWidth label="CÉDULA SOLICITANTE" type="number" onChange={(e) => setCedula(e.target.value)} />
-                      </Grid> */}
                       <Grid item xs={12}>
                         <TextField inputProps={{ style: { textTransform: "uppercase", maxLength: 30 } }} value={asunto} color={asunto !== '' ? "gris" : "oficial"} fullWidth label="ASUNTO" type="text" onChange={(e) => setAsunto(e.target.value)} />
                       </Grid>
