@@ -110,7 +110,7 @@ const filterByCodigo = (_equipo) => {
           INVENTARIO EQUIPOS
         </Typography>
         <Typography component="div" variant="h5" className="princi9" >
-          Médicos - Industrialesss
+          Médicos - Industriales
         </Typography>
         <Grid container spacing={{ xs: 2 }} sx={{marginY:2}} columns={{ xs: 4, sm: 8, md: 12 }}>
 					<Grid item xs={12} sm={12} md={3}>

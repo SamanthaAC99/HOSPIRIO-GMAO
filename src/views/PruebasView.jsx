@@ -1,367 +1,369 @@
-    import React, { useState, useEffect } from "react";
-    import { collection, doc, query, onSnapshot } from "firebase/firestore";
-    import { db } from "../firebase/firebase-config";
-    import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-    import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-    import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
-    import TextField from '@mui/material/TextField';
-    import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-    import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-    import Grid from '@mui/material/Grid';
-    import DeleteIcon from '@mui/icons-material/Delete';
-    import GraficaDona from "../components/GraficoDona";
-    import BarChart from "../components/Graficabarras";
-    import Example from "../components/MenuContent/ProgressBar";
-    import PendingActionsIcon from '@mui/icons-material/PendingActions';
-    import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
-    import Avatar from '@mui/material/Avatar';
-    import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-    import StackedBarChartIcon from '@mui/icons-material/StackedBarChart';
-    import FactCheckIcon from '@mui/icons-material/FactCheck';
-    import { blue, deepPurple, green, pink,orange } from '@mui/material/colors';
-    import TarjetaIndicadores from "../components/TarjetasIndicadores";
-    import TarjetasGraficos from "../components/TarjetasGraficos";
-    import DomainDisabledIcon from '@mui/icons-material/DomainDisabled';
-    import RadialSeparators from "../components/RadialSeparator";
-    import NotificationsPausedIcon from '@mui/icons-material/NotificationsPaused';
-    import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-    import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-    import Button from '@mui/material/Button';
-    import { useSelector } from "react-redux";
+import React, { useEffect, useRef, useState } from "react";
+import '../css/Mantenimiento.css';
+import {collection, doc,getDoc,getDocs,query,orderBy } from "firebase/firestore";
+import { db } from "../firebase/firebase-config";
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Grid from "@mui/material/Grid";
+
+import 'react-super-responsive-table/dist/SuperResponsiveTableStyle.css';
+import '../css/Tabla.css';
+import '../css/Compras.css';
+import '../css/Presentacion.css';
+import Typography from '@mui/material/Typography';
+import Autocomplete from '@mui/material/Autocomplete';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import TextField from '@mui/material/TextField';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from "react-redux";
+import { setOrdenState } from '../features/ordenes/ordenSlice';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import "../css/MantenimientoView.css"
+import {Container} from "reactstrap";
+// importamos lo necesario para gestionar las tablas 
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+const prioridades = [
+    { label: 'Todas' },
+    { label: 'Baja' },
+    { label: 'Media' },
+    { label: 'Alta' },
+    { label: 'Crítica' },
+]
+const tipos = [
+    { label: 'Todos' },
+    { label: 'Equipo Médico' },
+    { label: 'Infraestructura' },
+    { label: 'Sistemas' },
+    { label: 'Sistema Eléctrico' },
+    { label: 'Civil/Plomería' },
+    { label: 'Carpintería/Mobiliario' },
+]
+const estados = [
+    { label: 'Todos' },
+    { label: 'Solventado' },
+    { label: 'Iniciada'},
+    { label: 'Pendiente' },
+    { label: 'Rechazada' },
+]
+
+
+export default function PruebasView() {
+    const [time1, setTime1] = useState(new Date());
+    const [prioridad, setPrioridad] = useState("Todas");
+    const [estado, setEstado] = useState("Todos");
+    const [tipo, setTipo] = useState("Todos");
+    const [elementosfb, setElementosfb] = useState([]);
+    const [festado, setFestado] = useState(false);
+    const [fprioridad, setFprioridad] = useState(false);
+    const [ftrabajo, setFtrabajo] = useState(false);
+    const [fdepartamento, setFdepartamento] = useState(false);
+    const [ffecha,setFfecha] = useState(false);
+    const [departamento,setDepartamento] = useState("Todos");
+    const [ordenes, setOrdenes] = useState([]);
+    const [departamentos, setDepartamentos] = useState([]);
+    const [reset,setReset] =useState(false)
+
+
+    const navigate = useNavigate();
+    //dispatch = me permite acceder a los metodos de los reducers
+    const dispatch = useDispatch();
+    // variables de la tabla
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const ordenes_db = useRef([{}])
     
-    import Autocomplete from '@mui/material/Autocomplete';
-    import {
-        CircularProgressbarWithChildren,
-        buildStyles
-    } from "react-circular-progressbar";
-    import "../css/PruebasView.css"
-    import "../css/Grupo.css"
-    import "react-circular-progressbar/dist/styles.css";
-    import GraficaDisponibilidadTotal from "../components/GraficaDisponibilidadT";
     
-    export default function PruebasView(){
-        const currentUser = useSelector(state => state.auths);
-        const currentInventario = useSelector(state => state.inventarios);
-        const [user, setUser] = useState({});
-        const [mttr, setMttr] = useState(0);
-        const [reportes, setReportes] = useState([]);
-        const [ctdad, setCtdad] = useState(0);
-        const [time1, setTime1] = useState(new Date());
-        const [time2, setTime2] = useState(new Date());
-        const [ordenes,setOrdenes] = useState([]);
-        const [departamentos, setDepartamentos] = useState([]);
-        const [departamento, setDepartamento]= useState("ALL");
-        const [data, setData] = useState([]);
-        const [equipos, setEquipos] = useState([]);
-        const [selecEquipo, setSelecEquipo] = useState([]);
-        const [codigose,setCodigose] = useState([]);
+
+    const SelectFecha1 = (newValue) => {
+        const fechaformateada = new Date(newValue).getTime()
+        const datoFormat2 = new Date(fechaformateada).toLocaleDateString("en-US")
+        setTime1(datoFormat2);
+    };
+    const getData = async () => {
+
         
-    
-        //EMPIEZA SELEC FECHA ORDENES
-        const SelectFecha1 = (newValue) => {
-            setTime1(newValue);
-        };
-        const SelectFecha2 = (newValue) => {
-            setTime2(newValue);
-        };
-        
-        const handleOrdenes =()=>{
-    
-            const ordenesFilter = ordenes.filter(filteryByDateOrdenes)
-            const fechasObtenidas = ordenesFilter.map(orden => orden.fecha)
-            console.log(fechasObtenidas)
-        }
-    
-        const filteryByDateOrdenes = (orden)=>{
-            const fechaInicio = new Date(time1).getTime()
-            const fechaFinal = new Date(time2).getTime()
-            const fechaOrden = new Date(orden.fecha).getTime()
-            if(fechaOrden >= fechaInicio && fechaOrden <= fechaFinal){
-                return orden
-            }else{
+
+        /*
+        const reference = query(collection(db, "ordenes"));
+        onSnapshot(reference, (querySnapshot) => {
+
+            var ordenes = []
+            var ordenesFecha = []
+            querySnapshot.forEach((doc) => {
+                ordenes.push(doc.data());
+            });
+            ordenesFecha = ordenes.sort((a, b) => (b.indice - a.indice))
+            setElementosfb(
+                ordenesFecha
+            );
+            setOrdenes(
+                ordenesFecha
+            );
+        }); */
+        const ref_ordenes = await getDocs(collection(db, "ordenes"));
+        let aux_ordenes =  ref_ordenes.docs.map((doc) => ({ ...doc.data() }))
+        aux_ordenes.sort((a, b) => (b.indice - a.indice))
+        setElementosfb(aux_ordenes);
+        setOrdenes(aux_ordenes);
+        ordenes_db.current = aux_ordenes;
+        const ref_empresas = await getDoc(doc(db, "informacion", "parametros"));
+        let aux_empresas = ref_empresas.data().departamentos.map((doc) => ({ ...doc }))
+       
+      
+    }
+
+    const almacenarOdenStore = (data) => {
+        dispatch(setOrdenState(data));
+        navigate('gestionorden');
+    }
+
+    const filtrarDatos = () => {
+        console.log(departamento)
+        console.log(fdepartamento)
+        var data = elementosfb;
+        const filtro1 = data.filter(filterbypriority)
+        const filtro2 = filtro1.filter(filterbystate)
+        const filtro3 = filtro2.filter(filterbytipo)
+        const filtro4 =  filtro3.filter(filterbydepartamento)
+        const filtro5 = filtro4.filter(filtrobydate);
+        setOrdenes(filtro5);
+        setReset(!reset);
+    }
+
+    const filterbypriority = (_orden) => {
+        if(fprioridad === true){
+            if (_orden.prioridad === prioridad) {
+                return _orden
+            } else if (prioridad === 'Todas') {
+                return _orden
+            } else {
                 return null;
             }
-    
+        }else{
+            return _orden
         }
-    
-        const EquipoSeleccionado = (holis)=>{
-            setSelecEquipo(holis)
-            var codigoe=data.filter(item => item.equipo === holis)
-            setCodigose(codigoe.map((item)=> item.codigo))
-            console.log(codigoe)
     }
-        const calcularNumeros = (dato) =>{
-            return(dato+1);
+    const filterbystate = (_orden) => {
+        if(festado === true){
+            if (_orden.estado === estado) {
+                return _orden
+            } else if (estado === 'Todos') {
+                return _orden
+            } else {
+                return null;
+            }
+        }else{
+            return _orden
         }
-        const getData =()=>{
-            const reference = query(collection(db, "ingreso"));
-            onSnapshot(reference, (querySnapshot) => {
-                setData(
-                    querySnapshot.docs.map((doc) => ({ ...doc.data() }))
-                );
-            });
+    }
+    const filterbytipo = (_orden) => {
+        if(ftrabajo === true){
+        if (_orden.tipotrabajo === tipo) {
+            return _orden
+        } else if (tipo === 'Todos') {
+            return _orden
+        } else {
+            return null;
+        }
+        }else{
+            return _orden
+        }
+    }
+    const filterbydepartamento = (_orden) =>{
+        if(fdepartamento === true){
+            if (_orden.departamento === departamento) {
+                return _orden
+            }else if (departamento === 'Todos') {
+                return _orden
+            } else {
+                return null;
+            }
+            }else{
+                return _orden
+            }
+    }
+    const filtrobydate =(_orden)=>{
+        let fechaFormat =  new Date(_orden.indice).toLocaleDateString("en-US")
+
+        if(ffecha === true){
+            if (fechaFormat === time1) {
+                return _orden
+            }else {
+                return null;
+            }
+            }else{
+                return _orden
+            }
+
+    }
+    // funciones de la tabla
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+      };
     
-            onSnapshot(doc(db, "usuarios", currentUser.uid), (doc) => {
-                setUser(doc.data());
-            });
-    
-            onSnapshot(doc(db, "informacion", "ksCkGtZm1u2I0y5YoC4g"), (doc) => {
-                setEquipos(doc.data().equipos)
-            });
-    
-         }
-    
-        //TERMINA SELEC FECHA ORDENES
-        
-            
-        useEffect(() => {
-            getData();
-        }, [])
-        return (
-            <>
-                <div className="contenedor-indicadores-dispi">
-                <Grid container spacing={{ xs: 4 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                <Grid item xs={6} sm={6} md={2.50}>
-                        
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+      const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+      };
+    useEffect(() => {
+        getData();
+    }, [])
+
+    return (
+        <>
+            <Container>
+                <br />
+                <Typography component="div" variant="h4" className="princi7" >
+                    ORDENES DE TRABAJO
+                </Typography>
+                <div className="mantenimiento-container">
+
+                <Grid container spacing={2}>
+                <Grid item xs={6} sm={6} md={2.4}>
+                        <Autocomplete
+                            disableClearable
+                            key={reset}
+                            id="combo-box-demo"
+                            options={estados}
+                            onChange={(event, newvalue) => setEstado(newvalue.label)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="ESTADO" color={estados !== '' ? "gris" : "oficial"} type="text" />}
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={6} md={2.4}>
+                        <Autocomplete
+                            disableClearable
+                            key={reset}
+                            id="combo-box-demo"
+                            options={tipos}
+                            onChange={(event, newvalue) => setTipo(newvalue.label)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="TIPO DE TRABAJO" color={tipos !== '' ? "gris" : "oficial"} type="text" />}
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={6} md={2.4}>
+                        <Autocomplete
+                            disableClearable
+                            key={reset}
+                            id="combo-box-demo"
+                            options={prioridades}
+                            onChange={(event, newvalue) => setPrioridad(newvalue.label)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="PRIORIDAD" color={tipos !== '' ? "gris" : "oficial"} type="text" />}
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={6} md={2.4}>
+                        <Autocomplete
+                            disableClearable
+                            key={reset}
+                            id="combo-box-demo"
+                            options={departamentos}
+                  getOptionLabel={(option) => {
+                    return option.nombre;
+                  }}
+                            onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTO" color={tipos !== '' ? "gris" : "oficial"} type="text" />}
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={6} md={2.4}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
                             <DesktopDatePicker
-                                label={"Desde"}
+                                label={"Filtrar Fecha"}
                                 inputFormat="MM/dd/yyyy"
                                 value={time1}
                                 onChange={SelectFecha1}
-                                renderInput={(params) => <TextField {...params}  fullWidth />}
+                                renderInput={(params) => <TextField  fullWidth {...params} />}
                             />
                         </LocalizationProvider>
-                        </Grid>
-                        <Grid item xs={6} sm={6} md={2.50}>
-                         <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DesktopDatePicker
-                                label={"Hasta"}
-                                inputFormat="MM/dd/yyyy"
-                                value={time2}
-                                onChange={SelectFecha2}
-                                renderInput={(params) => <TextField {...params} fullWidth/>}
-                            />
-                        </LocalizationProvider>
+                    </Grid>
+        
                  
-                    </Grid>
-    
-    
-    
-                    {/* <Grid item xs={6} sm={6} md={2.75}>
-    
-                    <Autocomplete
-                                                            disableClearable
-                                                     
-                                                            id="combo-box-demo"
-                                                            options= {equipos}
-                                                            onChange={(event, newvalue) =>EquipoSeleccionado(newvalue)} 
-                                                            renderInput={(params) => <TextField {...params} fullWidth label="Equipos" type="text" />}
-                                                        />
-    
-    </Grid>
-    <Grid item xs={6} sm={6} md={2.75}>
-    <Autocomplete
-                                                            disableClearable
-                                                     
-                                                            id="combo-box-demo"
-                                                            options=  {codigose}
-                                                            onChange={(event, newvalue) => setEquipos(newvalue)}
-                                                            renderInput={(params) => <TextField {...params} fullWidth label="Códigos"  type="text" />}
-                                                        />
-                      
-                    
-                     
-                    </Grid> */}
-    
-                    <Grid item xs={6} sm={6} md={0.5}>
+                    <Grid item xs={12} sm={12} md={9.6}>
+                    <div className="panel-ace">
+                    <FormControlLabel control={<Switch onChange={(event,newValue)=>{setFestado(newValue)}} value={festado}   inputProps={{ 'aria-label': 'controlled' }} />} label="Estado" />
+                    <FormControlLabel control={<Switch onChange={(event,newValue)=>{setFtrabajo(newValue)}} inputProps={{ 'aria-label': 'controlled' }} />} label="Tipo Trabajo" />
+                    <FormControlLabel control={<Switch onChange={(event,newValue)=>{setFprioridad(newValue)}} inputProps={{ 'aria-label': 'controlled' }} />} label="Prioridad" />
+                    <FormControlLabel control={<Switch onChange={(event,newValue)=>{setFdepartamento(newValue)}} inputProps={{ 'aria-label': 'controlled' }} />} label="Departamento" />
+                    <FormControlLabel control={<Switch onChange={(event,newValue)=>{setFfecha(newValue)}} inputProps={{ 'aria-label': 'controlled' }} />} label="Fecha" />
+                    </div>
                    
-    
-    <Button variant="outlined" startIcon={<DeleteIcon />} className="filtrar"  >
-        Filtrar</Button>
-        </Grid>
-        <Grid item xs={12} sm={12} md={6}></Grid>
-                        <Grid item xs={12} sm={12} md={6}>
-                            <div className="card12" >
-    
-                                {
-                                    <div className="card-body12 small ">
-                                        {/* <LineChart labels={['Ene', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov','Dec']} datos={[1,2,3,4,5,6,7,8,9,10,11,12]}/> */}
-                                        <GraficaDisponibilidadTotal labels={['Ene', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dec',]} datos={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]} info={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]} />
-                                    </div>
-                                }
-    
-                            </div>
-                        </Grid>
-    
-    
-          
-    
-                        <Grid item xs={12} sm={12} md={3}>
-                            <div className="card12" >
-    
-                                {
-                                    <div className="card-body12 small ">
-                                        {/* <ProgressBar
-                radius={140}
-                progress={94}
-                strokeWidth={20}
-                strokeColor="#3e98c7"
-                strokeLinecap="round"
-                trackStrokeWidth={18}
-                counterClockwise
-            >
-                <div className="indicator">
-                    <div>{94}%</div>
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={12} md={2.4}>
+                    <Button  variant="contained" className="boton-gestion" onClick={filtrarDatos}  endIcon={<FilterAltIcon />}>
+                        Filtrar
+                    </Button>
+                    </Grid>
+                </Grid>
                 </div>
-            </ProgressBar> */}
-    
-    <Example>
-                                       <p className="titulo-card-g">Disponibilidad</p>
-                                            <CircularProgressbarWithChildren
-                                                value={currentInventario.disponibilidad} 
-                                                text={`${currentInventario.disponibilidad}%`}
-                                                strokeWidth={10}
-                                                styles={buildStyles({
-                                                    strokeLinecap: "butt"
-                                                })}
-                                            >
-                                              
-                                            </CircularProgressbarWithChildren>
-                                        </Example>
-                                    
-                                    </div>
-                                }
-    
-                            </div>
-                        </Grid>
-                       
-    
-                        <Grid item xs={6} sm={6} md={3}>  
-                        <Grid container spacing={{ xs: 4 }}>
-                        
-                        <Grid item xs={6} sm={6} md={12}>  
-                        <div className="card-container">
-                                <TarjetaIndicadores icono={<StackedBarChartIcon />} valor={currentInventario.mttr}  bgicon={blue[700]} titulo={'Mtbf Total'} colort={"#598ec7"} />
-                            </div>
-                            </Grid>
-                            <Grid item xs={6} sm={6} md={12}>   
-                            <div className="card-container">
-                                <TarjetaIndicadores icono={< StackedBarChartIcon />} valor={currentInventario.mtbf}  bgicon={blue[700]} titulo={'Mttr Total'} colort={"#598ec7"} />
-                            </div>
-                            </Grid>
-                        </Grid>
-                        </Grid>
-                    
-                
-                        <Grid item xs={12} sm={12} md={6}>
-                        <div className="card-tabla-dis" >
-                                {
-                                    <div className="header-ev-dis">
-                                        <h5 className="titulo-ev">MTTR</h5>
-    
-                                        <Avatar sx={{ bgcolor: blue[700] }} >
-                                            <TrendingDownIcon />
-                                        </Avatar>
-    
-                                    </div>
-                                }
-                                {
-                                    <div className="card-bodyd">
-                                        <div className="Scroll">
-    
-                                            <Table className='table table-light table-hover'>
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>#</Th>
-                                                        <Th className="t-encargados">Código</Th>
-                                                        <Th className="t-encargados">Equipo</Th>
-                                                        <Th className="t-encargados">MTTR</Th>
-                                                       
-    
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                {data.sort((a, b) => (a.indice - b.indice)).map((dato, index) => (
-                                                         <Tr key={dato.indice}>
-                                                         <Td>{index + 1}</Td>
-    
-                                                            <Td className="t-encargados">
-                                                            {dato.codigo}
-                                                            </Td>
-                                                            <Td className="t-encargados">
-                                                            {calcularNumeros}
-                                                            </Td>
-                                                            <Td className="t-encargados">
-                                                            {dato.mttr}
-                                                            </Td>
-                                                        </Tr>
-                                                          ))}
-                                                </Tbody>
-                                            </Table>
-                                            </div>
-                                            </div>
-                                        }
-    
-    </div>
-                        </Grid>
-                   
-    
-                        <Grid item xs={12} sm={12} md={6}>
-                        <div className="card-tabla-dis" >
-                                {
-                                    <div className="header-ev-dis">
-                                        <h5 className="titulo-ev">MTBF</h5>
-    
-                                        <Avatar sx={{ bgcolor: blue[700] }} >
-                                            <TrendingUpIcon />
-                                        </Avatar>
-    
-                                    </div>
-                                }
-                                {
-                                    <div className="card-bodyd">
-                                        <div className="Scroll">
-    
-                                            <Table className='table table-light table-hover'>
-                                                <Thead>
-                                                    <Tr>
-                                                        <Th>#</Th>
-                                                        <Th className="t-encargados">Código</Th>
-                                                        <Th className="t-encargados">Equipo</Th>
-                                                        <Th className="t-encargados">MTBF</Th>
-                                                       
-    
-                                                    </Tr>
-                                                </Thead>
-                                                <Tbody>
-                                                {data.sort((a, b) => (a.indice - b.indice)).map((dato, index) => (
-                                                         <Tr key={dato.indice}>
-                                                         <Td>{index + 1}</Td>
-    
-                                                            <Td className="t-encargados">
-                                                            {dato.codigo}
-                                                            </Td>
-                                                            <Td className="t-encargados">
-                                                            {dato.equipo}
-                                                            </Td>
-                                                            <Td className="t-encargados">
-                                                            {dato.mtbf}
-                                                            </Td>
-                                                        </Tr>
-                                                          ))}
-                                                </Tbody>
-                                            </Table>
-                                            </div>
-                                            </div>
-                                        }
-    
-    </div>
-                        </Grid>
-    
-                    </Grid>
-                </div> 
-            </>
-        );
-    
-    }
+                <TableContainer sx={{ maxHeight: 370 }}>
+        <Table stickyHeader aria-label="sticky table">
+          <TableHead>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell
+                  key={column.id}
+                  align={column.align}
+                  style={{ minWidth: column.minWidth }}
+                >
+                  {column.label}
+                </TableCell>
+              ))}
+               <TableCell align="center">Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {ordenes
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => {
+                return (
+                  <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                    {columns.map((column) => {
+                      const value = row[column.id];
+                      return (
+                        <TableCell key={column.id} align={column.align}>
+                          {column.format && typeof value === 'number'
+                            ? column.format(value)
+                            : value}
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell align="center"><Button variant="outlined">Gestionar</Button></TableCell>
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 100]}
+        component="div"
+        count={ordenes.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+            </Container>
+
+      
+        </>
+
+    );
+}
+
+const columns = [
+    { id: 'fecha', label: 'Fecha', minWidth: 170 },
+    { id: 'departamento', label: 'Departamento', minWidth: 100 },
+    { id: 'departamento', label: 'Prioridad', minWidth: 100 },
+    { id: 'tipotrabajo', label: 'Tipo de Trabajo', minWidth: 100 },
+    { id: 'estado', label: 'Estado', minWidth: 100 },
+    // { id: 'acciones', label: 'Acciones', minWidth: 100 }
+  ];

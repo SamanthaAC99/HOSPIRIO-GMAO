@@ -79,7 +79,6 @@ export default function Inventarioview() {
 	const [codigoSeleccionado, setCodigoSeleccionado] = useState("")
 	const [reset, setReset] = useState(false);
 	//variables de declaracion de equipo
-
 	const [tipoEquipo, setTipoEquipo] = useState([]);
 	const [ubicaciones, setUbicaciones] = useState([]);
 	const [ubicacion, setUbicacion] = useState({})
@@ -285,7 +284,7 @@ export default function Inventarioview() {
 			modelo: modelo,
 			marca: marca,
 			serie: serie,
-			propietario: propietario,
+			propietario: propietario.nombre,
 			seguro: seguro,
 			importancia: eimportancia,
 			codigo: code,
@@ -337,7 +336,7 @@ export default function Inventarioview() {
 				marca: marca,
 				modelo: modelo,
 				serie: serie,
-				propietario: propietario,
+				propietario: propietario.nombre,
 				seguro: seguro.value,
 				importancia: eimportancia,
 			});
@@ -348,7 +347,7 @@ export default function Inventarioview() {
 				marca: marca,
 				modelo: modelo,
 				serie: serie,
-				propietario: propietario,
+				propietario: propietario.nombre,
 				seguro: seguro.value,
 				importancia: eimportancia,
 				img: url
@@ -716,7 +715,7 @@ export default function Inventarioview() {
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Propietario:</strong><p style={{ margin: 0 }}>{currentEquipo.propietario.nombre}</p>
+									<strong style={{ marginRight: 4 }}>Propietario:</strong><p style={{ margin: 0 }}>{currentEquipo.propietario}</p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>

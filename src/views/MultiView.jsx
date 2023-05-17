@@ -16,6 +16,7 @@ import DaccesoriosView from "./DaccesoriosView";
 import DeclararPropietario from "./DeclararPropietario";
 //import ReportesExternosView from "./ReportesExternosView"; este modulo ya no se utiliza
 import Contratosview from "./Contratos";
+import PruebasView from "./PruebasView";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Vistacontratos from "./Vistacontratos";
 import EquiposInactivosView from "./EquiposInactivosView";
@@ -33,7 +34,7 @@ import DashboardExternos from "./DashboardExternos";
 import DepartamentoView from "./DepartamentoView";
 import EquipoView from "./EquipoView";
 import ResponsableView from "./ResponsableView";
-import PruebasView from "./PruebasView";
+
 import IndicadoresOT from "./IndicadoresOT";
 import DubicacionView from "./DubicacionView";
 import DtipoEquipoView from "./DtipoEquipoView";
@@ -154,12 +155,12 @@ export default function MultiView() {
                             <Vistacontratos />
                         </PrivateRoute>
                     } />
-                {/* <Route path="activos/indicadores"
+                <Route path="pruebas"
                     element={
-                        <PrivateRoute auth={currentUser.permisions.gestiona}>
-                            <Indicadores />
-                        </PrivateRoute>
-                    } /> */}
+                       
+                            <PruebasView />
+                  
+                    } />
 
 
                 <Route path='indicadores/OT'

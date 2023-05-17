@@ -288,7 +288,8 @@ export default function Mantenimientoview() {
                     </Grid>
                 </Grid>
                 </div>
-                <Table className='table table-ligh table-hover'>
+                <div style={{overflowY:"scroll",height:400}}>
+                <Table className='table table-ligh table-hover' >
                     <Thead>
                         <Tr>
                             <Th>#</Th>
@@ -300,7 +301,7 @@ export default function Mantenimientoview() {
                             <Th>Acciones</Th>
                         </Tr>
                     </Thead>
-
+                    
                     <Tbody>
                         {ordenes.map((orden, index) => (
                             <Tr key={orden.indice}>
@@ -319,7 +320,9 @@ export default function Mantenimientoview() {
                             </Tr>
                         ))}
                     </Tbody>
+             
                 </Table>
+                </div>
             </Container>
 
       
