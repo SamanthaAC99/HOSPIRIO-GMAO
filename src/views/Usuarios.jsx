@@ -151,6 +151,7 @@ export default function Usuarios_menu() {
         datos['area'] = area
         datos['permisions'] = state
         datos['cargo'] = cargo
+        datos['secondlastname'] = ""
         console.log(datos)
         setReset(!reset);
         limpiarCampos();
