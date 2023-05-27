@@ -220,7 +220,7 @@ export default function DashboardJefeM() {
 
 
     const actualizarValidacion = ()=>{
-        let aux_ordenes = JSON.parse(JSON.stringify(ordenes))
+        let aux_ordenes = JSON.parse(JSON.stringify(ordenesTotales.current))
         let ordenes_fitlradas = aux_ordenes.filter(filterStateSolventadas).filter(item => item.verificacion === false)
      
         for(let i = 0;i< ordenes_fitlradas.length ; i++){
