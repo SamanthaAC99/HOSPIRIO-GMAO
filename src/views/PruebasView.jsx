@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import '../css/Mantenimiento.css';
-import {collection, doc,getDoc,getDocs,query,orderBy } from "firebase/firestore";
+import {collection, doc,getDoc,getDocs} from "firebase/firestore";
 import { db } from "../firebase/firebase-config";
 import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
 import Grid from "@mui/material/Grid";
 
 import 'react-super-responsive-table/dist/SuperResponsiveTableStyle.css';
@@ -90,26 +89,6 @@ export default function PruebasView() {
         setTime1(datoFormat2);
     };
     const getData = async () => {
-
-        
-
-        /*
-        const reference = query(collection(db, "ordenes"));
-        onSnapshot(reference, (querySnapshot) => {
-
-            var ordenes = []
-            var ordenesFecha = []
-            querySnapshot.forEach((doc) => {
-                ordenes.push(doc.data());
-            });
-            ordenesFecha = ordenes.sort((a, b) => (b.indice - a.indice))
-            setElementosfb(
-                ordenesFecha
-            );
-            setOrdenes(
-                ordenesFecha
-            );
-        }); */
         const ref_ordenes = await getDocs(collection(db, "ordenes"));
         let aux_ordenes =  ref_ordenes.docs.map((doc) => ({ ...doc.data() }))
         aux_ordenes.sort((a, b) => (b.indice - a.indice))
@@ -118,6 +97,7 @@ export default function PruebasView() {
         ordenes_db.current = aux_ordenes;
         const ref_empresas = await getDoc(doc(db, "informacion", "parametros"));
         let aux_empresas = ref_empresas.data().departamentos.map((doc) => ({ ...doc }))
+        setDepartamentos(aux_empresas)
        
       
     }
@@ -307,7 +287,7 @@ export default function PruebasView() {
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
             <TableRow>
-              {columns.map((column) => (
+              {columns.map((column,index) => (
                 <TableCell
                   key={column.id}
                   align={column.align}
@@ -316,15 +296,15 @@ export default function PruebasView() {
                   {column.label}
                 </TableCell>
               ))}
-               <TableCell align="center">Acciones</TableCell>
+               <TableCell key={"acciones"}align="center">Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {ordenes
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => {
+              .map((row,index) => {
                 return (
-                  <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                  <TableRow hover role="checkbox" tabIndex={-1} key={index}>
                     {columns.map((column) => {
                       const value = row[column.id];
                       return (
@@ -335,7 +315,7 @@ export default function PruebasView() {
                         </TableCell>
                       );
                     })}
-                    <TableCell align="center"><Button variant="outlined">Gestionar</Button></TableCell>
+                    <TableCell key={index+10} align="center"><Button variant="outlined" onClick={() => { almacenarOdenStore(row) }} >Gestionar</Button></TableCell>
                   </TableRow>
                 );
               })}
@@ -362,8 +342,7 @@ export default function PruebasView() {
 const columns = [
     { id: 'fecha', label: 'Fecha', minWidth: 170 },
     { id: 'departamento', label: 'Departamento', minWidth: 100 },
-    { id: 'departamento', label: 'Prioridad', minWidth: 100 },
+    { id: 'prioridad', label: 'Prioridad', minWidth: 100 },
     { id: 'tipotrabajo', label: 'Tipo de Trabajo', minWidth: 100 },
     { id: 'estado', label: 'Estado', minWidth: 100 },
-    // { id: 'acciones', label: 'Acciones', minWidth: 100 }
   ];
