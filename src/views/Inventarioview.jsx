@@ -9,7 +9,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
 import { collection, setDoc, query, doc, deleteDoc, onSnapshot, updateDoc } from "firebase/firestore";
-
+import { styled } from '@mui/material/styles';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
 import AddIcon from '@mui/icons-material/Add';
 import Grid from "@mui/material/Grid";
@@ -33,6 +33,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { setEquipoState } from '../features/inventario/inventarioSlice';
 import Person2Icon from '@mui/icons-material/Person2';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import Paper from '@mui/material/Paper';
 import Swal from 'sweetalert2';
 import '../css/Inventario.css';
 import { useParams } from "react-router-dom";
@@ -52,7 +53,7 @@ import { useDispatch } from "react-redux";
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
@@ -62,6 +63,33 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
 import EditLocationIcon from '@mui/icons-material/EditLocation';
+
+
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+	[`&.${tableCellClasses.head}`]: {
+	  backgroundColor: theme.palette.common.black,
+	  color: theme.palette.common.white,
+	},
+	[`&.${tableCellClasses.body}`]: {
+	  fontSize: 14,
+	},
+  }));
+
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+	'&:nth-of-type(odd)': {
+	  backgroundColor: theme.palette.action.hover,
+	},
+	// hide last border
+	'&:last-child td, &:last-child th': {
+	  border: 0,
+	},
+  }));
+  
+
+
+
+
 export default function Inventarioview() {
 	let params = useParams();
 	const dispatch = useDispatch();
@@ -682,7 +710,7 @@ export default function Inventarioview() {
 												<TableCell align="left">{row.responsable.nombre}</TableCell>
 												<TableCell align="center">
 
-													<Button variant='contained' disabled color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
+													<Button variant='contained'  color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
 
 												</TableCell>
 												<TableCell align="center">
@@ -1082,33 +1110,36 @@ export default function Inventarioview() {
 							</Button>
 						</Grid>
 						<Grid item xs={12} >
-							<div style={{ overflow: "scroll", height: "300px" }}>
-								{/* <Table className='table table-ligh table-hover'>
-									<Thead>
-										<Tr>
-											<Th>#</Th>
-											<Th>Código</Th>
-											<Th>Accesorio</Th>
-											<Th>Acciones</Th>
-										</Tr>
-									</Thead>
+		
 
-									<Tbody>
-										{accesoriosEquipo.map((dato, index) => (
-											<Tr key={index}>
-												<Td>{index + 1}</Td>
-												<Td>{dato.codigo}</Td>
-												<Td>{dato.nombre}</Td>
-												<Td>
-													<Button variant="contained" color='warning' onClick={() => { quitarAccesorio(dato) }}>
+							<TableContainer sx={{overflowY:"scroll",height:300}} component={Paper}>
+								<Table  aria-label="customized table">
+									<TableHead>
+									<TableRow>
+						
+										<StyledTableCell align="left">#</StyledTableCell>
+										<StyledTableCell align="left">Código</StyledTableCell>
+										<StyledTableCell align="left">Accesorio</StyledTableCell>
+										<StyledTableCell align="left">Acciones</StyledTableCell>
+									</TableRow>
+									</TableHead>
+									<TableBody>
+									{accesoriosEquipo.map((row,index) => (
+										<StyledTableRow key={index}>
+			
+										<StyledTableCell align="left">{index+1}</StyledTableCell>
+										<StyledTableCell align="left">{row.codigo}</StyledTableCell>
+										<StyledTableCell align="left">{row.nombre}</StyledTableCell>
+										<StyledTableCell align="left"
+										><Button variant="contained" color='warning' onClick={() => { quitarAccesorio(row) }}>
 														Quitar
-													</Button>
-												</Td>
-											</Tr>
-										))}
-									</Tbody>
-								</Table> */}
-							</div>
+													</Button></StyledTableCell>
+										</StyledTableRow>
+									))}
+									</TableBody>
+								</Table>
+								</TableContainer>
+
 						</Grid>
 					</Grid>
 				</ModalBody>
