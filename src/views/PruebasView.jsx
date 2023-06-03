@@ -42,17 +42,23 @@ import Stack from '@mui/material/Stack';
 
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 // configuracion de los reloges
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import DownloadIcon from '@mui/icons-material/Download';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+// datePickers
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 //iconos
 import SettingsIcon from '@mui/icons-material/Settings';
 export default function PruebasView() {
 
     const [modalEditar, setModalEditar] = useState(false);
+    const [modalGestionar,setModalGestionar] = useState(false);
     const [equipos, setEquipos] = useState([]);
     const [modalInsertar, setModalinsertar] = useState(false);
     const [modalArchivo, setModalarchivo] = useState(false);
@@ -66,12 +72,13 @@ export default function PruebasView() {
     const [empresas, setEmpresas] = useState([]);
     const [validados, setValidados] = useState("");
     const [deshabilitar,setDeshabilitar] = useState(false);
-    const [currentPlan ,setCurrentPlan] = useState({})
+
     const [eventos, setEventos] = useState([{codigo:"",equipo:{nombre:""},man_actual:{start:""},departamento:{nombre:""}}]);
     // variables para editar la fecha
     const [currentMan, setCurrentMan] = useState({});
     const [equipoEmpresa, setEquipoEmpresa] = useState('');
     const [equipoPeriodicidad, setEquipoPeriodicidad] = useState(4);
+
 
     const [nombresActivos, setNombresActivos] = useState([]);
     const aux_equipos = useRef([])
@@ -92,7 +99,26 @@ export default function PruebasView() {
     //modal crear plan
     const [btnPlan,setBtnPlan] = useState(false)
     const [currentEmpresa, setCurrentEmpresa] = useState('');
+    // variables para la tabla de  mantenimientos
+    const [currentPlan ,setCurrentPlan] = useState({equipo:{nombre:''},mantenimientos:[{}],departamento:{nombre:''}})
+    const [planes,setPlanes] =useState({equipo:{nombre:''},mantenimientos:[{}],departamento:{nombre:''}})
+    const [pageMan,setPageMan] = useState(0);
+    const [pagesMan,setPagesMan] = useState(10);
+    const [checkedPlan, setCheckedPlan] = useState(false);
+     // funciones para la tabla de mantenimientos
+     const handleVerificacion = (event) => {
+        setCheckedPlan(event.target.checked);
+      };
+    const handleChangeMan = (event,newPage)=>{
+        setPageMan(newPage);
+    }
 
+    const handleChangeRowsPerPageMan = (event) => {
+		setPagesMan(+event.target.value);
+        setPageMan(0);
+	};
+
+     //
 
 	const handleChangePage = (event, newPage) => {
 		setPage(newPage);
@@ -108,13 +134,16 @@ export default function PruebasView() {
         setTime1(newValue);
     };
 
-
+    const abrirModalGestionar =(__data)=>{
+        console.log(__data)
+        setModalGestionar(true);
+        setPlanes(__data)
+    }
     // Funciones modal Editar
-    const abrirModalEditar = (data) => {
+    const abrirModalEditar = (__data) => {
         setModalEditar(true);
-        setCurrentMan(data)
-        setFinicio(new Date(data.start))
-        setFtermina(new Date(data.end))
+        setCurrentPlan(__data);
+        console.log(__data);
     }
     const cerrrarModalEditar = () => {
         setModalEditar(false);
@@ -257,6 +286,7 @@ export default function PruebasView() {
                 updateDoc(ref, {
                     mantenimientos: mantenimientos,
                 });
+                
                 setModalinsertar(false);
             } //aqui termina la segunda condicional del if
         }else{
@@ -597,7 +627,7 @@ return (
 												<TableCell align="left">{row.codigo}</TableCell>
 												<TableCell align="left">{row.man_actual.start}</TableCell>
 												<TableCell align="left">
-													<Button variant="outlined"   size="large" className="boton-plan" startIcon={<SettingsIcon/>}>
+													<Button variant="outlined" onClick={()=>{abrirModalGestionar(row)}}  size="large" className="boton-plan" startIcon={<SettingsIcon/>}>
 														gestionar
 													</Button>
 												</TableCell>
@@ -782,38 +812,26 @@ return (
         </Modal>
         <Modal isOpen={modalEditar}>
             <ModalHeader>
-                <div><h1>Editar Plan Mantenimiento</h1></div>
-                SelectFecha1                </ModalHeader>
+                <div><h1>Editar Plan</h1></div>
+            </ModalHeader>
             <ModalBody>
                 <FormGroup>
                     <Grid container spacing={4}>
-
                         <Grid item xs={12}>
-                            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                <DateTimePicker
-                                    renderInput={(props) => <TextField fullWidth {...props} />}
-                                    label="Fecha Inicial del Mantenimiento"
-                                    value={finicio}
-                                    onChange={SelectFechaInicio}
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                <DesktopDatePicker
+                                    label={"Fecha Mantenimiento"}
+                                    inputFormat="MM/dd/yyyy"
+                                    // value={time1}
+                                    // onChange={SelectFecha1}
+                                    renderInput={(params) => <TextField   {...params} />}
                                 />
                             </LocalizationProvider>
                         </Grid>
                         <Grid item xs={12}>
-                            <LocalizationProvider dateAdapter={AdapterDateFns}>
-
-                                <DateTimePicker
-                                    renderInput={(props) => <TextField fullWidth {...props} />}
-                                    label="Fecha Final del Mantenimiento"
-                                    value={ftermina}
-                                    onChange={SelectFechaFinal}
-                                />
-
-                            </LocalizationProvider>
-
                         </Grid>
                     </Grid>
                 </FormGroup>
-
             </ModalBody>
             <ModalFooter>
                 <Button
@@ -833,6 +851,133 @@ return (
                 </Button>
             </ModalFooter>
         </Modal>
+
+        <Modal size="xl" isOpen={modalGestionar}>
+            <ModalHeader>
+              Planificacion de Mantenimientos
+                </ModalHeader>
+            <ModalBody>
+                    <Grid container spacing={1}>
+                    <Grid item xs={6}>
+                        <div>
+                            <p><strong>Equipo: </strong> {planes.equipo.nombre} </p> 
+                            <p><strong>Departamento: </strong>{planes.departamento.nombre}</p>
+                        </div>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <div>
+                            <p><strong>Codigo: </strong>{planes.codigo}</p>
+                        </div>
+                    </Grid>
+                        <Grid item xs={12}>
+                        <TableContainer sx={{ maxHeight: 430 }}>
+						<Table stickyHeader aria-label="sticky table">
+							<TableHead>
+								<TableRow>
+								
+										<TableCell
+											key={"departamento"}
+											align={"left"}
+											style={{ minWidth: 60 }}
+										>
+											Start
+										</TableCell>
+										<TableCell
+											key={"codigo"}
+											align={"left"}
+											style={{ minWidth: 60 }}
+										>
+											End
+										</TableCell>
+										<TableCell
+											key={"proximo"}
+											align={"left"}
+											style={{ minWidth: 40 }}
+										>
+											Periodicidad
+										</TableCell>
+                                        <TableCell
+											key={"encargado"}
+											align={"left"}
+											style={{ minWidth: 100 }}
+										>
+											Encargado
+										</TableCell>
+										<TableCell
+											key={"verificacion"}
+											align={"left"}
+											style={{ minWidth: 40 }}
+										>
+											Verificacion
+										</TableCell>
+                                        <TableCell
+											key={"accion"}
+											align={"left"}
+											style={{ minWidth: 100 }}
+										>
+											Acciones
+										</TableCell>
+
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{planes.mantenimientos.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+									.map((row, index) => {
+										return (
+											<TableRow hover role="checkbox" tabIndex={-1} key={index}>
+												<TableCell align="left">{row.start}</TableCell>
+												<TableCell align="left">{row.end}</TableCell>
+												<TableCell align="center">{row.periodicidad}</TableCell>
+                                                <TableCell align="left">{row.empresa}</TableCell>
+												<TableCell align="center">
+                                                    <Checkbox
+                                                        checked={checkedPlan}
+                                                        onChange={handleVerificacion}
+                                                        inputProps={{ 'aria-label': 'controlled' }}
+                                                    />
+												</TableCell>
+                                                <TableCell align="left">
+                                                    <Stack direction="row" spacing={2}>
+                                                        <IconButton aria-label="delete" color="rojo" size="small">
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                        <IconButton aria-label="editar" color="warning" size="small">
+                                                            <EditIcon fontSize="small" onClick={()=>{abrirModalEditar(row)}} />
+                                                        </IconButton>                                           
+                                                    </Stack>
+												</TableCell>
+											</TableRow>
+										);
+									})}
+							</TableBody>
+						</Table>
+					</TableContainer>
+					<TablePagination
+						rowsPerPageOptions={[10, 25, 100]}
+						component="div"
+						count={planes.mantenimientos.length}
+						rowsPerPage={pagesMan}
+						page={pageMan}
+						onPageChange={handleChangeMan}
+						onRowsPerPageChange={handleChangeRowsPerPageMan}
+					/>
+                        </Grid>
+                    </Grid>
+            </ModalBody>
+            <ModalFooter>
+                <Button
+                    color="azul1"
+                    variant="contained"
+                    onClick={() => setModalGestionar(false)}
+                    sx={{ marginRight: 5 }}
+                >
+                    cerrar
+                </Button>
+               
+            </ModalFooter>
+        </Modal>
+
+
     </>
 );
 }
