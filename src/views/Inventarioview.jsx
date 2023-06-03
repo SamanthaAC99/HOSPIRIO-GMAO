@@ -3,21 +3,23 @@ import '../css/Ordentrabajo.css';
 import '../css/Presentacion.css';
 import '../css/InventarioView.css';
 import Typography from '@mui/material/Typography';
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
+import Stack from '@mui/material/Stack';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
 import { collection, setDoc, query, doc, deleteDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { styled } from '@mui/material/styles';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
+import AddIcon from '@mui/icons-material/Add';
 import Grid from "@mui/material/Grid";
 import TextField from '@mui/material/TextField';
 import * as XLSX from 'xlsx';
 import { db, storage } from "../firebase/firebase-config";
-import { teal, deepOrange } from '@mui/material/colors';
+import { teal } from '@mui/material/colors';
 import Autocomplete from '@mui/material/Autocomplete';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import Backdrop from '@mui/material/Backdrop';
@@ -30,6 +32,8 @@ import ExtensionIcon from '@mui/icons-material/Extension';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { setEquipoState } from '../features/inventario/inventarioSlice';
 import Person2Icon from '@mui/icons-material/Person2';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import Paper from '@mui/material/Paper';
 import Swal from 'sweetalert2';
 import '../css/Inventario.css';
 import { useParams } from "react-router-dom";
@@ -43,27 +47,66 @@ import {
 	ModalFooter,
 } from "reactstrap";
 import { v4 as uuidv4 } from 'uuid';
-import Stack from '@mui/material/Stack';
+
 import { useDispatch } from "react-redux";
+// dependencias para las tablas
+
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+// iconos
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
+import EditLocationIcon from '@mui/icons-material/EditLocation';
+
+
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+	[`&.${tableCellClasses.head}`]: {
+	  backgroundColor: theme.palette.common.black,
+	  color: theme.palette.common.white,
+	},
+	[`&.${tableCellClasses.body}`]: {
+	  fontSize: 14,
+	},
+  }));
+
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+	'&:nth-of-type(odd)': {
+	  backgroundColor: theme.palette.action.hover,
+	},
+	// hide last border
+	'&:last-child td, &:last-child th': {
+	  border: 0,
+	},
+  }));
+  
+
+
 
 
 export default function Inventarioview() {
 	let params = useParams();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const [data, setData] = useState([]);
+	const [data, setData] = useState([{ codigo: "", equipo: { nombre: "" }, departamento: { nombre: "" }, responsable: { nombre: "" } }]);
 	const [modalActualizar, setModalactualizar] = useState(false);
 	const [modalAccesorios, setModalAccesorios] = useState(false);
 	const [reloadAuto, setReloadAuto] = useState(false);
 	const [modalInsertar, setModalinsertar] = useState(false);
 	const [modalInformacion, setModalinformacion] = useState(false);
-	const [equipo, setEquipo] = useState('');
+	const [equipo, setEquipo] = useState({codigo:0,nombre:""});
 	const [acc1, setAcc1] = useState({});
-	const [propietario, setPropietario] = useState('');
+	const [propietario, setPropietario] = useState({codigo:0,nombre:""});
 	const [marca, setMarca] = useState('');
 	const [modelo, setModelo] = useState('');
 	const [serie, setSerie] = useState('');
-	const [tipo, setTipo] = useState('');
+	const [tipo, setTipo] = useState({codigo:0,nombre:""});
 	const [seguro, setSeguro] = useState('');
 	const [file, setFile] = useState(null);
 	const [equipos, setEquipos] = useState([]);
@@ -79,28 +122,90 @@ export default function Inventarioview() {
 	const [codigoSeleccionado, setCodigoSeleccionado] = useState("")
 	const [reset, setReset] = useState(false);
 	//variables de declaracion de equipo
-
 	const [tipoEquipo, setTipoEquipo] = useState([]);
 	const [ubicaciones, setUbicaciones] = useState([]);
-	const [ubicacion, setUbicacion] = useState({})
+	const [ubicacion, setUbicacion] = useState({codigo:0,nombre:""})
 	const [responsables, setResponsables] = useState([]);
-	const [responsable, setResponsable] = useState({});
+	const [responsable, setResponsable] = useState({codigo:0,nombre:""});
 	const [departamentos, setDepartamentos] = useState([]);
 	const [propietarios, setPropietarios] = useState([]);
 	const [modalReubicar, setModalReubicar] = useState(false);
-	const [departamento, setDepartamento] = useState({});
+	const [departamento, setDepartamento] = useState({codigo:0,nombre:""});
 	const [currentEquipo, setCurrentEquipo] = useState(initialData);
+	//modals
+	const [modalParametros, setModalParametros] = useState(false);
+
+	const [page, setPage] = React.useState(0);
+	const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+	//variables para los filtros
+	const [departamentoFilter, setDepartamentoFilter] = useState("");
+	const [equipoFilter, setEquipoFilter] = useState("");
+	//varbiables para la busqueda por codigo
+	const [codigos, setCodigos] = useState([]);
+
+	//funciones para la busqueda por codigo
+	const ordenarCodigos = (lista) => {
+		lista.sort(function (a, b) {
+			var valorA = parseInt(a.split('-')[0]);
+			var valorB = parseInt(b.split('-')[0]);
+			return valorA - valorB;
+		});
+
+		return lista;
+	}
+	//funciones para los filtros
+	const FilterByDepartamento = (_item) => {
+		if (_item.departamento.nombre === departamentoFilter) {
+			return _item
+		} else if (departamentoFilter === "") {
+			return _item
+		}
+	}
+	const FilterByEquipo = (_item) => {
+		if (_item.equipo.nombre === equipoFilter) {
+			return _item
+		} else if (equipoFilter === "") {
+			return _item
+		}
+	}
+	const filtrarEquipos = () => {
+		let aux_equipos = JSON.parse(JSON.stringify(equipos_totales.current))
+		let aux_filter = []
+		if (aux_equipos.length > 0) {
+			console.log(departamentoFilter)
+			aux_filter = aux_equipos.filter(FilterByDepartamento).filter(FilterByEquipo)
+			setData(aux_filter)
+
+		}
+		setEquipoFilter("")
+		setDepartamentoFilter("")
+		setReset(!reset)
+	}
+	//
 
 
+	const handleChangePage = (event, newPage) => {
+		setPage(newPage);
+	};
 
-
+	const handleChangeRowsPerPage = (event) => {
+		setRowsPerPage(+event.target.value);
+		setPage(0);
+	};
 	const getData = async () => {
 		const reference = query(collection(db, "ingreso"));
 		onSnapshot(reference, (querySnapshot) => {
+			let aux_equipos = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
 			setData(
-				querySnapshot.docs.map((doc) => ({ ...doc.data() }))
+				aux_equipos.filter(item => item.situacion === "Activo")
 			);
 			equipos_totales.current = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
+			let codigos = aux_equipos.map((item, index) => {
+				return item.codigo
+			})
+			let aux_codigos = ordenarCodigos(codigos)
+			setCodigos(aux_codigos)
 		});
 
 		onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
@@ -112,6 +217,8 @@ export default function Inventarioview() {
 			setAccesorios(doc.data().accesorios)
 			setPropietarios(doc.data().propietarios)
 		});
+
+
 
 	}
 
@@ -224,6 +331,7 @@ export default function Inventarioview() {
 
 
 	const mostrarModalInsertar = () => {
+		setModalParametros(false);
 		setModalinsertar(true);
 	};
 
@@ -268,11 +376,7 @@ export default function Inventarioview() {
 	};
 
 	const IngresarEquipo = async () => {
-		Swal.fire(
-			'Equipo Registrado',
-			'',
-			'success'
-		)
+		
 		setDeshabilitar(true)
 		let code = generateCodigo()
 		var valorNuevo = {
@@ -293,7 +397,7 @@ export default function Inventarioview() {
 			indice: Date.now(),
 			situacion: "Activo",
 			//valores que cambiaran en el futuro
-			reubicado:false,
+			reubicado: false,
 			codigos_historial: [code],
 			mantenimientos: [],
 			mtbf: "",
@@ -312,7 +416,12 @@ export default function Inventarioview() {
 			console.log(url)
 			valorNuevo.img = url
 		}
-
+		Swal.fire(
+			'Equipo Registrado',
+			'',
+			'success'
+		)
+		console.log(valorNuevo)
 		sendFirestore(valorNuevo)
 		setModalinsertar(false);
 		setDeshabilitar(false)
@@ -321,7 +430,7 @@ export default function Inventarioview() {
 		let aux_equipos = equipos_totales.current
 		let datos_filter = aux_equipos.filter(item => item.ubicacion.codigo === ubicacion.codigo && item.responsable.codigo === responsable.codigo && item.departamento.codigo === departamento.codigo && item.equipo.codigo === equipo.codigo)
 		let index = datos_filter.length + 1
-		let codigo = ubicacion.codigo + "-" + departamento.codigo + "-" + responsable.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-" + index.toString() +"-" +'0'
+		let codigo = ubicacion.codigo + "-" + departamento.codigo + "-" + responsable.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-" + index.toString() + "-0"
 		return codigo
 	}
 
@@ -337,7 +446,7 @@ export default function Inventarioview() {
 				marca: marca,
 				modelo: modelo,
 				serie: serie,
-				propietario: propietario,
+				propietario: propietario.nombre,
 				seguro: seguro.value,
 				importancia: eimportancia,
 			});
@@ -371,7 +480,7 @@ export default function Inventarioview() {
 		let aux = JSON.parse(JSON.stringify(data))
 		let temp = aux.codigos_historial
 		temp.unshift('TODOS')
-	
+
 		dispatch(setEquipoState(aux))
 		navigate('hojadevida')
 	}
@@ -415,45 +524,12 @@ export default function Inventarioview() {
 		});
 		setAccesoriosEquipo(aux)
 	}
-	const filtrarInventario = () => {
-		let aux = JSON.parse(JSON.stringify(equipos_totales.current))
-		let filtrados = aux.filter(filterByNombre).filter(filterByCodigo)
-		setData(filtrados)
-		setCodigoSeleccionado("")
-		equiposFiltro.current = ""
-		setReset(!reset)
-	}
-	const filterByNombre = (_equipo) => {
-		if (equiposFiltro.current !== "") {
-			if (_equipo.equipo.nombre === equiposFiltro.current) {
-				return _equipo
-			} else {
-				return null
-			}
-		} else {
-			return _equipo
-		}
-	}
-	const filterByCodigo = (_equipo) => {
-		if (codigoSeleccionado !== "") {
-			if (_equipo.codigo === codigoSeleccionado) {
-				return _equipo
-			} else {
-				return null
-			}
-		} else {
-			return _equipo
-		}
-	}
-	const traerCodigos = (value) => {
-		let codigos_equipos = equipos_totales.current.filter(item => item.equipo.nombre === value.nombre && item.situacion === "Activo")
-		let codigos_fifltrados = codigos_equipos.map(item => (item.codigo))
-		setCodigosFiltrados(codigos_fifltrados)
-		equiposFiltro.current = value.nombre
-	}
+
+	
+	
 	const crearExcel = () => {
 		console.log("hola mundo");
-		console.log(data)
+		console.log(data);
 		const myHeader = ["equipo", "codigo", "marca", "modelo"];
 		const worksheet = XLSX.utils.json_to_sheet(data.filter(FilterBySituacion), { header: myHeader });
 		const workbook = XLSX.utils.book_new();
@@ -485,28 +561,50 @@ export default function Inventarioview() {
 		const ref = doc(db, "ingreso", `${currentEquipo.id}`);
 		updateDoc(ref, {
 			codigos_historial: aux_historial,
-			codigo:newCodigo,
-			reubicado:true,
+			codigo: newCodigo,
+			reubicado: true,
 		});
 		setModalReubicar(false)
-		
+
 	}
 
-	useEffect(() => {
-		getData();
-	}, [])
+
 
 	return (
 		<>
-			<Typography component="div" variant="h4" className="princi3" >
+			<Typography component="div" variant="h5" style={{marginBottom:13,fontFamily:"Cormorant Garamond",marginTop:10,color:"#977F2F"}} >
 				INVENTARIO EQUIPOS
-			</Typography>
-			<Typography component="div" variant="h5" className="princi9" >
-				Médicos - Industriales
 			</Typography>
 			<Container>
 				<Grid container spacing={{ xs: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-					<Grid item xs={12} sm={12} md={3}>
+
+					<Grid item xs={12} md={12}>
+
+						<Button
+							variant="contained"
+
+							sx={{ height: "100%" }}
+							color='azul1'
+							endIcon={<CloudDownloadIcon sx={{ fontSize: 90 }} />}
+							onClick={() => { getData() }}
+
+						>LEER DATOS</Button>
+
+					</Grid>
+					<Grid item xs={12} sm={12} md={3.5}>
+						<Autocomplete
+							disablePortal
+							id="combo-box-demo"
+							key={reset}
+							options={departamentos}
+							getOptionLabel={(option) => {
+								return option.nombre;
+							}}
+							onChange={(event, newvalue) => setDepartamentoFilter(newvalue.nombre)}
+							renderInput={(params) => <TextField {...params} label="Departamento" type="text" />}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={12} md={4}>
 						<Autocomplete
 							disablePortal
 							id="combo-box-demo"
@@ -515,22 +613,14 @@ export default function Inventarioview() {
 							getOptionLabel={(option) => {
 								return option.nombre;
 							}}
-							// isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
-							onChange={(event, newvalue) => traerCodigos(newvalue)}
+							onChange={(event, newvalue) => setEquipoFilter(newvalue.nombre)}
 							renderInput={(params) => <TextField {...params} label="Equipos" type="text" />}
 						/>
 					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
-						<Autocomplete
-							disablePortal
-							id="combo-box-demo"
-							key={reset}
-							options={codigosFiltrados}
-							onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
-							renderInput={(params) => <TextField {...params} label="Codigo" type="text" />}
-						/>
-					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
+
+
+
+					<Grid item xs={12} sm={12} md={1.5}>
 
 						<Button
 							variant="contained"
@@ -538,12 +628,23 @@ export default function Inventarioview() {
 							sx={{ height: "100%" }}
 							color='azul1'
 							endIcon={<FilterAltIcon sx={{ fontSize: 90 }} />}
-							onClick={filtrarInventario}
+							onClick={filtrarEquipos}
 
 						>Filtrar</Button>
 
 					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
+					<Grid item xs={12} sm={12} md={1.5}>
+
+						<Button variant="contained"
+							color='rojo'
+							sx={{ height: "100%" }}
+							fullWidth
+							endIcon={<AddIcon sx={{ fontSize: 90 }} />}
+							onClick={() => { setModalParametros(true) }}
+						>AGREGAR</Button>
+
+					</Grid>
+					<Grid item xs={12} sm={12} md={1.5}>
 
 						<Button variant="contained"
 							color='verde2'
@@ -551,133 +652,97 @@ export default function Inventarioview() {
 							fullWidth
 							endIcon={<CalendarMonthIcon sx={{ fontSize: 90 }} />}
 							onClick={crearExcel}
-						>Generar EXCEL</Button>
+						>EXCEL</Button>
 
 					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
+
+
+					{/* <Grid item xs={12} sm={12} md={3}>
+						<Autocomplete
+							disablePortal
+							id="combo-box-demo"
+							options={codigos}
+							sx={{ width: 300 }}
+							renderInput={(params) => <TextField {...params} label="Movie" />}
+						/>
+					</Grid>
+					<Grid item xs={12} sm={12} md={1.5}>
 						<Button variant="contained"
-							color='azul1'
+							sx={{ height: "100%" }}
+							endIcon={<SearchIcon />}
 							fullWidth
-							onClick={() => mostrarModalInsertar()}>Ingresar Equipo</Button>
-					</Grid>
-
-
-
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<DomainAddIcon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_area")}
 						>
-							Crear Departamento
+							BUSCAR
 						</Button>
-					</Grid>
-
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_equipo")}
-						>
-							Crear Equipo
-						</Button>
-					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_responsable")}
-						>
-							Crear Responsable
-						</Button>
-					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<Person2Icon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_propietario")}
-						>
-							Crear Propietario
-						</Button>
-					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<ExtensionIcon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_accesorios")}
-						>
-							Crear Accesorio
-						</Button>
-					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_ubicacion")}
-						>
-							Crear Ubicación
-						</Button>
-					</Grid>
-					<Grid item xs={12} sm={12} md={3}>
-						<Button variant="outlined"
-							fullWidth
-							endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
-							onClick={() => navegarView("inventario/invequipos/declarar_tipo_equipo")}
-						>
-							Crear Tipo de Equipo
-						</Button>
-					</Grid>
+					</Grid> */}
 
 
 
 				</Grid>
 
 				<br />
-				<div style={{ height: 350, overflow: "scroll" }}>
-					<Table className='table table-ligh table-hover'>
-						<Thead>
-							<Tr>
-								<Th>#</Th>
-								<Th>Código</Th>
-								<Th>Equipo</Th>
-								<Th>Departamento</Th>
-								<Th>Responsable</Th>
-								<Th>Accesorios</Th>
-								<Th>Acciones</Th>
-								<Th>Info</Th>
-								<Th>Hoja</Th>
-							</Tr>
-						</Thead>
+				<div style={{ height: 430 }}>
 
-						<Tbody>
-							{data.filter(FilterBySituacion).map((dato, index) => (
-								<Tr key={dato.indice}>
-									<Td>{index + 1}</Td>
-									<Td>{dato.codigo}</Td>
-									<Td>{dato.equipo.nombre}</Td>
-									<Td>{dato.departamento.nombre}</Td>
-									<Td>{dato.responsable.nombre}</Td>
-									<Td>
-										<Button variant='contained' color='dark' onClick={() => mostrarModalAccesorios(dato)}>Accesorios</Button>
-									</Td>
-									<Td>
-										<Stack direction="row" spacing={2} alignitems="center" justifyContent="center" >
-											<Button variant="contained" color='warning' onClick={() => mostrarModalActualizar(dato)}>Editar</Button>
-											<Button variant="contained" color='rojo' onClick={() => eliminar(dato)}>Eliminar</Button>
-											<Button variant="contained" color='morado' onClick={() => { DardeBaja(dato) }} >Dar Baja</Button>
-											<Button variant="contained" color='crema' onClick={() => { mostrarModalReubicar(dato) }} >Reubicar</Button>
-										</Stack>
-									</Td>
-									<Td>
-										<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => mostrarModalInformacion(dato)}><InfoIcon /></IconButton>
-									</Td>
-									<Td>
-										<IconButton aria-label="delete" sx={{ color: deepOrange[200] }} onClick={() => { hojavida(dato) }} ><AssignmentIcon /></IconButton>
-									</Td>
-								</Tr>
-							))}
-						</Tbody>
-					</Table>
+					<TableContainer sx={{ maxHeight: 430 }}>
+						<Table stickyHeader aria-label="sticky table">
+							<TableHead>
+								<TableRow>
+									{columns.map((column, index) => (
+										<TableCell
+											key={column.id}
+											align={column.align}
+											style={{ minWidth: column.minWidth }}
+										>
+											{column.label}
+										</TableCell>
+									))}
+
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+									.map((row, index) => {
+										return (
+											<TableRow hover role="checkbox" tabIndex={-1} key={index}>
+												<TableCell align="left">{row.codigo}</TableCell>
+												<TableCell align="left">{row.equipo.nombre}</TableCell>
+												<TableCell align="left">{row.departamento.nombre}</TableCell>
+												<TableCell align="left">{row.responsable.nombre}</TableCell>
+												<TableCell align="center">
+
+													<Button variant='contained'  color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
+
+												</TableCell>
+												<TableCell align="center">
+													<Stack direction="row" spacing={1}>
+														<IconButton aria-label="edit" onClick={() => mostrarModalActualizar(row)} color='warning'><EditIcon /></IconButton>
+														<IconButton aria-label="delete" onClick={() => eliminar(row)} color='rojo'><DeleteIcon /></IconButton>
+														<IconButton aria-label="baja" onClick={() => DardeBaja(row)} color='morado'><PhonelinkOffIcon /></IconButton>
+														<IconButton aria-label="reubicar" onClick={() => { mostrarModalReubicar(row) }} color='crema'><EditLocationIcon /></IconButton>
+													</Stack>
+												</TableCell>
+												<TableCell align="center">
+													<Stack direction="row" spacing={1}>
+														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {mostrarModalInformacion(row)}} ><InfoIcon /></IconButton>
+														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {hojavida(row)}} ><AssignmentIcon /></IconButton>
+													</Stack>
+												</TableCell>
+											</TableRow>
+										);
+									})}
+							</TableBody>
+						</Table>
+					</TableContainer>
+					<TablePagination
+						rowsPerPageOptions={[10, 25, 100]}
+						component="div"
+						count={data.length}
+						rowsPerPage={rowsPerPage}
+						page={page}
+						onPageChange={handleChangePage}
+						onRowsPerPageChange={handleChangeRowsPerPage}
+					/>
+
 				</div>
 			</Container>
 
@@ -685,6 +750,7 @@ export default function Inventarioview() {
 
 				<ModalHeader>
 					<div><h1>Información Equipo</h1></div>
+					<h1>David</h1>
 				</ModalHeader>
 				<ModalBody>
 					<FormGroup>
@@ -752,27 +818,7 @@ export default function Inventarioview() {
 							</Grid>
 
 							<Grid item xs={12} md={12}>
-								<div style={{ overflow: "scroll", height: "150px" }}>
-									<Table className='table table-ligh table-hover'>
-										<Thead>
-											<Tr>
-												<Th>#</Th>
-												<Th>Código</Th>
-												<Th>Accesorio</Th>
-											</Tr>
-										</Thead>
 
-										<Tbody>
-											{accesoriosEquipo.map((dato, index) => (
-												<Tr key={index}>
-													<Td>{index + 1}</Td>
-													<Td>{dato.codigo}</Td>
-													<Td>{dato.nombre}</Td>
-												</Tr>
-											))}
-										</Tbody>
-									</Table>
-								</div>
 							</Grid>
 						</Grid>
 						<Grid className="fila" item xs={12}>
@@ -986,7 +1032,9 @@ export default function Inventarioview() {
 								renderInput={(params) => <TextField {...params} fullWidth label="Seguro" type="text" />}
 							/>
 						</Grid>
-
+						<Grid item xs={12}>
+						<strong>Codigo Generado: </strong>{ubicacion.codigo + "-" + departamento.codigo + "-" + responsable.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-1-0"}
+						</Grid>
 						<Grid item xs={12}>
 							<b>Importancia:    </b>
 							<RadioGroup
@@ -1056,38 +1104,42 @@ export default function Inventarioview() {
 								variant="contained"
 								fullWidth
 								onClick={() => agregarAccesorio()}
+
 							>
 								AGREGAR ACCESORIO
 							</Button>
 						</Grid>
 						<Grid item xs={12} >
-							<div style={{ overflow: "scroll", height: "300px" }}>
-								<Table className='table table-ligh table-hover'>
-									<Thead>
-										<Tr>
-											<Th>#</Th>
-											<Th>Código</Th>
-											<Th>Accesorio</Th>
-											<Th>Acciones</Th>
-										</Tr>
-									</Thead>
+		
 
-									<Tbody>
-										{accesoriosEquipo.map((dato, index) => (
-											<Tr key={index}>
-												<Td>{index + 1}</Td>
-												<Td>{dato.codigo}</Td>
-												<Td>{dato.nombre}</Td>
-												<Td>
-													<Button variant="contained" color='warning' onClick={() => { quitarAccesorio(dato) }}>
+							<TableContainer sx={{overflowY:"scroll",height:300}} component={Paper}>
+								<Table  aria-label="customized table">
+									<TableHead>
+									<TableRow>
+						
+										<StyledTableCell align="left">#</StyledTableCell>
+										<StyledTableCell align="left">Código</StyledTableCell>
+										<StyledTableCell align="left">Accesorio</StyledTableCell>
+										<StyledTableCell align="left">Acciones</StyledTableCell>
+									</TableRow>
+									</TableHead>
+									<TableBody>
+									{accesoriosEquipo.map((row,index) => (
+										<StyledTableRow key={index}>
+			
+										<StyledTableCell align="left">{index+1}</StyledTableCell>
+										<StyledTableCell align="left">{row.codigo}</StyledTableCell>
+										<StyledTableCell align="left">{row.nombre}</StyledTableCell>
+										<StyledTableCell align="left"
+										><Button variant="contained" color='warning' onClick={() => { quitarAccesorio(row) }}>
 														Quitar
-													</Button>
-												</Td>
-											</Tr>
-										))}
-									</Tbody>
+													</Button></StyledTableCell>
+										</StyledTableRow>
+									))}
+									</TableBody>
 								</Table>
-							</div>
+								</TableContainer>
+
 						</Grid>
 					</Grid>
 				</ModalBody>
@@ -1125,7 +1177,6 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
-
 								options={responsables}
 								isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
 								value={responsable}
@@ -1171,6 +1222,98 @@ export default function Inventarioview() {
 					<Button
 						variant="contained"
 						onClick={() => setModalReubicar(false)}
+					>
+						Cerrar
+					</Button>
+				</ModalFooter>
+			</Modal>
+			<Modal isOpen={modalParametros}>
+				<ModalHeader>
+					<div><h3>AGREGUE UN PARAMETRO</h3></div>
+				</ModalHeader>
+				<ModalBody>
+					<Grid container spacing={2}>
+						<Grid item xs={12}>
+							<Button variant="contained"
+								color='azul1'
+								fullWidth
+								onClick={() => mostrarModalInsertar()}>Ingresar Equipo</Button>
+						</Grid>
+
+						<Grid item xs={12} >
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<DomainAddIcon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_area")}
+							>
+								Crear Departamento
+							</Button>
+						</Grid>
+
+						<Grid item xs={12} >
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_equipo")}
+							>
+								Crear Equipo
+							</Button>
+						</Grid>
+						<Grid item xs={12} >
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_responsable")}
+							>
+								Crear Responsable
+							</Button>
+						</Grid>
+						<Grid item xs={12}>
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<Person2Icon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_propietario")}
+							>
+								Crear Propietario
+							</Button>
+						</Grid>
+						<Grid item xs={12} >
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<ExtensionIcon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_accesorios")}
+							>
+								Crear Accesorio
+							</Button>
+						</Grid>
+						<Grid item xs={12} >
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_ubicacion")}
+							>
+								Crear Ubicación
+							</Button>
+						</Grid>
+						<Grid item xs={12}>
+							<Button variant="outlined"
+								fullWidth
+								endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
+								onClick={() => navegarView("inventario/invequipos/declarar_tipo_equipo")}
+							>
+								Crear Tipo de Equipo
+							</Button>
+						</Grid>
+					</Grid>
+
+				</ModalBody>
+
+				<ModalFooter>
+
+
+					<Button
+						variant="contained"
+						onClick={() => setModalParametros(false)}
 					>
 						Cerrar
 					</Button>
@@ -1222,3 +1365,12 @@ const initialData = {
 }
 
 const no_img = "https://firebasestorage.googleapis.com/v0/b/app-mantenimiento-91156.appspot.com/o/inventario%2FSP.PNG?alt=media&token=835f72e6-3ddf-4e64-bd7c-b95564da4ec8"
+const columns = [
+	{ id: 'codigo', label: 'Codigo', minWidth: 170 },
+	{ id: 'equipo', label: 'Equipo', minWidth: 100 },
+	{ id: 'departamento', label: 'Departamento', minWidth: 100 },
+	{ id: 'responsable', label: 'Responsable', minWidth: 100 },
+	{ id: 'accesoriops', label: 'Accesorios', minWidth: 100, align: 'center' },
+	{ id: 'acciones', label: 'Acciones', minWidth: 100, align: 'center' },
+	{ id: 'info', label: 'Info', minWidth: 100, align: 'center' },
+];

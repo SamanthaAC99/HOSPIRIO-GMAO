@@ -1,35 +1,29 @@
 import { useSelector } from "react-redux";
-import { collection, query, doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
-import { pink, cyan, lightGreen, orange } from '@mui/material/colors';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { collection, query, doc, onSnapshot, getDoc } from "firebase/firestore";
+import { pink, lightGreen, orange } from '@mui/material/colors';
 import autoTable from 'jspdf-autotable'
 import { jsPDF } from "jspdf";
 import TextareaAutosize from '@mui/material/TextareaAutosize';
-import Swal from 'sweetalert2';
 import PrintIcon from '@mui/icons-material/Print';
 import Checkbox from '@mui/material/Checkbox';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
-import SearchIcon from '@mui/icons-material/Search';
 import { Grid } from "@mui/material";
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import * as React from 'react';
-import Stack from '@mui/material/Stack';
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import InfoIcon from '@mui/icons-material/Info';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-import Box from '@mui/material/Box';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import TarjetaDashboard from "../components/TarjetaDashBoard";
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import PageviewIcon from '@mui/icons-material/Pageview';
+import emailjs from '@emailjs/browser';
 import '../css/DashboardJefeM.css'
 import { db } from "../firebase/firebase-config"
 import {
@@ -63,8 +57,6 @@ const tipos = [
 export default function DashboardJefeM() {
     const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
     const currentUser = useSelector(state => state.auths);
-    const [user, setUser] = useState({});
-    const [ordenesTecnico, setOrdenesTecnico] = useState([]);
     const [prioridad, setPrioridad] = useState("Todas");
     const [departamentos, setDepartamentos] = useState([]);
     const [departamento, setDepartamento] = useState("Todos");
@@ -74,8 +66,8 @@ export default function DashboardJefeM() {
     const [currentForm, setCurrentForm] = useState({})
     const [ctdPendientes, setCtdPendientes] = useState(0);
     const [ctdSolventadas, setCtdSolventadas] = useState(0);
-    const [elementosfb, setElementosfb] = useState([]);
     const [ordenes, setOrdenes] = useState([]);
+    const ordenesTotales = useRef([])
     const [currentReporte, setCurrentReporte] = useState({});
     const [modalReportexistente, setModalReportexistente] = useState(false);
 
@@ -97,59 +89,43 @@ export default function DashboardJefeM() {
 
     const updateUser = () => {
 
-        onSnapshot(doc(db, "usuarios", currentUser.uid), (doc) => {
-            setUser(doc.data());
-        });
         const reference = query(collection(db, "ordenes"));
         onSnapshot(reference, (querySnapshot) => {
             var ordenes = [];
             querySnapshot.forEach((doc) => {
                 ordenes.push(doc.data());
             });
-            setOrdenesTecnico(
-                ordenes
-            );
-            setElementosfb(
-                ordenes
-            );
-            setOrdenes(
-                ordenes.sort((a, b) =>{
 
+            setOrdenes(
+                ordenes.filter(item => item.tipotrabajo !== "Sistemas" ).sort((a, b) =>{
                     return b.indice  - a.indice
                 })
             );
-            var pendiente = ordenes.filter(filterStateIniciadas).length
-            var solventadas = ordenes.filter(filterStateSolventadas).length
-            setCtdPendientes(pendiente);
-            console.log(ctdPendientes)
-            setCtdSolventadas(solventadas);
+            ordenesTotales.current = ordenes.filter(item => item.tipotrabajo !== "Sistemas" ).sort((a, b) =>{
+                return b.indice  - a.indice
+            })
+            setCtdPendientes(ordenes.filter(filterStateIniciadas).filter(item => item.tipotrabajo !== "Sistemas" ).length);
+            setCtdSolventadas(ordenes.filter(filterStateSolventadas).filter(item => item.tipotrabajo !== "Sistemas" ).length);
 
         });
         onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
-            setDepartamentos(doc.data().departamentos)
+            let departamentos_aux = doc.data().departamentos
+            let temp = [{nombre:"TODOS",codigo:9999}] //esta linea de codigo es para agregar el parametro todos al inicio del arreglo
+            departamentos_aux.forEach((doc)=>{
+                temp.push(doc)
+            })
+            console.log(temp)
+            setDepartamentos(temp)
           });
     }
 
-    // const updateOrdenes = (data) => {
-    //     const p = ordenesTecnico.filter((item)=> item.departamento  === data ).filter((item)=> item.tipotrabajo  !== "Sistemas").filter(filterStatePendientes).length
-    //     const s = ordenesTecnico.filter((item)=> item.departamento  === data ).filter((item)=> item.tipotrabajo  !== "Sistemas").filter(filterStateSolventadas).length
-    //     console.log(p)
-    //     console.log(s)
-    //     setCtdPendientes(p);
-    //     setCtdSolventadas(s);
-    // }
-
 
     const filtrarDatos = () => {
-        const data = elementosfb;
-        const filtro1 = data.filter(filterbyarea)
-        const filtro2 = filtro1.filter(filterbyprioridad)
-        const filtro3 = filtro2.filter(filterbytipot)
-        setOrdenes(filtro3);
-        var pendiente = filtro3.filter(filterStateIniciadas).length
-        var solventadas = filtro3.filter(filterStateSolventadas).length
-        setCtdPendientes(pendiente);
-        setCtdSolventadas(solventadas);
+        const data = JSON.parse(JSON.stringify(ordenesTotales.current));
+        let ordenes_filtradas = data.filter(filterbyarea).filter(filterbyprioridad).filter(filterbytipot)
+        setOrdenes(ordenes_filtradas);
+        setCtdPendientes(ordenes_filtradas.filter(filterStateIniciadas).length);
+        setCtdSolventadas(ordenes_filtradas.filter(filterStateSolventadas).length);
     }
 
     const filterbytipot = (orden) => {
@@ -165,7 +141,7 @@ export default function DashboardJefeM() {
     const filterbyarea = (orden) => {
         if (orden.departamento === departamento) {
             return orden
-        } else if (departamento === 'Todos') {
+        } else if (departamento === 'TODOS') {
             return orden
         } else {
             return
@@ -216,35 +192,6 @@ export default function DashboardJefeM() {
         doc.setFontSize(12)// de aqui para abajo todo estara con fontsize 9
         doc.text("Reporte de Mantenimiento", 85, 20)
         doc.setFontSize(10)
-        // doc.text("Id Reporte:", 20, 30)
-        // doc.text(currentReporte.id, 70, 30)
-        // doc.text("Orden de Trabajo:", 20, 40)
-        // doc.text(currentReporte.OrdenId, 70, 40)
-        // doc.text("Código Equipo:", 20, 50)
-        // doc.text(currentReporte.codigoe, 70, 50)
-        // doc.text("Equipo:", 20, 60)
-        // doc.text(currentReporte.equipo, 70, 60)
-        // doc.text("Técnico:", 20, 70)
-        // doc.text(currentReporte.nombreT, 70, 70)
-        // doc.text("Estado:", 20, 80)
-        // doc.text(currentReporte.estadof, 70, 80)
-        // doc.text("Tipo de Mantenimiento:", 20, 90)
-        // doc.text(currentReporte.tmantenimiento, 70, 90)
-        // doc.text("Tiempo:", 20, 100)
-        // doc.text(currentReporte.tiempo, 70, 100)
-        // doc.text("Costo:", 20, 110)
-        // doc.text(currentReporte.costo, 70, 110)
-        // doc.text("Falla:", 20, 120)
-        // doc.text(currentReporte.falla, 70, 120)
-        // doc.text("Causas:", 20, 130)
-        // doc.text(currentReporte.causas, 70, 130)
-        // doc.text("Actividades:", 20, 140)
-        // doc.text(currentReporte.actividadesR, 70, 140)
-        // doc.text("Repuestos:", 20, 150)
-        // doc.text(currentReporte.repuestos, 70, 150)
-        // doc.text("Observaciones:", 20, 160)
-        // doc.text(currentReporte.observaciones, 70, 160)
-        // doc.save(`reporte_${currentReporte.OrdenId}.pdf`);
         let aux = 15
         let datos_tabla =
          [
@@ -270,8 +217,35 @@ export default function DashboardJefeM() {
         
           doc.save(`reporte_${currentReporte.id}.pdf`);
     }
+
+
+    const actualizarValidacion = ()=>{
+        let aux_ordenes = JSON.parse(JSON.stringify(ordenesTotales.current))
+        let ordenes_fitlradas = aux_ordenes.filter(filterStateSolventadas).filter(item => item.verificacion === false)
+     
+        for(let i = 0;i< ordenes_fitlradas.length ; i++){
+            try {
+                let __orden = ordenes_fitlradas[i]
+                emailjs.send("service_22xh03a", "template_o2wssge", {
+                    n_orden: __orden.id,
+                    asunto: __orden.asunto,
+                    departamento:"Jefe de Mantenimiento",
+                    to_email:__orden.correo,
+                    reply_to:currentUser.email,
+                }, "Z1YvVmzlMz2V1hOEO");
+                console.log("exito")
+            } catch (error) {
+                console.log("error")
+            }
+        }
+    }
+
+    
+
+
     useEffect(() => {
         updateUser();
+        // eslint-disable-next-line
     }, [])
 
     return (
@@ -280,24 +254,11 @@ export default function DashboardJefeM() {
                 <Grid container spacing={{ xs: 1, md: 4 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                     <Grid item xs={12} sm={6} md={6}>
                         <div className="card13" >
-                            {
                                 <div className="header-ev">
                                     <h5 className="titulo-ev">Filtros</h5>
                                 </div>
-                            }
-                            {
                                 <div className="card-body12 small">
                                     <div className="name-outlined2">{currentUser.name} {currentUser.lastname}</div>
-
-                                    {/* <div className="alinear15">
-                                            < QrCode2Icon sx={{ color: cyan[300] }} />
-                                            <h1 className='texticone mx-4'>{currentUser.codigo}</h1>
-                                        </div>
-                                        <div className="alinear15">
-                                            <EngineeringIcon sx={{ color: cyan[300] }} />
-                                            <h1 className='texticone mx-4'>{currentUser.cargo}</h1>
-                                        </div>
-                                     */}
                                     <Grid container spacing={2}>
                                         <Grid item xs={3}>
                                             <Autocomplete
@@ -309,7 +270,6 @@ export default function DashboardJefeM() {
                                                   return option.nombre;
                                                 }}
                                                 onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
-                                                
                                                 renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
                                             />
                                         </Grid>
@@ -337,13 +297,9 @@ export default function DashboardJefeM() {
                                             <Button variant="outlined" className="boton-gestionm" onClick={filtrarDatos} startIcon={<FilterAltIcon />}>
                                                 Filtrar
                                             </Button>
-
                                         </Grid>
                                     </Grid>
                                 </div>
-
-
-                            }
                         </div>
                     </Grid>
 
@@ -352,16 +308,10 @@ export default function DashboardJefeM() {
 
                         <Grid container spacing={{ xs: 1, md: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
 
-                            {/* <Grid item xs={4} sm={6} md={4} >
-                                <TarjetaDashboard
-                                    icon={<PlayArrowIcon />}
-                                    headerColor={"#ADCF9F"}
-                                    avatarColor={lightGreen[700]}
-                                    title={'Enviadas'}
-                                    value={0}
-                                />
-                            </Grid> */}
-                            <Grid item xs={4} sm={6} md={6} >
+                            <Grid item xs={4} sm={6} md={4} >
+                            <Button variant="outlined" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
+                            </Grid>
+                            <Grid item xs={4} sm={6} md={4} >
                                 <TarjetaDashboard
                                     icon={<PendingActionsIcon />}
                                     headerColor={"#F7A76C"}
@@ -370,7 +320,7 @@ export default function DashboardJefeM() {
                                     value={ctdPendientes}
                                 />
                             </Grid>
-                            <Grid item xs={4} sm={6} md={6} >
+                            <Grid item xs={4} sm={6} md={4} >
                                 <TarjetaDashboard
                                     icon={<AssignmentTurnedInIcon />}
                                     headerColor={"#E4AEC5"}
@@ -384,8 +334,8 @@ export default function DashboardJefeM() {
 
 
                     <Grid item xs={12} sm={6} md={6}>
-                        <div className="card13" >
-                            {
+                        <div className="card13" style={{height:400}} >
+
                                 <div className="header-ev">
                                     <h5 className="titulo-ev">Actividades Pendientes</h5>
 
@@ -394,10 +344,9 @@ export default function DashboardJefeM() {
                                     </Avatar>
 
                                 </div>
-                            }
-                            {
-                                <div className="card-body12-tabla small">
-                                    <div className="ScrollStyle">
+                     
+                                <div className="card-body12-tabla small" style={{overflowY:"scroll"}}>
+                                    <div >
 
                                         <Table className='table table-light table-hover'>
                                             <Thead>
@@ -405,9 +354,7 @@ export default function DashboardJefeM() {
                                                     <Th>#</Th>
                                                     <Th className="t-encargados">Fecha</Th>
                                                     <Th className="t-encargados">Asunto</Th>
-                                                    {/* <Th className="t-encargados">Estado</Th> */}
                                                     <Th className="t-encargados">Información</Th>
-
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
@@ -422,21 +369,89 @@ export default function DashboardJefeM() {
                                                         <Td className="t-encargados">
                                                             {dato.asunto}
                                                         </Td>
-                                                        {/* <Td className="t-encargados">
-                                                            {dato.estado}
-                                                        </Td> */}
                                                         <Td>
                                                             <IconButton aria-label="delete" color="gris" onClick={() => { vistaTablaPendientes(dato) }}  ><InfoIcon /></IconButton>
                                                         </Td>
                                                     </Tr>
                                                 ))}
-
-
                                             </Tbody>
                                         </Table>
                                     </div>
 
-                                    <Modal isOpen={modalPendientes}>
+                                  
+                                </div>
+
+                        </div>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6} md={6}>
+                        <div className="card13" style={{height:400}}>
+                            
+                                <div className="header-ev">
+                                    <h5 className="titulo-ev">Actividades Acabadas</h5>
+                                    <Avatar sx={{ bgcolor: lightGreen[500] }} >
+                                        <DoneAllIcon />
+                                    </Avatar>
+                                </div>
+                            
+                            
+                                <div className="card-body12-tabla small"  style={{overflowY:"scroll"}}>
+                                    <div >
+                                        <Table className='table table-light table-hover'>
+                                            <Thead>
+                                                <Tr>
+                                                    <Th>#</Th>
+                                                    <Th className="t-encargados">Fecha</Th>
+                                                    <Th className="t-encargados">Asunto</Th>
+                                                    <Th className="t-encargados">Información</Th>
+                                                    <Th className="t-encargados">Verificación</Th>
+                                                    <Th className="t-encargados">Reporte</Th>
+                                                </Tr>
+                                            </Thead>
+                                            <Tbody>
+                                                {ordenes.filter(filterStateSolventadas).map((dato, index) => (
+
+                                                    <Tr key={index} >
+                                                        <Td>
+                                                            {index + 1}
+                                                        </Td>
+                                                        <Td className="t-encargados">
+                                                            {dato.fecha}
+                                                        </Td>
+                                                        <Td className="t-encargados">
+                                                            {dato.asunto}
+                                                        </Td>
+                                                        <Td className="t-encargados">
+                                                            <IconButton aria-label="informacion" color="gris" onClick={() => { vistainformacion2(dato) }}><InfoIcon /></IconButton>
+                                                        </Td>
+                                                        <Td className="t-encargados">
+                                                            <Checkbox
+                                                                {...label}
+                                                                icon={<CheckBoxOutlinedIcon />}
+                                                                checked={dato.verificacion}
+                                                            />
+                                                        </Td>
+                                                        <Td>
+                                                            <IconButton aria-label="delete" onClick={() => { visualizarReporte(dato) }} color="rosado">
+                                                                <RemoveRedEyeIcon />
+                                                            </IconButton>
+                                                        </Td>
+                                                    </Tr>
+                                                ))}
+                                            </Tbody>
+                                        </Table>
+                                    </div>
+                                  
+                                </div>
+                            
+                        </div>
+                    </Grid>
+
+                </Grid>
+            </div>
+
+
+            <Modal isOpen={modalPendientes}>
                                         <Container>
                                             <ModalHeader>
                                                 <div><h1> Orden de Trabajo</h1></div>
@@ -475,12 +490,7 @@ export default function DashboardJefeM() {
                                                             </label>
 
                                                         </Grid >
-                                                           {/* <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Encargado:  </b>
-                                                                {/* {currentForm.encargado.name +' '+currentForm.encargado.lastname+' '+currentForm.encargado.secondlastname } */}
-                                                        {/* </label> */}
-                                                        {/* </Grid >  */}
+                                            
                                                         <Grid item xs={12}>
                                                             <label>
                                                                 <b>Descripción Equipo:   </b>
@@ -535,175 +545,12 @@ export default function DashboardJefeM() {
                                             </ModalFooter>
                                         </Container>
                                     </Modal>
-                                </div>
-                            }
-                        </div>
-                    </Grid>
 
-                    <Grid item xs={12} sm={6} md={6}>
-                        <div className="card13" >
-                            {
-                                <div className="header-ev">
 
-                                    <h5 className="titulo-ev">Actividades Acabadas</h5>
-                                    <Avatar sx={{ bgcolor: lightGreen[500] }} >
-                                        <DoneAllIcon />
-                                    </Avatar>
-                                </div>
-                            }
-                            {
-                                <div className="card-body12-tabla small">
-                                    <div className="ScrollStyle">
-                                        <Table className='table table-light table-hover'>
-                                            <Thead>
-                                                <Tr>
-                                                    <Th>#</Th>
-                                                    <Th className="t-encargados">Fecha</Th>
-                                                    <Th className="t-encargados">Asunto</Th>
-                                                    <Th className="t-encargados">Información</Th>
-                                                    <Th className="t-encargados">Verificación</Th>
-                                                    <Th className="t-encargados">Reporte</Th>
 
-                                                </Tr>
-                                            </Thead>
-                                            <Tbody>
-                                                {ordenes.filter(filterStateSolventadas).map((dato, index) => (
 
-                                                    <Tr key={index} >
-                                                        <Td>
-                                                            {index + 1}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {dato.fecha}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {dato.asunto}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            <IconButton aria-label="informacion" color="gris" onClick={() => { vistainformacion2(dato) }}><InfoIcon /></IconButton>
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            <Checkbox
-                                                                {...label}
-                                                                icon={<CheckBoxOutlinedIcon />}
-                                                                checked={dato.verificacion}
-                                                            />
-                                                        </Td>
-                                                        <Td>
-                                                            <IconButton aria-label="delete" onClick={() => { visualizarReporte(dato) }} color="rosado">
-                                                                <RemoveRedEyeIcon />
-                                                            </IconButton>
-                                                        </Td>
-                                                    </Tr>
-                                                ))}
-                                            </Tbody>
-                                        </Table>
-                                    </div>
-                                    <Modal isOpen={modalInformacion2}>
-                                        <Container>
-                                            <ModalHeader>
-                                                <div><h1> Orden de Trabajo</h1></div>
-                                            </ModalHeader>
-                                            <ModalBody>
-                                                <FormGroup>
-                                                    <Grid container spacing={2}>
-                                                    <Grid item xs={12}>
-                                            <div className="name-outlined">{currentForm.id}</div>
-                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Asunto:  </b>
-                                                                {currentForm.asunto}
-                                                            </label>
 
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Fecha: </b>
-                                                                {currentForm.fecha}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Departamento:  </b>
-                                                                {currentForm.departamento}
-                                                            </label>
-
-                                                        </Grid > 
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Prioridad:  </b>
-                                                                {currentForm.prioridad}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Tipo de Trabajo:  </b>
-                                                                {currentForm.tipotrabajo}
-                                                            </label>
-                                                        </Grid >
-                                                        {/* <Grid item xs={12}>
-                                                            <label>
-                                                            <b>Código Equipo:  </b>  
-                                                            {currentForm.codigoe}
-                                                            </label>
-                                                        </Grid > */}
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Descripción Equipo:  </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Descripción"
-                                                                className="text-area-encargado"
-                                                                name="descripcion"
-                                                                readOnly
-                                                                value={currentForm.descripcion} />
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Problemática:  </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Problematica"
-                                                                className="text-area-encargado"
-                                                                name="problematica"
-                                                                readOnly
-                                                                value={currentForm.problematica} />
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Observaciones:  </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Observaciones"
-                                                                className="text-area-encargado"
-                                                                name="observaciones"
-                                                                readOnly
-                                                                value={currentForm.observaciones} />
-
-                                                        </Grid >
-                                                    </Grid>
-                                                </FormGroup>
-                                            </ModalBody>
-                                            <ModalFooter className="modal-footer">
-                                                <Button variant="contained"
-                                                    className="boton-modal-d"
-                                                    onClick={cerrarvistainfo2}>Cerrar </Button>
-                                            </ModalFooter>
-                                        </Container>
-                                    </Modal>
-                                </div>
-                            }
-
-                            <Modal isOpen={modalReportexistente}>
+            <Modal isOpen={modalReportexistente}>
                                 <ModalHeader>
                                     <div><h1>Ver Reporte Interno</h1></div>
                                 </ModalHeader>
@@ -850,11 +697,108 @@ export default function DashboardJefeM() {
                                 </ModalFooter>
                             </Modal>
 
-                        </div>
-                    </Grid>
 
-                </Grid>
-            </div>
+            <Modal isOpen={modalInformacion2}>
+                                        <Container>
+                                            <ModalHeader>
+                                                <div><h1> Orden de Trabajo</h1></div>
+                                            </ModalHeader>
+                                            <ModalBody>
+                                                <FormGroup>
+                                                    <Grid container spacing={2}>
+                                                    <Grid item xs={12}>
+                                            <div className="name-outlined">{currentForm.id}</div>
+                                        </Grid >
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Asunto:  </b>
+                                                                {currentForm.asunto}
+                                                            </label>
+
+                                                        </Grid >
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Fecha: </b>
+                                                                {currentForm.fecha}
+                                                            </label>
+
+                                                        </Grid >
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Departamento:  </b>
+                                                                {currentForm.departamento}
+                                                            </label>
+
+                                                        </Grid > 
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Prioridad:  </b>
+                                                                {currentForm.prioridad}
+                                                            </label>
+
+                                                        </Grid >
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Tipo de Trabajo:  </b>
+                                                                {currentForm.tipotrabajo}
+                                                            </label>
+                                                        </Grid >
+                                                        {/* <Grid item xs={12}>
+                                                            <label>
+                                                            <b>Código Equipo:  </b>  
+                                                            {currentForm.codigoe}
+                                                            </label>
+                                                        </Grid > */}
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Descripción Equipo:  </b>
+                                                            </label>
+                                                            <TextareaAutosize
+                                                                aria-label="minimum height"
+                                                                minRows={1}
+                                                                placeholder="Descripción"
+                                                                className="text-area-encargado"
+                                                                name="descripcion"
+                                                                readOnly
+                                                                value={currentForm.descripcion} />
+                                                        </Grid >
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Problemática:  </b>
+                                                            </label>
+                                                            <TextareaAutosize
+                                                                aria-label="minimum height"
+                                                                minRows={1}
+                                                                placeholder="Problematica"
+                                                                className="text-area-encargado"
+                                                                name="problematica"
+                                                                readOnly
+                                                                value={currentForm.problematica} />
+                                                        </Grid >
+                                                        <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Observaciones:  </b>
+                                                            </label>
+                                                            <TextareaAutosize
+                                                                aria-label="minimum height"
+                                                                minRows={1}
+                                                                placeholder="Observaciones"
+                                                                className="text-area-encargado"
+                                                                name="observaciones"
+                                                                readOnly
+                                                                value={currentForm.observaciones} />
+
+                                                        </Grid >
+                                                    </Grid>
+                                                </FormGroup>
+                                            </ModalBody>
+                                            <ModalFooter className="modal-footer">
+                                                <Button variant="contained"
+                                                    className="boton-modal-d"
+                                                    onClick={cerrarvistainfo2}>Cerrar </Button>
+                                            </ModalFooter>
+                                        </Container>
+                                    </Modal>
         </>
     );
 }
