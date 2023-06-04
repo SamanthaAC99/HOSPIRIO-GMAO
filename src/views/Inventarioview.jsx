@@ -106,7 +106,7 @@ export default function Inventarioview() {
 	const [modelo, setModelo] = useState('');
 	const [serie, setSerie] = useState('');
 	const [tipo, setTipo] = useState({codigo:0,nombre:""});
-	const [seguro, setSeguro] = useState('');
+	const [seguro, setSeguro] = useState({label:'Asegurado',value:true});
 	const [file, setFile] = useState(null);
 	const [equipos, setEquipos] = useState([]);
 	const [eimportancia, setEimportancia] = useState([]);
@@ -310,18 +310,7 @@ export default function Inventarioview() {
 			console.log('no hay archivo');
 		}
 	};
-	const mostrarModalActualizar = (_dato) => {
-		console.log(_dato)
-		setCurrentEquipo(_dato);
-		setEimportancia(_dato.importancia)
-		setModelo(_dato.modelo)
-		setMarca(_dato.marca)
-		setSerie(_dato.serie)
-		setPropietario(_dato.propietario)
-		setModalactualizar(true);
-		setSeguro({ label: 'ASEGURADO', value: true })
-		//setSeguro(_dato.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
-	};
+	
 
 	const mostrarModalAccesorios = (_data) => {
 		setCurrentEquipo(_data)
@@ -333,7 +322,7 @@ export default function Inventarioview() {
 		setModelo("")
 		setMarca("")
 		setSerie("")
-		setPropietario("")
+		setPropietario({nombre:"HOSPITAL DEL RIO",codigo:1})
 	}
 
 
@@ -461,22 +450,36 @@ export default function Inventarioview() {
 	}
 
 
-
+	const mostrarModalActualizar = (_dato) => {
+	
+		setCurrentEquipo(_dato);
+		setEimportancia(_dato.importancia)
+		setModelo(_dato.modelo)
+		setMarca(_dato.marca)
+		setSerie(_dato.serie)
+		setPropietario(_dato.propietario)
+		setModalactualizar(true);
+		setSeguro(_dato.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
+	};
 
 
 	const ActualizarEquipo = async () => {
-
+		let aux_equipos = JSON.parse(JSON.stringify(data))
 		const ref = doc(db, "ingreso", `${currentEquipo.id}`);
+		let equipo_modify =  JSON.parse(JSON.stringify(currentEquipo))
+
 		if (file === null) {
+			
 			await updateDoc(ref, {
 				marca: marca,
 				modelo: modelo,
 				serie: serie,
-				propietario: propietario.nombre,
+				propietario: propietario,
 				seguro: seguro.value,
 				importancia: eimportancia,
 			});
-		} else {
+		}
+		 else {
 
 			let url = await sendStorage(currentEquipo.id)
 			await updateDoc(ref, {
@@ -488,12 +491,29 @@ export default function Inventarioview() {
 				importancia: eimportancia,
 				img: url
 			});
+			equipo_modify.img = url
 		}
+		equipo_modify.marca = marca
+		equipo_modify.modelo = modelo
+		equipo_modify.serie = serie
+		equipo_modify.propietario = propietario
+		equipo_modify.seguro = seguro.value
+		equipo_modify.importancia = eimportancia
+
 		Swal.fire(
 			"¡Datos Actualizados!",
 			'',
 			'success'
 		)
+		let equipos_edited = aux_equipos.map(item=>{
+			if(item.id === equipo_modify.id){
+				return equipo_modify
+			}else{
+				return item
+			}
+
+		})
+		setData(equipos_edited)
 		setFile(null)
 		setModalactualizar(false)
 
@@ -884,7 +904,7 @@ export default function Inventarioview() {
 
 			<Modal isOpen={modalActualizar}>
 				<ModalHeader>
-					<div><h3>Editar Registro</h3></div>
+					<div><h3>Editar Equipo</h3></div>
 				</ModalHeader>
 				<ModalBody>
 					<Grid container spacing={2}>
@@ -903,8 +923,10 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
-								defaultValue={propietario}
+								defaultValue={{nombre:"HOSPITAL DEL RIO",codigo:1}}
+								value={propietario}
 								options={propietarios}
+								isOptionEqualToValue={(option, value) => option.codigo === value.codigo}
 								getOptionLabel={(option) => {
 									return option.nombre;
 								}}
@@ -918,7 +940,7 @@ export default function Inventarioview() {
 								id="combo-box-demo"
 								value={seguro}
 								options={tseguro}
-								isOptionEqualToValue={(option, value) => option.label === value.label}
+								isOptionEqualToValue={(option, value) => option.value === value.value}
 								getOptionLabel={(option) => option.label}
 								onChange={(event, newvalue) => setSeguro(newvalue)}
 								renderInput={(params) => <TextField {...params} fullWidth label="Seguro" type="text" />}
