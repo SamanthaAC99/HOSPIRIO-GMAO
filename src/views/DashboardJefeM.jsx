@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import PrintIcon from '@mui/icons-material/Print';
 import Checkbox from '@mui/material/Checkbox';
+import TuneIcon from '@mui/icons-material/Tune';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 import { Grid } from "@mui/material";
@@ -63,6 +64,7 @@ export default function DashboardJefeM() {
     const [tipotrabajo, setTipotrabajo] = useState("Todos");
     const [modalPendientes, setModalPendientes] = useState(false);
     const [modalInformacion2, setModalinformacion2] = useState(false);
+    const [modalFiltrar, setModalFiltrar] = useState(false);
     const [currentForm, setCurrentForm] = useState({})
     const [ctdPendientes, setCtdPendientes] = useState(0);
     const [ctdSolventadas, setCtdSolventadas] = useState(0);
@@ -240,7 +242,12 @@ export default function DashboardJefeM() {
         }
     }
 
-    
+    const vistaFiltrar = () => {
+        setModalFiltrar(true);
+    };
+    const cerrarvistaFiltrar = () => {
+        setModalFiltrar(false);
+    };
 
 
     useEffect(() => {
@@ -260,7 +267,16 @@ export default function DashboardJefeM() {
                                 <div className="card-body12 small">
                                     <div className="name-outlined2">{currentUser.name} {currentUser.lastname}</div>
                                     <Grid container spacing={2}>
-                                        <Grid item xs={3}>
+                                    <Grid item xs={12} md={6}>
+                                            <Button variant="outlined" onClick={() => {vistaFiltrar() }}  className="boton-gestionm2" startIcon={<TuneIcon />}>
+                                                Filtrar
+                                            </Button>
+                                        </Grid>
+
+                                        <Grid item  xs={12} md={6}>
+                            <Button variant="contained" className="boton-gestionm2" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
+                            </Grid> 
+                                        {/* <Grid item xs={3}>
                                             <Autocomplete
                                                 disableClearable
                                                 className='seleccionadortabla-jm'
@@ -297,7 +313,7 @@ export default function DashboardJefeM() {
                                             <Button variant="outlined" className="boton-gestionm" onClick={filtrarDatos} startIcon={<FilterAltIcon />}>
                                                 Filtrar
                                             </Button>
-                                        </Grid>
+                                        </Grid> */}
                                     </Grid>
                                 </div>
                         </div>
@@ -308,10 +324,10 @@ export default function DashboardJefeM() {
 
                         <Grid container spacing={{ xs: 1, md: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
 
-                            <Grid item xs={4} sm={6} md={4} >
+                            {/* <Grid item xs={4} sm={6} md={4} >
                             <Button variant="outlined" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
-                            </Grid>
-                            <Grid item xs={4} sm={6} md={4} >
+                            </Grid> */}
+                            <Grid item xs={4} sm={6} md={6} >
                                 <TarjetaDashboard
                                     icon={<PendingActionsIcon />}
                                     headerColor={"#F7A76C"}
@@ -320,7 +336,7 @@ export default function DashboardJefeM() {
                                     value={ctdPendientes}
                                 />
                             </Grid>
-                            <Grid item xs={4} sm={6} md={4} >
+                            <Grid item xs={4} sm={6} md={6} >
                                 <TarjetaDashboard
                                     icon={<AssignmentTurnedInIcon />}
                                     headerColor={"#E4AEC5"}
@@ -799,6 +815,65 @@ export default function DashboardJefeM() {
                                             </ModalFooter>
                                         </Container>
                                     </Modal>
+
+                                    <Modal className="{width:0px}" isOpen={modalFiltrar}>
+                <ModalHeader>
+                    <div><h3>Filtrar Datos</h3></div>
+                </ModalHeader>
+
+                <ModalBody>
+                <Grid item xs={3}>
+                                            <Autocomplete
+                                                disableClearable
+                                                className='seleccionadortabla-jm'
+                                                id="combo-box-demo"
+                                                options={departamentos}
+                                                getOptionLabel={(option) => {
+                                                  return option.nombre;
+                                                }}
+                                                onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
+                                                renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={3}>
+                                            <Autocomplete
+                                                disableClearable
+                                                className='seleccionadortabla-jm'
+                                                id="combo-box-demo"
+                                                options={prioridades}
+                                                onChange={(event, newvalue) => setPrioridad(newvalue.label)}
+                                                renderInput={(params) => <TextField {...params} fullWidth label="PRIORIDAD" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={3}>
+                                            <Autocomplete
+                                                disableClearable
+                                                className='seleccionadortabla-jm'
+                                                id="combo-box-demo"
+                                                options={tipos}
+                                                onChange={(event, newvalue) => setTipotrabajo(newvalue.label)}
+                                                renderInput={(params) => <TextField {...params} fullWidth label="TIPO TRABAJO" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
+                                            />
+                                        </Grid>
+                                    
+                                     
+                </ModalBody>
+
+                <ModalFooter>
+                <Button     variant="contained"
+                                        className="boton-modal-pdf" onClick={filtrarDatos} startIcon={<FilterAltIcon />}>
+                                                Filtrar
+                                            </Button>
+
+                <Button
+                 variant="outlined"
+                 className="boton-modal-d"
+                        onClick={() => cerrarvistaFiltrar()}
+                    >
+                        Cancelar
+                    </Button>
+                </ModalFooter>
+            </Modal>
         </>
     );
 }

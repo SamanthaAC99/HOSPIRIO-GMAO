@@ -186,7 +186,7 @@ export default function OrdenTrabajoView() {
                       !ESTIMADO USUARIO!
                     </Typography>
                     <br />
-                    El formulario consta de 6 preguntas que nos permitirán determinar los problemas y atender adecuadamente la solicitud.
+                    El formulario consta de 5 preguntas que nos permitirán determinar los problemas y atender adecuadamente la solicitud.
                     <br />
                     <br />
                     Por favor, responda todos los campos de manera específica.
@@ -196,7 +196,7 @@ export default function OrdenTrabajoView() {
                       component="button"
                       className="link"
                       variant="body2"
-                      href="https://drive.google.com/file/d/19O-mC3F3OXb8RliOhCeJ_OeD_TtZtv_x/view?usp=sharing"
+                      href="https://drive.google.com/file/d/1TzEWiL0x5A5NP0b-Z2CqFApEqgvfbnOQ/view?usp=sharing"
                       target="_blank"
                       rel="noreferrer"
 

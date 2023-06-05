@@ -24,6 +24,7 @@ import TarjetaDashboard from "../components/TarjetaDashBoard";
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import emailjs from '@emailjs/browser';
+import TuneIcon from '@mui/icons-material/Tune';
 import '../css/DashboardJefeM.css'
 import { db } from "../firebase/firebase-config"
 import {
@@ -54,6 +55,7 @@ export default function DashboardJefeS() {
     const [departamento, setDepartamento] = useState("Todos");
     const [modalPendientes, setModalPendientes] = useState(false);
     const [modalInformacion2, setModalinformacion2] = useState(false);
+    const [modalFiltrar, setModalFiltrar] = useState(false);
     const [currentForm, setCurrentForm] = useState({})
     const [ctdPendientes, setCtdPendientes] = useState(0);
     const [ctdSolventadas, setCtdSolventadas] = useState(0);
@@ -76,6 +78,13 @@ export default function DashboardJefeS() {
     };
     const cerrarvistainfo2 = () => {
         setModalinformacion2(false);
+    };
+
+    const vistaFiltrar = () => {
+        setModalFiltrar(true);
+    };
+    const cerrarvistaFiltrar = () => {
+        setModalFiltrar(false);
     };
 
     const updateUser = () => {
@@ -242,7 +251,7 @@ export default function DashboardJefeS() {
                                 <div className="card-body12 small">
                                     <div className="name-outlined2">{currentUser.name} {currentUser.lastname}</div>
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} md={6}>
+                                        {/* <Grid item xs={12} md={6}>
                                             <Autocomplete
                                                 disableClearable
                                                 className='seleccionadortabla-jm'
@@ -254,8 +263,8 @@ export default function DashboardJefeS() {
                                                 onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
                                                 renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
                                             />
-                                        </Grid>
-                                        <Grid item xs={12} md={3}>
+                                        </Grid> */}
+                                        {/* <Grid item xs={12} md={3}>
                                             <Autocomplete
                                                 disableClearable
                                                 className='seleccionadortabla-jm'
@@ -264,12 +273,20 @@ export default function DashboardJefeS() {
                                                 onChange={(event, newvalue) => setPrioridad(newvalue.label)}
                                                 renderInput={(params) => <TextField {...params} fullWidth label="PRIORIDAD" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
                                             />
-                                        </Grid>
+                                        </Grid> */}
                                     
-                                        <Grid item xs={12} md={3}>
+                                        {/* <Grid item xs={12} md={3}>
                                             <Button variant="outlined" className="boton-gestionm" onClick={filtrarDatos} startIcon={<FilterAltIcon />}>
                                                 Filtrar
                                             </Button>
+                                        </Grid> */}
+                                        <Grid item xs={12} md={6}>
+                                            <Button variant="outlined" onClick={() => {vistaFiltrar() }}  className="boton-gestionm2"startIcon={<TuneIcon />}>
+                                                Filtrar
+                                            </Button>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                        <Button variant="contained" className="boton-gestionm2" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
                                         </Grid>
                                     </Grid>
                                 </div>
@@ -280,11 +297,11 @@ export default function DashboardJefeS() {
 
 
                         <Grid container spacing={{ xs: 1, md: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-
+{/* 
                             <Grid item xs={4} sm={6} md={4} >
                             <Button variant="outlined" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
-                            </Grid>
-                            <Grid item xs={4} sm={6} md={4} >
+                            </Grid> */}
+                            <Grid item xs={4} sm={6} md={6} >
                                 <TarjetaDashboard
                                     icon={<PendingActionsIcon />}
                                     headerColor={"#F7A76C"}
@@ -293,7 +310,7 @@ export default function DashboardJefeS() {
                                     value={ctdPendientes}
                                 />
                             </Grid>
-                            <Grid item xs={4} sm={6} md={4} >
+                            <Grid item xs={4} sm={6} md={6} >
                                 <TarjetaDashboard
                                     icon={<AssignmentTurnedInIcon />}
                                     headerColor={"#E4AEC5"}
@@ -772,6 +789,57 @@ export default function DashboardJefeS() {
                                             </ModalFooter>
                                         </Container>
                                     </Modal>
+
+                <Modal className="{width:0px}" isOpen={modalFiltrar}>
+                <ModalHeader>
+                    <div><h3>Filtrar Datos</h3></div>
+                </ModalHeader>
+
+                <ModalBody>
+                  <Grid item xs={12} md={6}>
+                                            <Autocomplete
+                                                disableClearable
+                                                className='seleccionadortabla-jm'
+                                                id="combo-box-demo"
+                                                options={departamentos}
+                                                getOptionLabel={(option) => {
+                                                  return option.nombre;
+                                                }}
+                                                onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
+                                                renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
+                                            />
+                                        </Grid> 
+                                         <Grid item xs={12} md={6}>
+                                            <Autocomplete
+                                                disableClearable
+                                                className='seleccionadortabla-jm'
+                                                id="combo-box-demo"
+                                                options={prioridades}
+                                                onChange={(event, newvalue) => setPrioridad(newvalue.label)}
+                                                renderInput={(params) => <TextField {...params} fullWidth label="PRIORIDAD" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
+                                            />
+                                        </Grid> 
+                                    
+                                     
+                </ModalBody>
+
+                <ModalFooter>
+
+                <Button 
+      variant="contained"
+      className="boton-modal-pdf"
+                onClick={filtrarDatos} 
+                startIcon={<FilterAltIcon />}>Filtrar
+                </Button>
+                <Button
+                 variant="outlined"
+                 className="boton-modal-d"
+                        onClick={() => cerrarvistaFiltrar()}
+                    >
+                        Cancelar
+                    </Button>
+                </ModalFooter>
+            </Modal>
         </>
     );
 }
