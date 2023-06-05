@@ -49,7 +49,6 @@ const tipos = [
     { label: 'Todos' },
     { label: 'Equipo Médico' },
     { label: 'Infraestructura' },
-    { label: 'Sistemas' },
     { label: 'Sistema Eléctrico' },
     { label: 'Civil/Plomería' },
     { label: 'Carpintería/Mobiliario' },
