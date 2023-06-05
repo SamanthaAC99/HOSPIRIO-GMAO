@@ -19,8 +19,6 @@ import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from "react-redux";
 import { setOrdenState } from '../features/ordenes/ordenSlice';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
 import "../css/MantenimientoView.css"
 import { Container } from "reactstrap";
 // importamos lo necesario para gestionar las tablas 
@@ -32,14 +30,12 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 const prioridades = [
-    { label: 'Todas' },
     { label: 'Baja' },
     { label: 'Media' },
     { label: 'Alta' },
     { label: 'Crítica' },
 ]
 const tipos = [
-    { label: 'Todos' },
     { label: 'Equipo Médico' },
     { label: 'Infraestructura' },
     { label: 'Sistemas' },
@@ -48,7 +44,6 @@ const tipos = [
     { label: 'Carpintería/Mobiliario' },
 ]
 const estados = [
-    { label: 'Todos' },
     { label: 'Solventado' },
     { label: 'Iniciada' },
     { label: 'Pendiente' },
@@ -57,16 +52,10 @@ const estados = [
 
 export default function Mantenimientoview() {
     const [time1, setTime1] = useState(new Date());
-    const [prioridad, setPrioridad] = useState("Todas");
-    const [estado, setEstado] = useState("Todos");
-    const [tipo, setTipo] = useState("Todos");
-    const [elementosfb, setElementosfb] = useState([]);
-    const [festado, setFestado] = useState(false);
-    const [fprioridad, setFprioridad] = useState(false);
-    const [ftrabajo, setFtrabajo] = useState(false);
-    const [fdepartamento, setFdepartamento] = useState(false);
-    const [ffecha, setFfecha] = useState(false);
-    const [departamento, setDepartamento] = useState("Todos");
+    const [prioridad, setPrioridad] = useState("");
+    const [estado, setEstado] = useState("");
+    const [tipo, setTipo] = useState("");
+    const [departamento, setDepartamento] = useState("");
     const [ordenes, setOrdenes] = useState([]);
     const [departamentos, setDepartamentos] = useState([]);
     const [reset, setReset] = useState(false)
@@ -91,7 +80,6 @@ export default function Mantenimientoview() {
         const ref_ordenes = await getDocs(collection(db, "ordenes"));
         let aux_ordenes = ref_ordenes.docs.map((doc) => ({ ...doc.data() }))
         aux_ordenes.sort((a, b) => (b.indice - a.indice))
-        setElementosfb(aux_ordenes);
         setOrdenes(aux_ordenes);
         ordenes_db.current = aux_ordenes;
         const ref_empresas = await getDoc(doc(db, "informacion", "parametros"));
@@ -106,84 +94,76 @@ export default function Mantenimientoview() {
         navigate('gestionorden');
     }
 
-    const filtrarDatos = () => {
-        console.log(departamento)
-        console.log(fdepartamento)
-        var data = elementosfb;
-        const filtro1 = data.filter(filterbypriority)
-        const filtro2 = filtro1.filter(filterbystate)
-        const filtro3 = filtro2.filter(filterbytipo)
-        const filtro4 = filtro3.filter(filterbydepartamento)
-        const filtro5 = filtro4.filter(filtrobydate);
-        setOrdenes(filtro5);
-        setReset(!reset);
-    }
+
 
     const filterbypriority = (_orden) => {
-        if (fprioridad === true) {
+       
             if (_orden.prioridad === prioridad) {
                 return _orden
-            } else if (prioridad === 'Todas') {
+            } else if (prioridad === "") {
                 return _orden
             } else {
                 return null;
             }
-        } else {
-            return _orden
-        }
+       
     }
     const filterbystate = (_orden) => {
-        if (festado === true) {
+        
             if (_orden.estado === estado) {
                 return _orden
-            } else if (estado === 'Todos') {
+            } else if (estado === "") {
                 return _orden
             } else {
                 return null;
             }
-        } else {
-            return _orden
-        }
+        
     }
     const filterbytipo = (_orden) => {
-        if (ftrabajo === true) {
+
             if (_orden.tipotrabajo === tipo) {
                 return _orden
-            } else if (tipo === 'Todos') {
+            } else if (tipo ===  "") {
                 return _orden
             } else {
                 return null;
             }
-        } else {
-            return _orden
-        }
+    
     }
     const filterbydepartamento = (_orden) => {
-        if (fdepartamento === true) {
+
             if (_orden.departamento === departamento) {
                 return _orden
-            } else if (departamento === 'Todos') {
+            } else if (departamento === "") {
                 return _orden
             } else {
                 return null;
             }
-        } else {
-            return _orden
-        }
+      
     }
-    const filtrobydate = (_orden) => {
+    const filterbydate = (_orden) => {
         let fechaFormat = new Date(_orden.indice).toLocaleDateString("en-US")
 
-        if (ffecha === true) {
             if (fechaFormat === time1) {
+                return _orden
+            } else if (time1 === "") {
                 return _orden
             } else {
                 return null;
             }
-        } else {
-            return _orden
-        }
-
+     
+    }
+    // nuevo sistema de filtro mas sencillo
+    const filterOrdenes =()=>{
+        let aux_ordenes = JSON.parse(JSON.stringify(ordenes_db.current))
+        let ordenes_filtradas = aux_ordenes.filter(filterbystate).filter(filterbytipo).filter(filterbypriority).filter(filterbydepartamento).filter(filterbydate)
+        setOrdenes(ordenes_filtradas);
+        setReset(!reset);
+        setDepartamento("");
+        setTipo("");
+        setPrioridad("");
+        setEstado("");
+        setTime1("")
+        setPage(0);
     }
     // funciones de la tabla
     const handleChangePage = (event, newPage) => {
@@ -256,7 +236,6 @@ export default function Mantenimientoview() {
                                 <DesktopDatePicker
                                     label={"Filtrar Fecha"}
                                     inputFormat="MM/dd/yyyy"
-                                    value={time1}
                                     onChange={SelectFecha1}
                                     renderInput={(params) => <TextField fullWidth {...params} />}
                                 />
@@ -264,32 +243,9 @@ export default function Mantenimientoview() {
                         </Grid>
 
 
-                        <Grid item xs={12} sm={12} md={10}>
-                            <div>
-                                <Grid container spacing={1}>
-                                    <Grid item xs={12} sm={12} md={2}>
-                                        <FormControlLabel control={<Switch onChange={(event, newValue) => { setFestado(newValue) }} value={festado} inputProps={{ 'aria-label': 'controlled' }} />} label="Estado" />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={2}>
-                                        <FormControlLabel control={<Switch onChange={(event, newValue) => { setFtrabajo(newValue) }} inputProps={{ 'aria-label': 'controlled' }} />} label="Tipo Trabajo" />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={2}>
-                                        <FormControlLabel control={<Switch onChange={(event, newValue) => { setFprioridad(newValue) }} inputProps={{ 'aria-label': 'controlled' }} />} label="Prioridad" />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={2}>
-                                        <FormControlLabel control={<Switch onChange={(event, newValue) => { setFdepartamento(newValue) }} inputProps={{ 'aria-label': 'controlled' }} />} label="Departamento" />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12} md={2}>
-                                        <FormControlLabel control={<Switch onChange={(event, newValue) => { setFfecha(newValue) }} inputProps={{ 'aria-label': 'controlled' }} />} label="Fecha" />
-                                    </Grid>
-                                </Grid>
-                            </div>
 
-                        </Grid>
-
-
-                        <Grid item xs={12} md={2}>
-                            <Button variant="contained" className="boton-gestion" fullWidth onClick={filtrarDatos} endIcon={<FilterAltIcon />}>
+                        <Grid item xs={12} md={12}>
+                            <Button variant="contained"   onClick={filterOrdenes} endIcon={<FilterAltIcon />}>
                                 Filtrar
                             </Button>
                         </Grid>

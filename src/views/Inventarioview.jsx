@@ -2,13 +2,12 @@ import '../css/Tabla.css'
 import '../css/Ordentrabajo.css';
 import '../css/Presentacion.css';
 import '../css/InventarioView.css';
-import Typography from '@mui/material/Typography';
 import React, { useRef, useState } from "react";
 import Stack from '@mui/material/Stack';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
-import { collection, setDoc, query, doc, deleteDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { collection, setDoc, query, doc, deleteDoc, updateDoc,getDocs,getDoc } from "firebase/firestore";
 import { styled } from '@mui/material/styles';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
 import AddIcon from '@mui/icons-material/Add';
@@ -63,7 +62,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
 import EditLocationIcon from '@mui/icons-material/EditLocation';
-
+import SearchIcon from '@mui/icons-material/Search';
 
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -107,18 +106,17 @@ export default function Inventarioview() {
 	const [modelo, setModelo] = useState('');
 	const [serie, setSerie] = useState('');
 	const [tipo, setTipo] = useState({codigo:0,nombre:""});
-	const [seguro, setSeguro] = useState('');
+	const [seguro, setSeguro] = useState({label:'Asegurado',value:true});
 	const [file, setFile] = useState(null);
 	const [equipos, setEquipos] = useState([]);
 	const [eimportancia, setEimportancia] = useState([]);
 	const [deshabilitar, setDeshabilitar] = useState(false);
+	const [deshabilitar2,setDeshabilitar2] = useState(true); // esta variable nos servira para bloquear la funcionalidad si no le dan a leeer datos
 	//variables de declaracion de accesorios
 	const [accesorios, setAccesorios] = useState([]);
 	const [accesoriosEquipo, setAccesoriosEquipo] = useState([]);
 	// variables con los equipos declarados y filtros
 	const equipos_totales = useRef([])
-	const equiposFiltro = useRef("")
-	const [codigosFiltrados, setCodigosFiltrados] = useState([])
 	const [codigoSeleccionado, setCodigoSeleccionado] = useState("")
 	const [reset, setReset] = useState(false);
 	//variables de declaracion de equipo
@@ -169,6 +167,13 @@ export default function Inventarioview() {
 			return _item
 		}
 	}
+	const FilterByCodigo = (_item) => {
+		if (_item.codigo === codigoSeleccionado) {
+			return _item
+		} else if (codigoSeleccionado === "") {
+			return _item
+		}
+	}
 	const filtrarEquipos = () => {
 		let aux_equipos = JSON.parse(JSON.stringify(equipos_totales.current))
 		let aux_filter = []
@@ -182,7 +187,14 @@ export default function Inventarioview() {
 		setDepartamentoFilter("")
 		setReset(!reset)
 	}
-	//
+	// 
+	const btnBuscarCodigo =()=>{
+		let aux_equipos = JSON.parse(JSON.stringify(equipos_totales.current))
+		let equipo_target = aux_equipos.filter(FilterByCodigo)
+		setReset(!reset)
+		setData(equipo_target)
+		setCodigoSeleccionado("")
+	}
 
 
 	const handleChangePage = (event, newPage) => {
@@ -194,30 +206,44 @@ export default function Inventarioview() {
 		setPage(0);
 	};
 	const getData = async () => {
+		let aux_equipos = []
+		setDeshabilitar2(true)
+		try {
 		const reference = query(collection(db, "ingreso"));
-		onSnapshot(reference, (querySnapshot) => {
-			let aux_equipos = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
-			setData(
-				aux_equipos.filter(item => item.situacion === "Activo")
-			);
-			equipos_totales.current = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
-			let codigos = aux_equipos.map((item, index) => {
-				return item.codigo
-			})
-			let aux_codigos = ordenarCodigos(codigos)
-			setCodigos(aux_codigos)
-		});
-
-		onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
-			setTipoEquipo(doc.data().tequipo)
-			setEquipos(doc.data().equipos)
-			setDepartamentos(doc.data().departamentos)
-			setUbicaciones(doc.data().ubicaciones)
-			setResponsables(doc.data().responsables)
-			setAccesorios(doc.data().accesorios)
-			setPropietarios(doc.data().propietarios)
-		});
-
+		const querySnapshot = await getDocs(reference);
+		querySnapshot.forEach((doc) => {
+			aux_equipos.push(doc.data())
+		  });
+		setData(
+			aux_equipos.filter(item => item.situacion === "Activo")
+		);
+		equipos_totales.current = aux_equipos;
+		let codigos = aux_equipos.map((item, index) => {
+			return item.codigo
+		})
+		let aux_codigos = ordenarCodigos(codigos)
+		setCodigos(aux_codigos)
+		const reference2 = doc(db, "informacion", "parametros");
+		const docSnap = await getDoc(reference2);
+		let parametros = {}
+		if (docSnap.exists()) {
+			parametros = docSnap.data();
+			setTipoEquipo(parametros.tequipo)
+			setEquipos(parametros.equipos)
+			setDepartamentos(parametros.departamentos)
+			setUbicaciones(parametros.ubicaciones)
+			setResponsables(parametros.responsables)
+			setAccesorios(parametros.accesorios)
+			setPropietarios(parametros.propietarios)
+		} else {
+			console.log("No such document!");
+		}
+		setDeshabilitar2(false)
+		} catch (error) {
+			setDeshabilitar2(true)
+		}
+		
+	
 
 
 	}
@@ -284,18 +310,7 @@ export default function Inventarioview() {
 			console.log('no hay archivo');
 		}
 	};
-	const mostrarModalActualizar = (_dato) => {
-		console.log(_dato)
-		setCurrentEquipo(_dato);
-		setEimportancia(_dato.importancia)
-		setModelo(_dato.modelo)
-		setMarca(_dato.marca)
-		setSerie(_dato.serie)
-		setPropietario(_dato.propietario)
-		setModalactualizar(true);
-		setSeguro({ label: 'ASEGURADO', value: true })
-		//setSeguro(_dato.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
-	};
+	
 
 	const mostrarModalAccesorios = (_data) => {
 		setCurrentEquipo(_data)
@@ -307,7 +322,7 @@ export default function Inventarioview() {
 		setModelo("")
 		setMarca("")
 		setSerie("")
-		setPropietario("")
+		setPropietario({nombre:"HOSPITAL DEL RIO",codigo:1})
 	}
 
 
@@ -435,22 +450,36 @@ export default function Inventarioview() {
 	}
 
 
-
+	const mostrarModalActualizar = (_dato) => {
+	
+		setCurrentEquipo(_dato);
+		setEimportancia(_dato.importancia)
+		setModelo(_dato.modelo)
+		setMarca(_dato.marca)
+		setSerie(_dato.serie)
+		setPropietario(_dato.propietario)
+		setModalactualizar(true);
+		setSeguro(_dato.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
+	};
 
 
 	const ActualizarEquipo = async () => {
-
+		let aux_equipos = JSON.parse(JSON.stringify(data))
 		const ref = doc(db, "ingreso", `${currentEquipo.id}`);
+		let equipo_modify =  JSON.parse(JSON.stringify(currentEquipo))
+
 		if (file === null) {
+			
 			await updateDoc(ref, {
 				marca: marca,
 				modelo: modelo,
 				serie: serie,
-				propietario: propietario.nombre,
+				propietario: propietario,
 				seguro: seguro.value,
 				importancia: eimportancia,
 			});
-		} else {
+		}
+		 else {
 
 			let url = await sendStorage(currentEquipo.id)
 			await updateDoc(ref, {
@@ -462,12 +491,29 @@ export default function Inventarioview() {
 				importancia: eimportancia,
 				img: url
 			});
+			equipo_modify.img = url
 		}
+		equipo_modify.marca = marca
+		equipo_modify.modelo = modelo
+		equipo_modify.serie = serie
+		equipo_modify.propietario = propietario
+		equipo_modify.seguro = seguro.value
+		equipo_modify.importancia = eimportancia
+
 		Swal.fire(
 			"¡Datos Actualizados!",
 			'',
 			'success'
 		)
+		let equipos_edited = aux_equipos.map(item=>{
+			if(item.id === equipo_modify.id){
+				return equipo_modify
+			}else{
+				return item
+			}
+
+		})
+		setData(equipos_edited)
 		setFile(null)
 		setModalactualizar(false)
 
@@ -572,10 +618,7 @@ export default function Inventarioview() {
 
 	return (
 		<>
-			<Typography component="div" variant="h5" style={{marginBottom:13,fontFamily:"Cormorant Garamond",marginTop:10,color:"#977F2F"}} >
-				INVENTARIO EQUIPOS
-			</Typography>
-			<Container>
+			<Container style={{paddingTop:10}}>
 				<Grid container spacing={{ xs: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
 
 					<Grid item xs={12} md={12}>
@@ -594,6 +637,7 @@ export default function Inventarioview() {
 					<Grid item xs={12} sm={12} md={3.5}>
 						<Autocomplete
 							disablePortal
+							disabled = {deshabilitar2}
 							id="combo-box-demo"
 							key={reset}
 							options={departamentos}
@@ -607,6 +651,7 @@ export default function Inventarioview() {
 					<Grid item xs={12} sm={12} md={4}>
 						<Autocomplete
 							disablePortal
+							disabled = {deshabilitar2}
 							id="combo-box-demo"
 							key={reset}
 							options={equipos}
@@ -623,6 +668,7 @@ export default function Inventarioview() {
 					<Grid item xs={12} sm={12} md={1.5}>
 
 						<Button
+							disabled = {deshabilitar2}
 							variant="contained"
 							fullWidth
 							sx={{ height: "100%" }}
@@ -636,6 +682,7 @@ export default function Inventarioview() {
 					<Grid item xs={12} sm={12} md={1.5}>
 
 						<Button variant="contained"
+							disabled = {deshabilitar2}
 							color='rojo'
 							sx={{ height: "100%" }}
 							fullWidth
@@ -647,6 +694,7 @@ export default function Inventarioview() {
 					<Grid item xs={12} sm={12} md={1.5}>
 
 						<Button variant="contained"
+							disabled = {deshabilitar2}
 							color='verde2'
 							sx={{ height: "100%" }}
 							fullWidth
@@ -657,13 +705,16 @@ export default function Inventarioview() {
 					</Grid>
 
 
-					{/* <Grid item xs={12} sm={12} md={3}>
+					<Grid item xs={12} sm={12} md={3}>
 						<Autocomplete
 							disablePortal
+							disabled = {deshabilitar2}
+							key={reset}
 							id="combo-box-demo"
 							options={codigos}
 							sx={{ width: 300 }}
-							renderInput={(params) => <TextField {...params} label="Movie" />}
+							onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
+							renderInput={(params) => <TextField {...params} label="Buscar Codigo" />}
 						/>
 					</Grid>
 					<Grid item xs={12} sm={12} md={1.5}>
@@ -671,20 +722,22 @@ export default function Inventarioview() {
 							sx={{ height: "100%" }}
 							endIcon={<SearchIcon />}
 							fullWidth
+							onClick={btnBuscarCodigo}
+							disabled = {deshabilitar2}
 						>
 							BUSCAR
 						</Button>
-					</Grid> */}
+					</Grid>
 
 
 
 				</Grid>
 
 				<br />
-				<div style={{ height: 430 }}>
+				<div style={{ height: 410 }}>
 
-					<TableContainer sx={{ maxHeight: 430 }}>
-						<Table stickyHeader aria-label="sticky table">
+					<TableContainer  sx={{ maxHeight: 410 }}>
+						<Table  stickyHeader aria-label="sticky table">
 							<TableHead>
 								<TableRow>
 									{columns.map((column, index) => (
@@ -710,21 +763,21 @@ export default function Inventarioview() {
 												<TableCell align="left">{row.responsable.nombre}</TableCell>
 												<TableCell align="center">
 
-													<Button variant='contained'  color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
+													<Button variant='contained' disabled = {deshabilitar2}  color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
 
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={1}>
-														<IconButton aria-label="edit" onClick={() => mostrarModalActualizar(row)} color='warning'><EditIcon /></IconButton>
-														<IconButton aria-label="delete" onClick={() => eliminar(row)} color='rojo'><DeleteIcon /></IconButton>
-														<IconButton aria-label="baja" onClick={() => DardeBaja(row)} color='morado'><PhonelinkOffIcon /></IconButton>
-														<IconButton aria-label="reubicar" onClick={() => { mostrarModalReubicar(row) }} color='crema'><EditLocationIcon /></IconButton>
+														<IconButton aria-label="edit" onClick={() => mostrarModalActualizar(row)} color='warning' disabled = {deshabilitar2}><EditIcon /></IconButton>
+														<IconButton aria-label="delete" onClick={() => eliminar(row)} color='rojo' disabled = {deshabilitar2} ><DeleteIcon /></IconButton>
+														<IconButton aria-label="baja" onClick={() => DardeBaja(row)} color='morado' disabled = {deshabilitar2} ><PhonelinkOffIcon /></IconButton>
+														<IconButton aria-label="reubicar" onClick={() => { mostrarModalReubicar(row) }} color='crema' disabled = {deshabilitar2} ><EditLocationIcon /></IconButton>
 													</Stack>
 												</TableCell>
 												<TableCell align="center">
 													<Stack direction="row" spacing={1}>
-														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {mostrarModalInformacion(row)}} ><InfoIcon /></IconButton>
-														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {hojavida(row)}} ><AssignmentIcon /></IconButton>
+														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {mostrarModalInformacion(row)}} disabled = {deshabilitar2} ><InfoIcon /></IconButton>
+														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {hojavida(row)}} disabled = {deshabilitar2} ><AssignmentIcon /></IconButton>
 													</Stack>
 												</TableCell>
 											</TableRow>
@@ -851,7 +904,7 @@ export default function Inventarioview() {
 
 			<Modal isOpen={modalActualizar}>
 				<ModalHeader>
-					<div><h3>Editar Registro</h3></div>
+					<div><h3>Editar Equipo</h3></div>
 				</ModalHeader>
 				<ModalBody>
 					<Grid container spacing={2}>
@@ -870,8 +923,10 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
-								defaultValue={propietario}
+								defaultValue={{nombre:"HOSPITAL DEL RIO",codigo:1}}
+								value={propietario}
 								options={propietarios}
+								isOptionEqualToValue={(option, value) => option.codigo === value.codigo}
 								getOptionLabel={(option) => {
 									return option.nombre;
 								}}
@@ -885,7 +940,7 @@ export default function Inventarioview() {
 								id="combo-box-demo"
 								value={seguro}
 								options={tseguro}
-								isOptionEqualToValue={(option, value) => option.label === value.label}
+								isOptionEqualToValue={(option, value) => option.value === value.value}
 								getOptionLabel={(option) => option.label}
 								onChange={(event, newvalue) => setSeguro(newvalue)}
 								renderInput={(params) => <TextField {...params} fullWidth label="Seguro" type="text" />}
