@@ -252,6 +252,7 @@ export default function Inventarioview() {
 	//metodos para gestionar los equipos activos de los que ya no estan operativos
 
 	const DardeBaja = (_data) => {
+		let aux_equipos = JSON.parse(JSON.stringify(data))
 		Swal.fire({
 			title: "Dar equipo de Baja",
 			text: "¿Estás Seguro que deseas dar de baja al equipo?",
@@ -263,6 +264,8 @@ export default function Inventarioview() {
 		}).then((result) => {
 			if (result.isConfirmed) {
 				const ref = doc(db, "ingreso", `${_data.id}`);
+				let equipos_salvados = aux_equipos.filter(item=> item.id !== _data.id)
+				setData(equipos_salvados)
 				updateDoc(ref, {
 					situacion: "Inactivo",
 				});
@@ -358,7 +361,9 @@ export default function Inventarioview() {
 
 
 
-	const eliminar = (dato) => {
+	const eliminar = (__dato) => {
+		let aux_equipos = JSON.parse(JSON.stringify(data))
+
 		Swal.fire({
 			title: "Eliminar Equipo",
 			text: "¿Estás Seguro que deseas Eliminar al equipo?",
@@ -369,9 +374,11 @@ export default function Inventarioview() {
 			confirmButtonText: 'Sí'
 		}).then(async (result) => {
 			if (result.isConfirmed) {
-				await deleteDoc(doc(db, "ingreso", `${dato.id}`));
+				let equipos_salvados = aux_equipos.filter(item=> item.id !== __dato.id)
+				setData(equipos_salvados)
+				await deleteDoc(doc(db, "ingreso", `${__dato.id}`));
 				Swal.fire(
-					'Equipo dado de baja!',
+					'Equipo eliminado!',
 					'',
 					'success'
 				)
