@@ -1,34 +1,36 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useSelector } from "react-redux";
+
+import { collection, query, doc, updateDoc, onSnapshot, addDoc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase-config"
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
-import Checkbox from '@mui/material/Checkbox';
-import Swal from 'sweetalert2';
-import Grid from "@mui/material/Grid";
-import { v4 } from 'uuid';
+import InfoIcon from '@mui/icons-material/Info';
+import autoTable from 'jspdf-autotable'
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import { pink, cyan, lightGreen, orange } from '@mui/material/colors';
+import { useEffect, useRef, useState } from "react";
 import TextField from '@mui/material/TextField';
 import AddIcon from '@mui/icons-material/Add';
-import Button from '@mui/material/Button';
-import { db } from "../firebase/firebase-config";
-import SearchIcon from '@mui/icons-material/Search';
+// import { jsPDF } from "jspdf";
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PauseCircleIcon from '@mui/icons-material/PauseCircle';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import Autocomplete from '@mui/material/Autocomplete';
-import * as XLSX from 'xlsx';
-import Container from '@mui/material/Container';
-import ClearIcon from '@mui/icons-material/Clear';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
-//select
-import '../css/Plan.css'
-import { collection, doc, getDoc, updateDoc, getDocs } from "firebase/firestore";
-import {
-    Modal,
-    ModalHeader,
-    ModalBody,
-    FormGroup,
-    ModalFooter,
-} from "reactstrap";
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import TextareaAutosize from '@mui/material/TextareaAutosize';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import TarjetaDashboard from "../components/TarjetaDashBoard";
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import PrintIcon from '@mui/icons-material/Print';
 // dependencias para las tablas
-
+import logoHospi from '../assets/logo_hospi.png'
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -36,131 +38,209 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import Stack from '@mui/material/Stack';
-
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-// configuracion de los reloges
-import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
-import DownloadIcon from '@mui/icons-material/Download';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import DeleteIcon from '@mui/icons-material/Delete';
+//
+import Swal from 'sweetalert2';
+import {
+    Container,
+    Modal,
+    ModalHeader,
+    ModalBody,
+    FormGroup,
+    ModalFooter,
+} from "reactstrap";
+import { Grid } from "@mui/material";
+import '../css/EncargadoView.css'
 import EditIcon from '@mui/icons-material/Edit';
-// datePickers
-
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { jsPDF } from "jspdf";
 
 
-//iconos
-import SettingsIcon from '@mui/icons-material/Settings';
-export default function PruebasView() {
+export default function DashboardTecnicos() {
+    const currentUser = useSelector(state => state.auths);
 
-    const [modalEditar, setModalEditar] = useState(false);
-    const [modalGestionar, setModalGestionar] = useState(false);
-    const [modalInsertar, setModalinsertar] = useState(false);
+    const [modalPendientes, setModalPendientes] = useState(false);
+    const [codigosEquipo, setCodigosEquipo] = useState([]);
+    const [estadof, setEstadof] = useState('');
+    const [ctdPendientes, setCtdPendientes] = useState(0);
+    const [ctdSolventadas, setCtdSolventadas] = useState(0);
+    const [ctdActivas, setCtdActivas] = useState(0);
+    const [modalInformacion2, setModalinformacion2] = useState(false);
+    const [currentForm, setCurrentForm] = useState(orden_initialData);
+    const [modalReportexistente, setModalReportexistente] = useState(false);
+    const [modalReportin, setModalReportin] = useState(false);
+    const [currentOrden, setCurrentOrden] = useState([]);
+    const [inventario, setInventario] = useState([]);
+    const [cequipo, setCequipo] = useState("");
+    const [codigoe, setCodigoe] = useState("");
+    const [rtmantenimiento, setRtmantenimiento] = useState("");
+    const [btnReport, setBtnReport] = useState(false);
+    const [equipment, setEquipment] = useState({});
+    const [currentReporte, setCurrentReporte] = useState({});
+    const [modalEditarReporte, setModalEditarReporte] = useState(false);
+    //variables para las tablas
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [user, setUser] = useState({});
+    const [pagePendientes, setPagePendientes] = useState(0);
+    const [rowsPendientes, setRowsPendientes] = useState(10);
+    const [ordenesTecnico, setOrdenesTecnico] = useState([]);
+    // variables del modal reporte
+    const codigos_totales = useRef([])
 
+    const [nreporte, setNreporte] = useState({
+        OrdenId: '',
+        cedula: '',
+        nombreT: '',
+        falla: '',
+        id: '',
+        codigoe: '',
+        estadof: '',
+        equipo: '',
+        tmantenimiento: '',
+        costo: '',
+        causas: '',
+        actividadesR: [],
+        repuestos: '',
+        observaciones: '',
+        fecha: '',
+        departamento: '',
+        razonp: '',
+        tiempo: '',
+        horas: 0,
+        tipo: "Interno",
+    });
+    const play = async (data) => {
 
-    //variables de mantenimiento
-    const [time1, setTime1] = useState(new Date());
-    const [empresas, setEmpresas] = useState([]);
-    const [deshabilitar, setDeshabilitar] = useState(true);
+        const reference = doc(db, "ordenes", `${data.id}`);
+        //var someDate = Math.round(Date.now() / 1000);
+        //console.log(someDate)
+        let register_times;
+        var lista_tecnicos = data.tecnicos.map((item) => {
+            register_times = item.tiempos.slice()
+            if (item.id === currentUser.uid) {
+                var someDate = Math.round(Date.now() / 1000);
+                register_times.push(someDate)
 
-    const [eventos, setEventos] = useState([{ codigo: "", equipo: { nombre: "" }, man_actual: { start: "" }, departamento: { nombre: "" } }]);
-    // variables para editar la fecha
-    const [equipoEmpresa, setEquipoEmpresa] = useState('');
-    const [equipoPeriodicidad, setEquipoPeriodicidad] = useState(4);
-    const aux_equipos = useRef([])
-    const equipos_totales = useRef([])
-    const codigo_seleccionado = useRef("")
-    const [codigo, setCodigo] = useState("")
-    const [codigos, setCodigos] = useState([]);
-    const [reset, setReset] = useState(false);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
-    //variables para los filtros
-    const [departamentos, setDepartamentos] = useState([{ nombre: "sin cargar", codigo: 0 }]);
-    const [departamento, setDepartamento] = useState({ nombre: "", codigo: 0 });
-    const [nombresEquipo, setNombresEquipo] = useState([]);
-    const [equipo, setEquipo] = useState({ nombre: "", codigo: 0 });
-    // variables para la tabla de  mantenimientos
-    const [currentPlan, setCurrentPlan] = useState({ id: '', empresa: '', end: '2/9/2023, 15:00:00', start: '2/9/2023, 15:00:00', periodicidad: 0, title: '', verificacion: false })
-    const [fechaPlan, setFechanPlan] = useState("2/9/2023, 15:00:00")
-    const [planes, setPlanes] = useState({ equipo: { nombre: '' }, mantenimientos: [{ start: '2/9/2023, 15:00:00' }], departamento: { nombre: '' }, verificacion: false })
-    const [pageMan, setPageMan] = useState(0);
-    const [pagesMan, setPagesMan] = useState(10);
-    // funciones para la tabla de mantenimientos
-    const handleVerificacion = (__data) => {
-        let aux_data = JSON.parse(JSON.stringify(__data))
-        let aux_equipo = JSON.parse(JSON.stringify(planes))
-        let aux_planes = JSON.parse(JSON.stringify(eventos))
-        let mantenimientos = aux_equipo.mantenimientos
-
-        Swal.fire({
-            title: '¿Deseas Continuar?',
-            text: "¡Se cambiara la verificacion del Mantenimiento!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, Verificar!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                aux_data.verificacion = !aux_data.verificacion
-                let mantenimientos_edited = mantenimientos.map(item => {
-                    if (item.id === aux_data.id) {
-                        return aux_data
-                    } else {
-                        return item
-                    }
-                })
-                aux_equipo.mantenimientos = mantenimientos_edited
-                let eventos_edited = aux_planes.map((item) => {
-                    if (item.id === aux_equipo.id) {
-                        return aux_equipo
-                    } else {
-                        return item
-                    }
-
-                })
-                try {
-                    const ref = doc(db, "ingreso", `${planes.id}`);
-                    updateDoc(ref, {
-                        mantenimientos: mantenimientos_edited
-                    })
-                    Swal.fire(
-                        "¡Dato Guardado!",
-                        '',
-                        'success'
-                    )
-                    setPlanes(aux_equipo)
-                    setEventos(eventos_edited)
-                } catch (error) {
-                    Swal.fire(
-                        "¡Vuelva a Intentarlo!",
-                        '',
-                        'error'
-                    )
+                return {
+                    id: item.id,
+                    lastname: item.lastname,
+                    name: item.name,
+                    pause: false,
+                    play: true,
+                    tiempos: register_times,
+                    secondlastname: item.secondlastname,
+                    motivos_parada: item.motivos_parada,
                 }
-                setModalEditar(false)
-
             } else {
-                setModalEditar(false)
+                return {
+                    id: item.id,
+                    lastname: item.lastname,
+                    name: item.name,
+                    pause: item.pause,
+                    play: item.play,
+                    tiempos: item.tiempos,
+                    secondlastname: item.secondlastname,
+                    motivos_parada: item.motivos_parada,
+                }
             }
 
-        })
 
+        });
 
-    };
-    const handleChangeMan = (event, newPage) => {
-        setPageMan(newPage);
+        await updateDoc(reference, {
+
+            tecnicos: lista_tecnicos,
+        });
+
     }
 
-    const handleChangeRowsPerPageMan = (event) => {
-        setPagesMan(+event.target.value);
-        setPageMan(0);
-    };
+    const calcularHoras = (data) => {
+        const arreglo = data
+        var inicio = []
+        var final = []
+        var longitud = arreglo.length;
+        for (var i = 0; i < longitud; i++) {
+            if ((i % 2) === 0 || i === 0) {
+                inicio.push(arreglo[i])
+            } else {
+                final.push(arreglo[i])
+            }
+        }
+        const temp1 = 0;
+        const hinicio = inicio.reduce(
+            (previousValue, currentValue) => previousValue + currentValue,
+            temp1
+        );
+        const temp2 = 0;
+        const hfinal = final.reduce(
+            (previousValue, currentValue) => previousValue + currentValue,
+            temp2
+        );
+        const horas = (hfinal - hinicio) / 3600
+        return horas
 
-    //
+    }
 
+    const calcularTiempos = (data) => {
+        const arreglo = data.slice()
+        var inicio = []
+        var final = []
+        var longitud = arreglo.length;
+        for (var i = 0; i < longitud; i++) {
+            if ((i % 2) === 0 || i === 0) {
+                inicio.push(arreglo[i])
+            } else {
+                final.push(arreglo[i])
+            }
+        }
+        console.log(inicio)
+        console.log(final)
+        const temp1 = 0;
+        const hinicio = inicio.reduce(
+            (previousValue, currentValue) => previousValue + currentValue,
+            temp1
+        );
+        const temp2 = 0;
+        const hfinal = final.reduce(
+            (previousValue, currentValue) => previousValue + currentValue,
+            temp2
+        );
+
+        const t = (hfinal - hinicio) / 3600
+        const horas = Math.trunc(t)
+        const decimales = t - (Math.floor(t))
+        const minutos = decimales * 60
+        const tiempo = `${horas}h${Math.round(minutos)}m`
+        return tiempo
+
+    }
+    const abrirModalReporte = (data) => {
+        if (data.encargado.id === currentUser.uid) {
+            if (data.reporte === true) {
+                setBtnReport(true);
+            } else {
+                setBtnReport(false);
+            }
+            let aux_codigos = JSON.parse(JSON.stringify(codigos_totales.current))
+            let codigos_filter = aux_codigos.filter(item => item.departamento.nombre === data.departamento).map(item => (item.codigo))
+            setCodigosEquipo(codigos_filter)
+            setModalReportin(true);
+            setCurrentOrden(data);
+
+            //let codigos_filtrados = aux_codigos.filter(item)
+
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Acceso Denegado',
+            })
+        }
+    }
+
+    const cerrarModalReporte = () => {
+        setModalReportin(false);
+    }
+    // funciones para las tablas
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -169,819 +249,1490 @@ export default function PruebasView() {
         setRowsPerPage(+event.target.value);
         setPage(0);
     };
-    const SelectFecha1 = (newValue) => {
-        setTime1(newValue);
+
+    const handlePagePendientes = (event, newPage) => {
+        setPagePendientes(newPage)
     };
-
-    const abrirModalGestionar = (__data) => {
-        setModalGestionar(true);
-        setPlanes(__data)
-    }
-    // Funciones modal Editar
-    const abrirModalEditar = (__data) => {
-        setModalEditar(true);
-        setCurrentPlan(__data);
-        setFechanPlan(__data.start);
-        setEquipoEmpresa(__data.empresa)
-    }
-    const cerrrarModalEditar = () => {
-        setModalEditar(false);
-    }
-
-
-    function actualizarMantenimiento() {
-        //console.log(currentPlan)  estas 3 variables son las que van a etar cambiando al editar
-        //console.log(fechaPlan)
-        // console.log(equipoEmpresa)
-        let fecha_aux = new Date(fechaPlan)
-        let format_fecha = fecha_aux.toLocaleString()
-        fecha_aux.setHours(15);
-        let format_fecha_end = fecha_aux.toLocaleString()
-        let aux_equipo = JSON.parse(JSON.stringify(planes))
-        let mantenimientos = aux_equipo.mantenimientos
-        let aux_current_plan = JSON.parse(JSON.stringify(currentPlan))
-        let aux_planes = JSON.parse(JSON.stringify(eventos))
-        aux_current_plan.start = format_fecha
-        aux_current_plan.end = format_fecha_end
-        aux_current_plan.empresa = equipoEmpresa
-        let mantenimientos_edited = mantenimientos.map(item => {
-
-            if (item.id === aux_current_plan.id) {
-                return aux_current_plan
-            } else {
-                return item
-            }
-        })
-
-        aux_equipo.mantenimientos = mantenimientos_edited
-        let eventos_edited = aux_planes.map((item) => {
-            if (item.id === aux_equipo.id) {
-                return aux_equipo
-            } else {
-                return item
-            }
-
-        })
-        setPlanes(aux_equipo)
-        Swal.fire({
-            title: '¿Deseas Continuar?',
-            // text: "¡Se eliminará el reporte generado anteriormente!",
-            text: "¡Se cambiara la fecha de Mantenimiento!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, actualizar!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-
-                const ref = doc(db, "ingreso", `${planes.id}`);
-                updateDoc(ref, {
-                    mantenimientos: mantenimientos_edited
-                })
-
-                Swal.fire(
-                    "¡Dato Guardado!",
-                    '',
-                    'success'
-                )
-                setEventos(eventos_edited)
-                setModalEditar(false)
-
-            } else {
-                setModalEditar(false)
-            }
-
-        })
-
-    }
-    const formatFecha = (__fecha) => {
-        let indiceComa = __fecha.indexOf(",");
-        let substring = __fecha.substring(0, indiceComa);
-        return substring
-    }
-    const eliminarMantenimiento = (__data) => {
-        let aux_equipo = JSON.parse(JSON.stringify(planes))
-        let aux_planes = JSON.parse(JSON.stringify(eventos))
-        let mantenimientos = aux_equipo.mantenimientos
-        let datos_nuevos = mantenimientos.filter(item => item.id !== __data.id)
-        aux_equipo.mantenimientos = datos_nuevos
-        let eventos_edited = aux_planes.map((item) => {
-            if (item.id === aux_equipo.id) {
-                return aux_equipo
-            } else {
-                return item
-            }
-
-        })
-        Swal.fire({
-            title: '¿Deseas Continuar?',
-            text: "¡Se eliminara el mantenimiento!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, Eliminar!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                setPlanes(aux_equipo);
-                const ref = doc(db, "ingreso", `${aux_equipo.id}`);
-                updateDoc(ref, {
-                    mantenimientos: datos_nuevos
-                })
-                setEventos(eventos_edited)
-            }
-        })
-    }
-
-    // funciones para crear el plan
-
-
-    const handleChangePeriodicidad = (event) => {
-        setEquipoPeriodicidad(parseInt(event.target.value));
+    const handleRowsPendientes = (event) => {
+        setRowsPendientes(+event.target.value);
+        setPagePendientes(0);
     };
-    const crearPlanMantenimiento = (_date) => {
+    const pause = async (data) => {
+        await Swal.fire({
+            title: 'Seleccione el motivo de la pausa',
+            input: 'select',
+            inputOptions: {
+                'Suspendida': 'Suspendida',
+                'Repuestos': 'Espera de Repuestos',
+                'Disposicion': 'Disp. Área',
+                'Autorizacion': 'Autorización'
+            },
+            inputPlaceholder: 'Motivo',
+            showCancelButton: true,
+            inputValidator: (value) => {
+                return new Promise(async (resolve) => {
+                    if (value === '') {
+                        resolve('Necesita seleccionar una opción')
+                    } else {
+                        const reference = doc(db, "ordenes", `${data.id}`);
+                        //var someDate = Math.round(Date.now() / 1000);
+                        //console.log(someDate)
+                        var razonparada = data.tecnicos.find(item => item.id === currentUser.uid).motivos_parada;
+                        razonparada.push(value);
+                        let register_times;
+                        var lista_tecnicos = data.tecnicos.map((item) => {
+                            register_times = item.tiempos.slice()
+                            if (item.id === currentUser.uid) {
+                                var someDate = Math.round(Date.now() / 1000);
+                                register_times.push(someDate)
 
-
-        let year = _date.getFullYear()
-        let diaselect = _date.getDate()
-        let month = _date.getMonth() + 1
-        if (diaselect > 28) {
-            diaselect = 28; // este condicional es porque a veces hay meses que tienen meenos de 31 dias 
-        }
-        let equipo_seleccionado = equipos_totales.current.filter(filterbycodigo)[0]
-        let aux_planes = JSON.parse(JSON.stringify(eventos))
-        if (equipoEmpresa !== "") {
-            if (equipo_seleccionado.mantenimientos.length > 0) {
-                Swal.fire({
-                    title: '¿Deseas Continuar?',
-                    text: "¡Este Equipo Ya tiene Mantenimientos!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, Crear!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        let mantenimientos = JSON.parse(JSON.stringify(equipo_seleccionado.mantenimientos))
-                        let flag_year = true
-                        for (var i = month + equipoPeriodicidad; i < 24; i += equipoPeriodicidad) {
-                            let month_target = i
-                            if (i > 12) {
-                                month_target = i - 12
-                                if (flag_year) {
-                                    year = year + 1
-                                    flag_year = false
+                                return {
+                                    id: item.id,
+                                    lastname: item.lastname,
+                                    name: item.name,
+                                    pause: true,
+                                    play: false,
+                                    tiempos: register_times,
+                                    secondlastname: item.secondlastname,
+                                    motivos_parada: razonparada
+                                }
+                            } else {
+                                return {
+                                    id: item.id,
+                                    lastname: item.lastname,
+                                    name: item.name,
+                                    pause: item.pause,
+                                    play: item.play,
+                                    tiempos: item.tiempos,
+                                    secondlastname: item.secondlastname,
+                                    motivos_parada: item.motivos_parada,
                                 }
                             }
-                            let string_fecha_start = `${month_target}/${diaselect}/${year}, 2:00:00 PM`
-                            let string_fecha_end = `${month_target}/${diaselect}/${year}, 3:00:00 PM`
-                            let objeto_mantenimiento = {
-                                codigo_equipo: equipo_seleccionado.codigo,
-                                id: v4(),
-                                id_equipo: equipo_seleccionado.id,
-                                start: string_fecha_start,
-                                end: string_fecha_end,
-                                periodicidad: equipoPeriodicidad,
-                                title: equipo_seleccionado.equipo.nombre,
-                                verificacion: false,
-                                empresa: equipoEmpresa,
-                            }
-                            mantenimientos.push(objeto_mantenimiento)
-                        }
-                        equipo_seleccionado.mantenimientos = mantenimientos
-                        const ref = doc(db, "ingreso", `${equipo_seleccionado.id}`);
-                        updateDoc(ref, {
-                            mantenimientos: mantenimientos,
+
                         });
-                        setModalinsertar(false);
-                        let eventos_edited = aux_planes.map((item) => {
-                            if (item.id === equipo_seleccionado.id) {
-                                return equipo_seleccionado
-                            } else {
-                                return item
-                            }
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '¡Actividad en Espera!',
+                            showConfirmButton: false,
+                            timer: 2000
 
                         })
-                        setEventos(eventos_edited)
+
+                        // tiempos.push(someDate);
+                        //console.log(lista_tecnicos)
+                        await updateDoc(reference, {
+                            tecnicos: lista_tecnicos,
+                        });
+
                     }
                 })
+            }
+        })
 
 
-            } else {
-                let mantenimientos = []
-                let flag_year = true
-                for (var i = month + equipoPeriodicidad; i < 24; i += equipoPeriodicidad) {
-                    let month_target = i
-                    if (i > 12) {
-                        month_target = i - 12
-                        if (flag_year) {
-                            year = year + 1
-                            flag_year = false
+
+    }
+
+
+    const stop = (data) => {
+        if (data.encargado.id === currentUser.uid) {
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger mx-3'
+                },
+                buttonsStyling: false
+            })
+
+            swalWithBootstrapButtons.fire({
+                title: '¿Deseas finalizar la actividad?',
+                text: "Al finalizar la actividad no podrás editarla nuevamente!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, terminar!',
+                cancelButtonText: 'No, cancelar!',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    //var razonfinal = ""
+                    var horas;
+                    var horasminutos;
+                    var someDate = Math.round(Date.now() / 1000);
+                    //aqui empezamos nuevamente 
+                    var lista_tecnicos = JSON.parse(JSON.stringify(data.tecnicos))
+                    for (let i = 0; i < lista_tecnicos.length; i++) {
+                        var tiempos = lista_tecnicos[i].tiempos.slice();
+
+                        // if (data.mparada.length === 0) {
+                        //     razonfinal = "Sin Interrupción"
+                        // } else {
+                        //     razonfinal = lista_tecnicos[i].motivo_parada.pop()
+                        // }
+                        if (tiempos.length === 0) {
+                            tiempos = []
+                            horas = 0
+                            horasminutos = "0h00"
+                        } else {
+                            tiempos.push(someDate);
+                            horas = calcularHoras(tiempos);
+                            horasminutos = calcularTiempos(tiempos);
                         }
+
+                        lista_tecnicos[i].tiempo_horas = horas
+                        lista_tecnicos[i].tiempo_total = horasminutos
+                        lista_tecnicos[i].tiempos = tiempos
+                        lista_tecnicos[i].play = true
+                        lista_tecnicos[i].pause = true
                     }
-                    let string_fecha_start = `${month_target}/${diaselect}/${year}, 2:00:00 PM`
-                    let string_fecha_end = `${month_target}/${diaselect}/${year}, 3:00:00 PM`
-                    let objeto_mantenimiento = {
-                        codigo_equipo: equipo_seleccionado.codigo,
-                        id: v4(),
-                        id_equipo: equipo_seleccionado.id,
-                        start: string_fecha_start,
-                        end: string_fecha_end,
-                        periodicidad: equipoPeriodicidad,
-                        title: equipo_seleccionado.equipo.nombre,
-                        verificacion: false,
-                        empresa: equipoEmpresa,
-                    }
-                    mantenimientos.push(objeto_mantenimiento)
+                    const reference = doc(db, "ordenes", `${data.id}`);
+                    updateDoc(reference, {
+                        tecnicos: lista_tecnicos,
+                        estado: "Solventado",
+                    });
+                    swalWithBootstrapButtons.fire(
+                        'Felicidades!',
+                        'Acitividad Finalizada',
+                        'success'
+
+                    )
+                } else if (
+                    /* Read more about handling dismissals below */
+                    result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    swalWithBootstrapButtons.fire(
+                        'Cancelado',
+                        'Puedes continuar trabajando en la actividad',
+                        'error'
+                    )
                 }
-                equipo_seleccionado.mantenimientos = mantenimientos
-                const ref = doc(db, "ingreso", `${equipo_seleccionado.id}`);
-                updateDoc(ref, {
-                    mantenimientos: mantenimientos,
-                });
-                aux_planes.push(equipo_seleccionado)
-                setEventos(aux_planes)
-                setModalinsertar(false);
-            } //aqui termina la segunda condicional del if
+            })
         } else {
             Swal.fire({
                 icon: 'error',
-                title: 'Faltan Campos !',
-                showConfirmButton: false,
-                timer: 1500
+                title: 'Oops...',
+                text: 'No eres el Encargado de la Orden',
             })
         }
+    }
+
+    const getData = () => {
+
+        onSnapshot(doc(db, "usuarios", currentUser.uid), (doc) => {
+            setUser(doc.data());
+            updateOrdenes(doc.data());
+
+        });
+        const reference = query(collection(db, "ingreso"));
+        onSnapshot(reference, (querySnapshot) => {
+            var inventarioD = [];
+            querySnapshot.forEach((doc) => {
+                inventarioD.push(doc.data());
+            });
+            var codigos = inventarioD.map(item => item.codigo);
+            codigos_totales.current = inventarioD;
+            setInventario(inventarioD);
+            setCodigosEquipo(codigos);
+
+        });
+
 
 
     }
 
-    //limpiar campos 
-    const limpiarCampos = () => {
-        setCodigos([])
-        setCodigo("")
-        codigo_seleccionado.current = ""
-    }
-    const getData = async () => {
-        try {
-            setDeshabilitar(true)
-            const mes_actual = new Date().getMonth() + 1
-            const equiposRef = await getDocs(collection(db, "ingreso"));
-            let equipos_aux = []
-            equiposRef.forEach((doc) => {
-                equipos_aux.push(doc.data())
-            })
-            equipos_totales.current = equipos_aux
-            let dataFilter = equipos_aux.filter(filterbysituacion);
-            let equipos_mantenimiento = dataFilter.filter(item => item.mantenimientos.length > 0);
-            let formated_mans = equipos_mantenimiento.map((item) => {
-                let man_actual = {}
-                item.mantenimientos.forEach(item => {
-                    let aux_fecha = item.start
-                    let mes_mantenimiento = aux_fecha.indexOf("/");
-                    let n = parseInt(aux_fecha[mes_mantenimiento + 1], 10)
-                    if (n === mes_actual) {
-                        man_actual = item
-                    }
-    
+    const updateOrdenes = (usern) => {
+        const reference = query(collection(db, "ordenes"));
+        onSnapshot(reference, (querySnapshot) => {
+            var ordenes = [];
+            querySnapshot.forEach((doc) => {
+                ordenes.push(doc.data());
+            });
+            setOrdenesTecnico(
+                ordenes.sort((a, b) => {
+
+                    return b.indice - a.indice
                 })
-                item['man_actual'] = man_actual
-                return item
+            );
+
+            const p = ordenes.filter(item => usern.tareas.includes(item.id)).filter(filterStateIniciadas).length
+            const s = ordenes.filter(item => usern.tareas.includes(item.id)).filter(filterStateSolventadas).length
+            let a = ordenes.filter(item => usern.tareas.includes(item.id)).filter(filterStateIniciadas)
+            let aux = 0
+            for (let i = 0; i < a.length; i++) {
+                let tec = a[i].tecnicos
+
+                for (let j = 0; j < tec.length; j++) {
+                    let aux2 = tec[j]
+                    if (aux2.id === currentUser.uid) {
+                        if (aux2.pause === false) {
+                            aux = aux + 1
+                        }
+                    }
+                }
+
+            }
+            console.log(a)
+            setCtdPendientes(p);
+            setCtdSolventadas(s);
+            setCtdActivas(aux);
+
+
+
+        });
+    }
+
+    const selectEquipo = (val) => {
+        const equipos2 = inventario.find(item => item.codigo === val)
+        const equipos = inventario.find(item => item.codigo === val)
+        setEquipment(equipos2);
+
+        setCequipo(equipos.equipo.nombre);
+        setCodigoe(val);
+
+    }
+    const filterbyId = (item) => {
+        if (user.tareas.includes(item.id)) {
+            return item;
+        } else {
+            return
+        }
+    }
+
+
+    const filterbyEncargado = (data) => {
+        if (data.encargado.id === currentUser.uid) {
+            return data;
+        } else {
+            return
+        }
+    }
+
+    const filterStateSolventadas = (state) => {
+        if (state.estado === "Solventado") {
+            return state;
+        } else {
+            return
+        }
+    }
+
+    const filterStateIniciadas = (state) => {
+        if (state.estado === "Iniciada") {
+            return state;
+        } else {
+            return
+        }
+    }
+    const createReport = (event) => {
+        setNreporte({
+            ...nreporte,
+            [event.target.name]: event.target.value,
+        });
+    }
+
+    const sendReportFirebase = async () => {
+        const re = nreporte;
+        re['OrdenId'] = currentOrden.id;
+        re['cedula'] = currentUser.indentification;
+        re['nombreT'] = currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname;
+        re['equipo'] = cequipo;
+        re['codigoe'] = codigoe;
+        re['equipo_id'] = equipment.id;
+        re['tmantenimiento'] = rtmantenimiento;
+        re['estadof'] = estadof;
+        re['fecha'] = new Date().toLocaleString("en-US");
+        re['departamento'] = currentOrden.departamento;
+        re['razonp'] = currentOrden.razonp;
+        re['importancia'] = equipment.importancia;
+        re['indice'] = new Date().getTime();
+        let newReporte
+        let tecnicos_aux = JSON.parse(JSON.stringify(currentOrden.tecnicos))
+
+        let tiempos_aux = []
+        for (let i = 0; i < tecnicos_aux.length; i++) {
+            let temp = tecnicos_aux[i].tiempos
+
+            for (let j = 0; j < temp.length; j++) {
+                tiempos_aux.push(temp[j])
+            }
+        }
+
+        re['horas'] = calcularHoras(tiempos_aux);
+        re['tiempo'] = calcularTiempos(tiempos_aux);
+
+
+        console.log(re)
+
+        try {
+            newReporte = await addDoc(collection(db, "reportesint"), re);
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se agrego el reporte a la orden error:' + error,
             })
-            aux_equipos.current = formated_mans
-            setEventos(formated_mans);
-    
-    
-            const empresasRef = await getDocs(collection(db, "empresas"));
-            let empresas_aux = []
-            empresasRef.forEach((doc) => {
-                empresas_aux.push(doc.data())
+        }
+        if (newReporte.id !== null) {
+            console.log(newReporte.id)
+
+            var reportesID = currentOrden.reporteId
+            reportesID.push(newReporte.id)
+            try {
+                const reference = doc(db, "ordenes", `${currentOrden.id}`);
+                updateDoc(reference, {
+                    reporte: true,
+                    reporteId: reportesID,
+                });
+                const reference2 = doc(db, "reportesint", `${newReporte.id}`);
+                updateDoc(reference2, {
+                    id: newReporte.id,
+                });
+                Swal.fire(
+                    'Completado',
+                    'Reporte Agregado con éxito',
+                    'success'
+                )
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'No se agrego el reporte a la orden',
+                })
+            }
+
+
+
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'No se agrego el reporte a la orden',
             })
-            setEmpresas(empresas_aux)
-            const refParam = doc(db, "informacion", "parametros");
-            const params = await getDoc(refParam);
-            if (params.exists()) {
-                setNombresEquipo(params.data().equipos);
-                setDepartamentos(params.data().departamentos)
+        }
+        cerrarModalReporte();
+    }
+
+    const vistaTablaPendientes = (data) => {
+        setCurrentForm(data);
+        setModalPendientes(true);
+    };
+    const cerrarvistainfo = () => {
+        setModalPendientes(false);
+    };
+
+
+    const visualizarReporte = async (orden) => {
+        if (orden.reporte === false) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Acceso Denegado',
+            })
+        } else {
+            const docRef = doc(db, "reportesint", `${orden.reporteId.slice(-1)}`);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setCurrentReporte(docSnap.data());
+                setModalReportexistente(true);
             } else {
+                // doc.data() will be undefined in this case
                 console.log("No such document!");
             }
-            setDeshabilitar(false)
-        } catch (error) {
-            setDeshabilitar(true)
         }
-       
+    }
+
+    const vistainformacion2 = (data) => {
+        setCurrentForm(data);
+        setModalinformacion2(true);
+    };
+    const cerrarvistainfo2 = () => {
+        setModalinformacion2(false);
     };
 
+    const generarPdf = () => {
+        console.log(currentReporte)
+        var props_pdf ={
+            nombre:  currentReporte.equipo,
+            area_responsable:currentReporte.departamento,
+            tipo:"EQUIPO DE COMPUTO",
+            nro_orden:currentReporte.OrdenId,
+            tipo_mantenimiento:currentReporte.tmantenimiento,
+            estado:currentReporte.estadof,
+            problema:currentReporte.falla,
+            actividades:currentReporte.actividadesR,
+            conclusiones:currentReporte.observaciones,
+            causas:currentReporte.causas,
+            responsable:currentReporte.nombreT,
 
-
-
-    const mostrarModalInsertar = () => {
-        setEquipoPeriodicidad(4);
-        setModalinsertar(true);
-    };
-
-    const cerrarModalInsertar = () => {
-        setModalinsertar(false);
-        limpiarCampos();
-    };
-
-
-
-
-
-    const filterbysituacion = (_equipo) => {
-        if (_equipo.situacion === "Activo") {
-            return _equipo
-        } else {
-            return null;
+            
         }
-    }
-    const filterbyNombre = (_equipo) => {
-        if (equipo !== "") {
-            if (_equipo.equipo.nombre === equipo) {
-                return _equipo
-            } else {
-                return null;
-            }
-        } else {
-            return _equipo
-        }
-    }
-
-
-    const filterbyDepartamento = (_equipo) => {
-        if (_equipo.departamento.nombre === departamento.nombre) {
-            return _equipo
-        } else if (departamento.nombre === "") {
-            return _equipo;
-        }
-
-    }
-    const filterbycodigo = (_equipo) => {
-        if (codigo !== "") {
-            if (_equipo.codigo === codigo) {
-                return _equipo
-            } else {
-                return null;
-            }
-        } else {
-            return _equipo
-        }
-    }
-
-    const buscarMantenimiento = () => {
-
-        let aux_1 = JSON.parse(JSON.stringify(aux_equipos.current))
-        let aux = aux_1.filter(filterbyNombre).filter(filterbyDepartamento)
-        setEventos(aux);
-        setReset(!reset);
-        setDepartamento({ nombre: "", codigo: 0 })
-        setEquipo("")
-
-
-    }
-
-    const nombreSeleccionado = (_nombre) => {
-        let aux_1 = JSON.parse(JSON.stringify(equipos_totales.current))
-        const codigos_obtenidos = aux_1.filter(item => item.equipo.nombre === _nombre)
-        const codigos_finales = codigos_obtenidos.filter(item => item.situacion === "Activo").map(item => (item.codigo))
-
-        setReset(!reset);
-        setCodigos(codigos_finales);
-
-    }
-
-    
-    const descargarExcel = () => {
-
-        let aux_equipo = JSON.parse(JSON.stringify(planes))
-        let crono = aux_equipo.mantenimientos.map((item)=>{
-            let format_object = {
-                codigo_equipo: item.codigo_equipo,
-                start: item.start,
-                periodicidad: item.periodicidad,
-                title: item.title,
-                verificacion: item.verificacion,
-                empresa: item.empresa,
-            }
-            return format_object
+        var doc = new jsPDF({
+            orientation: "portrait",
         })
-       
-        const myHeader = ["title", "codigo_equipo", "start","periodicidad","empresa","verificacion"];
-        const worksheet = XLSX.utils.json_to_sheet(crono, { header: myHeader });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.sheet_add_aoa(worksheet, [["Equipo", "Código", "Fecha del Mantenimiento","Periodicidad","Empresa","Verificacion"]], { origin: "A1" });
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
-        XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+        let encabezado = [
+            [{ content: '', colSpan: 1, rowSpan: 2, styles: { halign: 'center', minCellWidth: 20 } },
+            { content: 'SOLICITUD ORDEN DE TRABAJO', styles: { halign: 'center', fontStyle: 'bold' } },
+            { content: 'MT-RE-01', styles: { halign: 'center', fontStyle: 'bold' } }
+            ], [{ content: 'MANTENIMIENTO', styles: { halign: 'center', fontStyle: 'bold' } },
+            { content: 'Fecha', styles: { halign: 'center', fontStyle: 'bold' } }]
+        ]
+        let aux = 5
+        autoTable(doc, {
+            didDrawCell: (data) => {
+                if (data.section === 'body' && data.column.index === 0) {
+                    doc.addImage(logoHospi, 'png', data.cell.x + 2, data.cell.y + 2, 25, 10)
+                }
+            },
+            theme: "grid",
+            startY: aux + 10,
+            body: encabezado,
+            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
+            styles: {
+                color: 20
+            },
+
+        })
+        aux = 40
+        doc.setFontSize(8)// de aqui para abajo todo estara con fontsize 9
+        doc.text("1.	RESPONSABLE DEL EQUIPO", 20, aux)
+        encabezado = [
+            [
+                { content: 'Nro Orden:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: props_pdf.nro_orden, colSpan: 3, styles: { halign: 'center' } },
+            ],
+            [
+                { content: 'Nombre del Equipo:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold', } },
+                { content: props_pdf.nombre, colSpan: 3, styles: { halign: 'center', minCellWidth: 100 } },
+            ],
+            [
+                { content: 'Area Responsable:  ', styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold', } },
+                { content: props_pdf.area_responsable, colSpan: 3, styles: { halign: 'center', minCellWidth: 100 } },
+            ],
+            [
+                { content: 'Tipo de equipo:  ', styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: props_pdf.tipo, colSpan: 3, styles: { halign: 'center', minCellWidth: 100 } },
+            ],
+            [
+                { content: 'Marca:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } },
+                { content: 'Serie:', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } }
+            ],
+            [
+                { content: 'Modelo:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } },
+                { content: 'Propietario:', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } }
+            ],
+            [
+                { content: 'Tipo Mantenimiento:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: props_pdf.tipo_mantenimiento, colSpan: 3, styles: { halign: 'center' } },
+            ],
+            [
+                { content: 'Estado del Equipo:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
+                { content: props_pdf.estado, colSpan: 3, styles: { halign: 'center' } },
+            ],
+        ]
+        autoTable(doc, {
+            theme: "grid",
+            startY: aux + 10,
+            body: encabezado,
+            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
+            styles: {
+                color: 20
+            },
+
+        })
+        aux = 120
+        doc.text("2.	PROBLEMA", 20, aux)
+
+        encabezado = [
+            [
+                { content: props_pdf.problema, styles: { halign: 'left' } },
+            ]]
+        autoTable(doc, {
+            theme: "grid",
+            startY: aux + 10,
+            body: encabezado,
+            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
+            styles: {
+                color: 20
+            },
+
+        })
+
+
+        aux = aux + 30
+        doc.text("3.	ACTIVIDADES", 20, aux)
+        encabezado = [
+            [
+                { content: props_pdf.actividades, styles: { halign: 'left' } },
+            ]]
+        autoTable(doc, {
+            theme: "grid",
+            startY: aux + 10,
+            body: encabezado,
+            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
+            styles: {
+                color: 20
+            },
+
+        })
+        aux = aux + 30
+        doc.text("4.	CONCLUSIONES", 20, aux)
+        encabezado = [
+            [
+                { content: props_pdf.conclusiones, styles: { halign: 'left' } },
+            ]]
+        autoTable(doc, {
+            theme: "grid",
+            startY: aux + 10,
+            body: encabezado,
+            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
+            styles: {
+                color: 20
+            },
+
+        })
+        aux = aux + 30
+        doc.text("5.	CAUSAS", 20, aux)
+        encabezado = [
+            [
+                { content: props_pdf.causas, styles: { halign: 'left' } },
+            ]]
+        autoTable(doc, {
+            theme: "grid",
+            startY: aux + 10,
+            body: encabezado,
+            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
+            styles: {
+                color: 20
+            },
+
+        })
+        aux = aux + 30
+        doc.text(`Responsable: ${props_pdf.responsable}`, 70, aux)
+        aux = aux + 10
+        doc.text("Recibido por:_______________________", 70, aux)
+        doc.save(`REPORTE-${currentReporte.id}.pdf`);
+    }
+    // creamos el codigo para editar los reportes
+    const EditarReporte = async (_data) => {
+
+
+        const docRef = doc(db, "reportesint", `${_data.reporteId.slice(-1)}`);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            setCurrentReporte(docSnap.data());
+            console.log(docSnap.data())
+            setModalEditarReporte(true);
+        } else {
+            // doc.data() will be undefined in this case
+            console.log("No such document!");
+        }
+    }
+    const cambiarDatosReporte = (event) => {
+        setCurrentReporte({
+            ...currentReporte,
+            [event.target.name]: event.target.value,
+        });
+    }
+    const ActualizarReporte = () => {
+
+        const ref = doc(db, "reportesint", `${currentReporte.id}`);
+        updateDoc(ref, {
+            tmantenimiento: rtmantenimiento,
+            costo: currentReporte.costo,
+            falla: currentReporte.falla,
+            causas: currentReporte.causas,
+            actividadesR: currentReporte.actividadesR,
+            repuestos: currentReporte.repuestos,
+            observaciones: currentReporte.observaciones,
+        });
+        setModalEditarReporte(false)
+
+        Swal.fire({
+            icon: 'warning',
+            title: '¡Actividad Actualizada!',
+            showConfirmButton: false,
+            timer: 2000
+
+        })
 
     }
-
-
-
     useEffect(() => {
-
+        getData();
         // eslint-disable-next-line
     }, [])
+
     return (
         <>
-            <Container maxWidth="lg" sx={{ paddingTop: 10 }}>
-                <Grid container spacing={2}>
+            <div className="container-test">
+                <Grid container spacing={{ xs: 1, md: 4 }} columns={{ xs: 4, sm: 8, md: 12 }}>
+                    <Grid item xs={12} sm={6} md={6}>
+                        <div className="card13" >
+                            {
+                                <div className="header-ev">
+                                    <h5 className="titulo-ev">Información del Técnico Interno</h5>
+                                </div>
+                            }
+                            {
+                                <div className="card-body12 small">
+                                    <div className="name-outlined">{currentUser.name} {currentUser.lastname} {currentUser.secondlastname}</div>
+                                    <div className="alinearforms">
+                                        <div className="alinear15">
+                                            < QrCode2Icon sx={{ color: cyan[300] }} />
+                                            <h1 className='texticone mx-4'>{currentUser.indentification} </h1>
+                                            <EngineeringIcon sx={{ color: cyan[300] }} />
+                                            <h1 className='texticone mx-4'>{currentUser.cargo}</h1>
+                                            <PhoneAndroidIcon sx={{ color: cyan[300] }} />
+                                            <h1 className='texticone mx-4'>{currentUser.cellphone}</h1>
+
+                                        </div>
 
 
-                    <Grid item xs={12}>
-                        <Button variant="contained" onClick={getData} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
-                            LEER DATOS
-                        </Button>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Autocomplete
-                            disabled ={deshabilitar}
-                            disableClearable
-                            id="combo-box-demo"
-                            key={reset}
-                            options={nombresEquipo}
-                            getOptionLabel={(option) => {
-                                return option.nombre;
-                            }}
-                            onChange={(event, newValue) => { setEquipo(newValue.nombre) }}
-                            renderInput={(params) => <TextField {...params} fullWidth label="EQUIPO" type="text" />}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Autocomplete
-                            disabled ={deshabilitar}
-                            key={reset}
-                            disableClearable
-                            id="combo-box-demo"
-                            options={departamentos}
-                            getOptionLabel={(option) => {
-                                return option.nombre;
-                            }}
-                            onChange={(event, newValue) => { setDepartamento(newValue) }}
-                            renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTO" type="text" />}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={2}>
-                        <Button variant="outlined" onClick={buscarMantenimiento}     disabled ={deshabilitar} fullWidth size="large" className="boton-plan" startIcon={<SearchIcon />}>
-                            Buscar
-                        </Button>
-                    </Grid>
-                    <Grid item xs={12} md={2}>
-                        <Button variant="outlined" size="large"     disabled ={deshabilitar} className="boton-plan" fullWidth startIcon={<AddIcon />} onClick={() => mostrarModalInsertar()} >
-                            Crear Plan
-                        </Button>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TableContainer sx={{ maxHeight: 430 }}>
-                            <Table stickyHeader aria-label="sticky table">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell
-                                            key={"equipo"}
-                                            align={"left"}
-                                            style={{ minWidth: 350 }}
-                                        >
-                                            Equipo
-                                        </TableCell>
-                                        <TableCell
-                                            key={"departamento"}
-                                            align={"left"}
-                                            style={{ minWidth: 150 }}
-                                        >
-                                            Departamento
-                                        </TableCell>
-                                        <TableCell
-                                            key={"codigo"}
-                                            align={"left"}
-                                            style={{ minWidth: 100 }}
-                                        >
-                                            Codigo
-                                        </TableCell>
-                                        
-                                        <TableCell
-                                            key={"accion"}
-                                            align={"left"}
-                                            style={{ minWidth: 100 }}
-                                        >
-                                            Acciones
-                                        </TableCell>
+                                    </div>
 
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {eventos.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                        .map((row, index) => {
-                                            return (
-                                                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                                                    <TableCell align="left">{row.equipo.nombre}</TableCell>
-                                                    <TableCell align="left">{row.departamento.nombre}</TableCell>
-                                                    <TableCell align="left">{row.codigo}</TableCell>
-                                          
-                                                    <TableCell align="left">
-                                                        <Button variant="outlined"      disabled ={deshabilitar} onClick={() => { abrirModalGestionar(row) }} size="large" className="boton-plan" startIcon={<SettingsIcon />}>
-                                                            gestionar
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <TablePagination
-                            rowsPerPageOptions={[10, 25, 100]}
-                            component="div"
-                            count={eventos.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                        />
+                                </div>
+                            }
+                        </div>
+
+                    </Grid>
+
+
+                    <Grid item xs={12} sm={6} md={6}>
+
+
+                        <Grid container spacing={{ xs: 1, md: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
+
+                            <Grid item xs={4} sm={6} md={4} >
+                                <TarjetaDashboard
+                                    icon={<PlayArrowIcon />}
+                                    headerColor={"#ADCF9F"}
+                                    avatarColor={lightGreen[700]}
+                                    title={'Activas'}
+                                    value={ctdActivas}
+                                />
+                            </Grid>
+                            <Grid item xs={4} sm={6} md={4} >
+                                <TarjetaDashboard
+                                    icon={<PendingActionsIcon />}
+                                    headerColor={"#F7A76C"}
+                                    avatarColor={orange[700]}
+                                    title={'Pendientes'}
+                                    value={ctdPendientes}
+                                />
+                            </Grid>
+                            <Grid item xs={4} sm={6} md={4} >
+                                <TarjetaDashboard
+                                    icon={<AssignmentTurnedInIcon />}
+                                    headerColor={"#E4AEC5"}
+                                    avatarColor={pink[700]}
+                                    title={'Participadas'}
+                                    value={ctdSolventadas}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={6}>
+                        <div className="card13" >
+                            <div className="header-ev">
+                                <h5 className="titulo-ev">Actividades Pendientes</h5>
+                                <Avatar sx={{ bgcolor: orange[700] }} >
+                                    <WorkHistoryIcon />
+                                </Avatar>
+                            </div>
+                            <div className="card-body12-tabla small" style={{ height: 330 }}>
+                                <TableContainer sx={{ maxHeight: 280 }}>
+                                    <Table stickyHeader aria-label="sticky table">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell
+                                                    align={"left"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Prioridad
+                                                </TableCell>
+                                                <TableCell
+                                                    align={"left"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Asunto
+                                                </TableCell>
+                                                <TableCell
+                                                    align={"center"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Acciones
+                                                </TableCell>
+                                                <TableCell
+                                                    align={"center"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Información
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {ordenesTecnico.filter(filterbyId).filter(filterStateIniciadas).slice(pagePendientes * rowsPendientes, pagePendientes * rowsPendientes + rowsPendientes)
+                                                .map((row, index) => {
+                                                    return (
+                                                        <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                            <TableCell align="left">{row.priorirdad}</TableCell>
+                                                            <TableCell align="left">{row.asunto}</TableCell>
+                                                            <TableCell align="center">
+                                                                <Stack direction="row" spacing={0.5} alignitems="center" justifyContent="center" >
+                                                                    <IconButton aria-label="play" onClick={() => play(row)} disabled={row.tecnicos.find(item => item.id === currentUser.uid).play} sx={{ color: lightGreen[500] }}><PlayCircleFilledWhiteIcon /></IconButton>
+                                                                    <IconButton aria-label="pause" onClick={() => pause(row)} disabled={row.tecnicos.find(item => item.id === currentUser.uid).pause} sx={{ color: orange[500] }}><PauseCircleIcon /></IconButton>
+                                                                    <IconButton aria-label="stop" onClick={() => stop(row)} disabled={row.tecnicos.find(item => item.id === currentUser.uid).pause} sx={{ color: pink[500] }}><StopCircleIcon /></IconButton>
+                                                                </Stack>
+                                                            </TableCell>
+                                                            <TableCell align="center">
+                                                                <IconButton aria-label="delete" color="gris" onClick={() => { vistaTablaPendientes(row) }}  ><InfoIcon /></IconButton>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                                <TablePagination
+                                    rowsPerPageOptions={[10, 25, 100]}
+                                    component="div"
+                                    count={ctdPendientes}
+                                    rowsPerPage={rowsPendientes}
+                                    page={pagePendientes}
+                                    onPageChange={handlePagePendientes}
+                                    onRowsPerPageChange={handleRowsPendientes}
+                                />
+                            </div>
+                        </div>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={6}>
+                        <div className="card13" >
+                            <div className="header-ev">
+                                <h5 className="titulo-ev">Reportes Encargados</h5>
+                                <Avatar sx={{ bgcolor: lightGreen[500] }} >
+                                    <DoneAllIcon />
+                                </Avatar>
+                            </div>
+                            <div className="card-body12-tabla small" style={{ height: 330 }}>
+                                <TableContainer sx={{ maxHeight: 280 }}>
+                                    <Table stickyHeader aria-label="sticky table">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell
+                                                    align={"left"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Prioridad
+                                                </TableCell>
+                                                <TableCell
+                                                    align={"left"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Asunto
+                                                </TableCell>
+                                                <TableCell
+                                                    align={"left"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Informacion
+                                                </TableCell>
+                                                <TableCell
+                                                    align={"left"}
+                                                    style={{ minWidth: 100 }}
+                                                >
+                                                    Reporte
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {ordenesTecnico.filter(filterbyId).filter(filterbyEncargado).filter(filterStateSolventadas).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                                .map((row, index) => {
+                                                    return (
+                                                        <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                            <TableCell align="left">{row.fecha}</TableCell>
+                                                            <TableCell align="left">{row.asunto}</TableCell>
+                                                            <TableCell align="center">
+                                                                <IconButton aria-label="informacion" color="gris" onClick={() => { vistainformacion2(row) }}><InfoIcon /></IconButton>
+                                                            </TableCell>
+                                                            <TableCell align="center">
+                                                                <Stack direction="row" spacing={1}>
+                                                                    <IconButton aria-label="delete" onClick={() => { abrirModalReporte(row) }} disabled={row.reporte} color="primary">
+                                                                        <AddIcon />
+
+                                                                    </IconButton>
+                                                                    <IconButton aria-label="delete" onClick={() => { visualizarReporte(row) }} disabled={!row.reporte} color="rosado">
+                                                                        <RemoveRedEyeIcon />
+                                                                    </IconButton>
+                                                                    <IconButton aria-label="delete" onClick={() => { EditarReporte(row) }} disabled={!row.reporte} color="warning">
+                                                                        <EditIcon />
+                                                                    </IconButton>
+                                                                </Stack>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                                <TablePagination
+                                    rowsPerPageOptions={[10, 25, 100]}
+                                    component="div"
+                                    count={ctdSolventadas - 1}
+                                    rowsPerPage={rowsPerPage}
+                                    page={page}
+                                    onPageChange={handleChangePage}
+                                    onRowsPerPageChange={handleChangeRowsPerPage}
+                                />
+                            </div>
+                        </div>
                     </Grid>
                 </Grid>
-
-            </Container>
-            <Modal className="{width:0px}" isOpen={modalInsertar}>
-                <ModalHeader>
-                    <div><h3>Crear Plan de Mantenimiento</h3></div>
-                </ModalHeader>
-                <ModalBody>
-                    <FormGroup>
+                <Modal isOpen={modalReportin}>
+                    <ModalHeader>
+                        <div><h1>Reporte Interno</h1></div>
+                    </ModalHeader>
+                    <ModalBody>
                         <Grid container spacing={4}>
                             <Grid item xs={12}>
+                                <TextField id="outlined-basic" InputProps={{ readOnly: true }} label="Código Orden" defaultValue={currentOrden.id} variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="Cédula Técnico" variant="outlined" InputProps={{ readOnly: true }} defaultValue={currentUser.indentification} fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="Nombre Técnico" variant="outlined" InputProps={{ readOnly: true }} defaultValue={currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname} fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+
                                 <Autocomplete
                                     disableClearable
                                     id="combo-box-demo"
-                                    options={nombresEquipo}
-                                    getOptionLabel={(option) => {
-                                        return option.nombre;
+                                    className='seleccionadortabla'
+
+                                    onChange={(event, newValue) => {
+                                        selectEquipo(newValue);
+
                                     }}
-                                    onChange={(event, newValue) => { nombreSeleccionado(newValue.nombre) }}
-                                    renderInput={(params) => <TextField {...params} fullWidth label="EQUIPO" type="text" />}
+                                    value={codigoe}
+                                    options={codigosEquipo}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Código Equipo" type="text" />}
                                 />
                             </Grid>
-
-                            <Grid item xs={12}>
-                                <Autocomplete
-                                    disableClearable
-                                    key={reset}
-                                    id="combo-box-demo"
-                                    options={codigos}
-
-                                    onChange={(event, newValue) => { setCodigo(newValue) }}
-                                    renderInput={(params) => <TextField {...params} fullWidth label="CÓDIGO" type="text" />}
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Fecha Mantenimiento"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="Equipo" variant="outlined" InputProps={{ readOnly: true }} value={cequipo} fullWidth />
                             </Grid>
                             <Grid item xs={6}>
                                 <Autocomplete
                                     disableClearable
                                     id="combo-box-demo"
-                                    options={empresas.map(item => item.empresa)}
-                                    renderInput={(params) => <TextField {...params} fullWidth label="Empresas" type="text" />}
-                                    onChange={(event, newvalue) => setEquipoEmpresa(newvalue)}
+                                    className='seleccionadortabla'
+                                    onChange={(event, newValue) => {
+                                        setRtmantenimiento(newValue);
+                                    }}
+                                    options={["PREVENTIVO", "CORRECTIVO"]}
+                                    renderInput={(params) => <TextField name="tmantenimiento"  {...params} fullWidth label="T.Mantenimiento" type="text" />}
                                 />
                             </Grid>
                             <Grid item xs={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel id="demo-simple-select-label">Periodicidad</InputLabel>
-                                    <Select
-                                        labelId="demo-simple-select-label"
-                                        id="demo-simple-select"
-                                        value={equipoPeriodicidad}
-                                        label="Periodicidad"
-                                        onChange={handleChangePeriodicidad}
-                                    >
-                                        <MenuItem value={1}>Mensual</MenuItem>
-                                        <MenuItem value={3}>Trimestral</MenuItem>
-                                        <MenuItem value={4}>4 meses</MenuItem>
-                                        <MenuItem value={6}>6 meses</MenuItem>
-                                        <MenuItem value={12}>Anual</MenuItem>
-                                    </Select>
-                                </FormControl>
-
-                            </Grid>
-                        </Grid>
-                    </FormGroup>
-                </ModalBody>
-                <ModalFooter>
-                    <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                            <Button
-                                onClick={() => crearPlanMantenimiento(time1, equipoPeriodicidad)}
-                                disabled={codigo !== "" ? false : true}
-                                variant="outlined"
-                                size="large"
-                                className="boton-plan"
-                                fullWidth startIcon={<AddIcon />}
-                            >
-                                Crear Plan
-                            </Button>
-                        </Grid>
-                        <Grid item xs={6}>
-                            <Button
-                                onClick={() => cerrarModalInsertar()}
-                                variant="outlined"
-                                size="large"
-                                className="boton-plan"
-                                fullWidth startIcon={<ClearIcon />}
-                            >
-                                Cancelar
-                            </Button>
-                        </Grid>
-                    </Grid>
-
-                </ModalFooter>
-            </Modal>
-
-           
-            <Modal size="sm" isOpen={modalEditar}>
-                <ModalHeader>
-                    <div><h1>Editar Plan</h1></div>
-                </ModalHeader>
-                <ModalBody>
-                    <FormGroup>
-                        <Grid container spacing={4}>
-                            <Grid item xs={12}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Fecha Mantenimiento"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={fechaPlan}
-                                        onChange={(newValue) => setFechanPlan(newValue)}
-                                        renderInput={(params) => <TextField fullWidth  {...params} />}
-                                    />
-                                </LocalizationProvider>
+                                <TextField id="outlined-basic" name="costo" onChange={createReport} label="Costo" variant="outlined" fullWidth />
                             </Grid>
                             <Grid item xs={12}>
                                 <Autocomplete
                                     disableClearable
                                     id="combo-box-demo"
-                                    value={equipoEmpresa}
-                                    options={empresas.map(item => item.empresa)}
-                                    renderInput={(params) => <TextField fullWidth {...params} label="Empresas" type="text" />}
-                                    onChange={(event, newvalue) => setEquipoEmpresa(newvalue)}
+                                    className='seleccionadortabla'
 
+                                    onChange={(event, newValue) => {
+                                        setEstadof(newValue);
+                                    }}
+                                    options={["ARREGLADO", "REPARADO"]}
+
+                                    renderInput={(params) => <TextField name="tmantenimiento"  {...params} fullWidth label="Estado" type="text" />}
+                                />
+                            </Grid>
+                            {/* <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    className='seleccionadortabla'
+
+                                    onChange={(event, newValue) => {
+                                        setNivelDeAlerta(newValue);
+                                    }}
+                                    options={["No Funcional", "Funcional"]}
+
+                                    renderInput={(params) => <TextField name="tmantenimiento"  {...params} fullWidth label="Nivel de Alerta" type="text" />}
+                                />
+                            </Grid> */}
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={2}
+                                    placeholder="Falla"
+                                    className="text-area-encargado"
+                                    name="falla"
+                                    onChange={createReport} />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={2}
+                                    placeholder="Causas"
+                                    className="text-area-encargado"
+                                    name="causas"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={2}
+                                    placeholder="Actividades"
+                                    className="text-area-encargado"
+                                    name="actividadesR"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={2}
+                                    placeholder="Repuestos"
+                                    className="text-area-encargado"
+                                    name="repuestos"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={2}
+                                    placeholder="Observaciones"
+                                    className="text-area-encargado"
+                                    name="observaciones"
+                                    onChange={createReport}
                                 />
                             </Grid>
                         </Grid>
-                    </FormGroup>
-                </ModalBody>
-                <ModalFooter>
-                    <Button
-                        color="rojo"
-                        variant="contained"
-                        onClick={() => cerrrarModalEditar()}
-                        sx={{ marginRight: 5 }}
-                    >
-                        CANCELAR
-                    </Button>
-                    <Button
-                        color="primary"
-                        variant="contained"
-                        onClick={() => actualizarMantenimiento()}
-                    >
-                        APLICAR
-                    </Button>
-                </ModalFooter>
-            </Modal>
 
-            <Modal size="xl" isOpen={modalGestionar}>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="outlined"
+                            className="boton-modal-d2"
+                            disabled={btnReport} onClick={sendReportFirebase}>Añadir</Button>
+                        <Button
+                            variant="contained"
+                            className="boton-modal-d"
+                            onClick={cerrarModalReporte}
+                        >
+                            Cancelar
+                        </Button>
+
+                    </ModalFooter>
+                </Modal>
+
+                <Modal isOpen={modalReportexistente}>
+                    <ModalHeader>
+                        <div><h1>Ver Reporte Interno</h1></div>
+                    </ModalHeader>
+                    <ModalBody>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <div className="name-outlined">{currentReporte.id}</div>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Estado:  </b>
+                                    {currentReporte.estadof}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Orden Trabajo:  </b>
+                                    {currentReporte.OrdenId}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Técnico: </b>
+                                    {currentReporte.nombreT}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Equipo:  </b>
+                                    {currentReporte.equipo}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Código Equipo:  </b>
+                                    {currentReporte.codigoe}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Tipo de mantenimiento:  </b>
+                                    {currentReporte.tmantenimiento}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Tiempo:  </b>
+                                    {currentReporte.tiempo}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Costo:  </b>
+                                    {currentReporte.costo}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Falla:  </b>
+                                </label>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Falla"
+                                    className="text-area-encargado"
+                                    name="falla"
+                                    readOnly
+                                    value={currentReporte.falla} />
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Causas:  </b>
+                                </label>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Causa"
+                                    className="text-area-encargado"
+                                    name="causa"
+                                    readOnly
+                                    value={currentReporte.causas} />
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Actividades:  </b>
+                                </label>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Actividades"
+                                    className="text-area-encargado"
+                                    name="actividadesR"
+                                    readOnly
+                                    value={currentReporte.actividadesR} />
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Repuestos:  </b>
+                                </label>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Repuestos"
+                                    className="text-area-encargado"
+                                    name="repuestos"
+                                    readOnly
+                                    value={currentReporte.repuestos} />
+                            </Grid >
+
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Observaciones:  </b>
+                                </label>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Observaciones"
+                                    className="text-area-encargado"
+                                    name="observaciones"
+                                    readOnly
+                                    value={currentReporte.observaciones} />
+                            </Grid >
+                        </Grid>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="contained"
+                            className="boton-modal-pdf"
+                            startIcon={<PrintIcon />}
+                            onClick={generarPdf} >
+                            Imprimir
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            className="boton-modal-d"
+                            onClick={() => { setModalReportexistente(false) }}
+                        >
+                            Cerrar
+                        </Button>
+                    </ModalFooter>
+                </Modal>
+            </div>
+            <Modal isOpen={modalEditarReporte}>
                 <ModalHeader>
-                    Planificacion de Mantenimientos
+                    <div><h5>Editar Reporte Interno - {currentReporte.OrdenId}</h5></div>
                 </ModalHeader>
                 <ModalBody>
                     <Grid container spacing={1}>
                         <Grid item xs={6}>
-                            <div>
-                                <p><strong>Equipo: </strong> {planes.equipo.nombre} </p>
-                                <p><strong>Departamento: </strong>{planes.departamento.nombre}</p>
-                            </div>
+                            <Autocomplete
+                                disableClearable
+                                id="combo-box-demo"
+                                className='seleccionadortabla'
+                                name="tmantenimiento"
+                                defaultValue={currentReporte.tmantenimiento}
+                                onChange={(event, newValue) => {
+                                    setRtmantenimiento(newValue);
+                                }}
+                                options={["PREVENTIVO", "CORRECTIVO"]}
+                                renderInput={(params) => <TextField   {...params} fullWidth label="T.Mantenimiento" type="text" />}
+                            />
                         </Grid>
                         <Grid item xs={6}>
-                            <div>
-                                <p><strong>Codigo: </strong>{planes.codigo}</p>
-                                <Button variant="outlined" size="large" className="boton-plan"  startIcon={<DownloadIcon />} onClick={descargarExcel} >
-                                EXCEL
-                            </Button>
-                            </div>
+                            <TextField inputProps={{ style: { textTransform: "uppercase" } }} id="outlined-basic" value={currentReporte.costo} name="costo" onChange={cambiarDatosReporte} label="Costo" variant="outlined" fullWidth />
                         </Grid>
                         <Grid item xs={12}>
-                            <TableContainer sx={{ maxHeight: 430 }}>
-                                <Table stickyHeader aria-label="sticky table">
-                                    <TableHead>
-                                        <TableRow>
-
-                                            <TableCell
-                                                key={"departamento"}
-                                                align={"left"}
-                                                style={{ minWidth: 60 }}
-                                            >
-                                                Fecha
-                                            </TableCell>
-
-                                            <TableCell
-                                                key={"proximo"}
-                                                align={"left"}
-                                                style={{ minWidth: 40 }}
-                                            >
-                                                Periodicidad
-                                            </TableCell>
-                                            <TableCell
-                                                key={"encargado"}
-                                                align={"left"}
-                                                style={{ minWidth: 100 }}
-                                            >
-                                                Encargado
-                                            </TableCell>
-                                            <TableCell
-                                                key={"verificacion"}
-                                                align={"left"}
-                                                style={{ minWidth: 40 }}
-                                            >
-                                                Verificacion
-                                            </TableCell>
-                                            <TableCell
-                                                key={"accion"}
-                                                align={"left"}
-                                                style={{ minWidth: 100 }}
-                                            >
-                                                Acciones
-                                            </TableCell>
-
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {planes.mantenimientos.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                            .map((row, index) => {
-                                                return (
-                                                    <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                                                        <TableCell align="left">{formatFecha(row.start)}</TableCell>
-                                                        <TableCell align="center">{row.periodicidad}</TableCell>
-                                                        <TableCell align="left">{row.empresa}</TableCell>
-                                                        <TableCell align="center">
-                                                            <Checkbox
-                                                                checked={row.verificacion}
-                                                                onChange={() => { handleVerificacion(row) }}
-                                                                inputProps={{ 'aria-label': 'controlled' }}
-
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell align="left">
-                                                            <Stack direction="row" spacing={2}>
-                                                                <IconButton aria-label="delete" color="rojo" onClick={() => { eliminarMantenimiento(row) }} size="small">
-                                                                    <DeleteIcon fontSize="small" />
-                                                                </IconButton>
-                                                                <IconButton aria-label="editar" color="warning" size="small">
-                                                                    <EditIcon fontSize="small" onClick={() => { abrirModalEditar(row) }} />
-                                                                </IconButton>
-                                                            </Stack>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                            <TablePagination
-                                rowsPerPageOptions={[10, 25, 100]}
-                                component="div"
-                                count={planes.mantenimientos.length}
-                                rowsPerPage={pagesMan}
-                                page={pageMan}
-                                onPageChange={handleChangeMan}
-                                onRowsPerPageChange={handleChangeRowsPerPageMan}
+                            <strong>Falla:</strong>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={2}
+                                placeholder="Falla"
+                                className="text-area-encargado"
+                                name="falla"
+                                value={currentReporte.falla}
+                                onChange={cambiarDatosReporte} />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <strong>Causas:</strong>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={2}
+                                placeholder="Causas"
+                                className="text-area-encargado"
+                                name="causas"
+                                value={currentReporte.causas}
+                                onChange={cambiarDatosReporte}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <strong>Actividades:</strong>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={2}
+                                placeholder="Actividades"
+                                className="text-area-encargado"
+                                name="actividadesR"
+                                value={currentReporte.actividadesR}
+                                onChange={cambiarDatosReporte}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <strong>Repuestos:</strong>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={2}
+                                placeholder="Repuestos"
+                                className="text-area-encargado"
+                                name="repuestos"
+                                value={currentReporte.repuestos}
+                                onChange={cambiarDatosReporte}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <strong>Observaciones:</strong>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={2}
+                                placeholder="Observaciones"
+                                className="text-area-encargado"
+                                name="observaciones"
+                                value={currentReporte.observaciones}
+                                onChange={cambiarDatosReporte}
                             />
                         </Grid>
                     </Grid>
+
                 </ModalBody>
                 <ModalFooter>
+                    <Button variant="outlined"
+                        className="boton-modal-d2"
+                        disabled={btnReport} onClick={ActualizarReporte}>Añadir</Button>
                     <Button
-                        color="primary"
                         variant="contained"
-                        onClick={() => setModalGestionar(false)}
-                        sx={{ marginRight: 5 }}
+                        className="boton-modal-d"
+                        onClick={() => { setModalEditarReporte(false) }}
                     >
-                        cerrar
+                        Cancelar
                     </Button>
 
                 </ModalFooter>
             </Modal>
 
 
+            <Modal isOpen={modalInformacion2}>
+                <Container>
+                    <ModalHeader>
+                        <div><h1> Orden de Trabajo </h1></div>
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormGroup>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <div className="name-outlined">{currentForm.id}</div>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Asunto:  </b>
+                                        {currentForm.asunto}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Fecha: </b>
+                                        {currentForm.fecha}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Departamento:  </b>
+                                        {currentForm.departamento}
+                                    </label>
+
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Responsable:  </b>
+                                        {currentForm.encargado.name}
+                                    </label>
+
+                                </Grid >
+                                {/* <Grid item xs={12}>
+                                                            <label>
+                                                                <b>Cédula Solicitante:  </b>
+                                                                {currentForm.cedula}
+                                                            </label>
+                                                        </Grid > */}
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Prioridad:  </b>
+                                        {currentForm.prioridad}
+                                    </label>
+
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Tipo de Trabajo:  </b>
+                                        {currentForm.tipotrabajo}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Descripción Equipo:  </b>
+                                    </label>
+                                    <TextareaAutosize
+                                        style={{ textTransform: "uppercase" }}
+                                        aria-label="minimum height"
+                                        minRows={1}
+                                        placeholder="Descripción"
+                                        className="text-area-encargado"
+                                        name="descripcion"
+                                        readOnly
+                                        value={currentForm.descripcion} />
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Problemática:  </b>
+                                    </label>
+                                    <TextareaAutosize
+                                        style={{ textTransform: "uppercase" }}
+                                        aria-label="minimum height"
+                                        minRows={1}
+                                        placeholder="Problematica"
+                                        className="text-area-encargado"
+                                        name="problematica"
+                                        readOnly
+                                        value={currentForm.problematica} />
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Observaciones:  </b>
+                                    </label>
+                                    <TextareaAutosize
+                                        style={{ textTransform: "uppercase" }}
+                                        aria-label="minimum height"
+                                        minRows={1}
+                                        placeholder="Observaciones"
+                                        className="text-area-encargado"
+                                        name="observaciones"
+                                        readOnly
+                                        value={currentForm.observaciones} />
+                                </Grid >
+                            </Grid>
+                        </FormGroup>
+                    </ModalBody>
+                    <ModalFooter className="modal-footer">
+                        <Button variant="contained"
+                            className="boton-modal-d"
+                            onClick={cerrarvistainfo2}>Cerrar </Button>
+
+                    </ModalFooter>
+                </Container>
+            </Modal>
+
+
+
+            <Modal isOpen={modalPendientes}>
+                <Container>
+                    <ModalHeader>
+                        <div><h1>Orden de Trabajo</h1></div>
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormGroup>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <div className="name-outlined">{currentForm.id}</div>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Asunto:  </b>
+                                        {currentForm.asunto}
+                                    </label>
+
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Fecha: </b>
+                                        {currentForm.fecha}
+                                    </label>
+
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Departamento:  </b>
+                                        {currentForm.departamento}
+                                    </label>
+
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Encargado:  </b>
+                                        {currentForm.encargado.name + " " + currentForm.encargado.lastname + " " + currentForm.encargado.secondlastname}
+                                    </label>
+
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Prioridad:  </b>
+                                        {currentForm.prioridad}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Tipo de Trabajo:  </b>
+                                        {currentForm.tipotrabajo}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Descripción Equipo:  </b>
+                                    </label>
+                                    <TextareaAutosize
+                                        style={{ textTransform: "uppercase" }}
+                                        aria-label="minimum height"
+                                        minRows={1}
+                                        placeholder="Descripción"
+                                        className="text-area-encargado"
+                                        name="descripcion"
+                                        readOnly
+                                        value={currentForm.descripcion} />
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Problemática:  </b>
+                                    </label>
+                                    <TextareaAutosize
+                                        style={{ textTransform: "uppercase" }}
+                                        aria-label="minimum height"
+                                        minRows={1}
+                                        placeholder="Problematica"
+                                        className="text-area-encargado"
+                                        name="problematica"
+                                        readOnly
+                                        value={currentForm.problematica} />
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
+                                        <b>Observaciones:  </b>
+                                    </label>
+                                    <TextareaAutosize
+                                        style={{ textTransform: "uppercase" }}
+                                        aria-label="minimum height"
+                                        minRows={1}
+                                        placeholder="Observaciones"
+                                        className="text-area-encargado"
+                                        name="observaciones"
+                                        readOnly
+                                        value={currentForm.observaciones} />
+                                </Grid >
+                            </Grid>
+                        </FormGroup>
+                    </ModalBody>
+                    <ModalFooter className="modal-footer">
+                        <Button variant="contained"
+                            className="boton-modal-d"
+                            onClick={cerrarvistainfo}>
+                            Cerrar
+                        </Button>
+                    </ModalFooter>
+                </Container>
+            </Modal>
         </>
     );
 }
 
+const orden_initialData = {
+
+
+    encargado: {
+        name: "",
+        lastname: "",
+        secondlastname: "",
+    }
+}
