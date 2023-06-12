@@ -24,6 +24,7 @@
     "install": "^0.13.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.28",
+    "jspdf-invoice-template": "^1.4.3",
     "npm": "^9.1.1",
     "react": "^18.2.0",
     "react-big-calendar": "^1.5.2",

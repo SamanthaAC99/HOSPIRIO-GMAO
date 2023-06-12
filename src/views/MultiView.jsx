@@ -53,6 +53,7 @@ import { resetUserState } from '../features/auth/authSlice';
 import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import ReportesExternosNew from "./ReporteExternoNew";
+import PruebasPdf from "./PruebasPdf";
 
 export default function MultiView() {
     const currentUser = useSelector(state => state.auths);
@@ -103,6 +104,13 @@ export default function MultiView() {
                     element={
                         <PrivateRoute auth={true}>
                             <PruebasView />
+                        </PrivateRoute>
+                    }
+                />
+                  <Route path="pruebasPDF"
+                    element={
+                        <PrivateRoute auth={true}>
+                            <PruebasPdf />
                         </PrivateRoute>
                     }
                 />
