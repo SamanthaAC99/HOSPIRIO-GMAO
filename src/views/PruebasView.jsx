@@ -1,69 +1,69 @@
 import { useSelector } from "react-redux";
-import { collection, query, doc, onSnapshot, getDoc } from "firebase/firestore";
-import { pink, lightGreen, orange } from '@mui/material/colors';
-
-import TextareaAutosize from '@mui/material/TextareaAutosize';
-import PrintIcon from '@mui/icons-material/Print';
-
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-
-import { Grid } from "@mui/material";
+import { collection, query, doc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
+import { pink, orange } from '@mui/material/colors';
+import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import Swal from 'sweetalert2';
+import TextareaAutosize from '@mui/material/TextareaAutosize';
+import Checkbox from '@mui/material/Checkbox';
+import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
+import Stack from '@mui/material/Stack';
+import { Grid } from "@mui/material";
 import * as React from 'react';
-import { useEffect, useState,useRef } from "react";
-import Avatar from '@mui/material/Avatar';
+import { useEffect, useState, useRef } from "react";
 import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
 import InfoIcon from '@mui/icons-material/Info';
-import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import TarjetaDashboard from "../components/TarjetaDashBoard";
-import DoneAllIcon from '@mui/icons-material/DoneAll';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import emailjs from '@emailjs/browser';
-import TuneIcon from '@mui/icons-material/Tune';
+import Container from '@mui/material/Container';
+import DescriptionIcon from '@mui/icons-material/Description';
 import FormLabel from '@mui/material/FormLabel';
-import '../css/DashboardJefeM.css';
 import { generarPdf } from "../scripts/pdfReporte";
-import { db } from "../firebase/firebase-config"
+import Button from '@mui/material/Button';
+import { db } from "../firebase/firebase-config";
 import {
-    Container,
     Modal,
     ModalHeader,
     ModalBody,
     FormGroup,
     ModalFooter,
 } from "reactstrap";
-import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
-
-const prioridades = [
-    { label: 'Todas' },
-    { label: 'Crítica' },
-    { label: 'Alta' },
-    { label: 'Media' },
-    { label: 'Baja' },
-]
-
-
-
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import '../css/EncargadoView.css';
+import Paper from '@mui/material/Paper';
 export default function PruebasView() {
-
+    const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
     const currentUser = useSelector(state => state.auths);
-    const [prioridad, setPrioridad] = useState("Todas");
-    const [departamentos, setDepartamentos] = useState([]);
+    const [ordenesTecnico, setOrdenesTecnico] = useState([]);
     const [departamento, setDepartamento] = useState("Todos");
+    const [reset, setReset] = useState(false);
+    const ordenesAux = useRef([])
     const [modalPendientes, setModalPendientes] = useState(false);
-    const [modalInformacion2, setModalinformacion2] = useState(false);
-    const [modalFiltrar, setModalFiltrar] = useState(false);
     const [currentForm, setCurrentForm] = useState({})
     const [ctdPendientes, setCtdPendientes] = useState(0);
     const [ctdSolventadas, setCtdSolventadas] = useState(0);
-    const [ordenes, setOrdenes] = useState([]);
-    const ordenesTotales = useRef([])
     const [currentReporte, setCurrentReporte] = useState({});
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [modalReportexistente, setModalReportexistente] = useState(false);
+    const [estado,setEstado] = useState("");
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+    };
 
     const vistaTablaPendientes = (data) => {
         setCurrentForm(data)
@@ -73,21 +73,26 @@ export default function PruebasView() {
         setModalPendientes(false);
     };
 
-    const vistainformacion2 = (data) => {
-        setCurrentForm(data)
-        setModalinformacion2(true);
-    };
-    const cerrarvistainfo2 = () => {
-        setModalinformacion2(false);
-    };
-
-    const vistaFiltrar = () => {
-        setModalFiltrar(true);
-    };
-    const cerrarvistaFiltrar = () => {
-        setModalFiltrar(false);
-    };
-
+   
+    const visualizarReporte = async (orden) => {
+        if (orden.reporte === false) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Acceso Denegado',
+            })
+        } else {
+            const docRef = doc(db, "reportesint", `${orden.reporteId}`);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setCurrentReporte(docSnap.data());
+                setModalReportexistente(true);
+            } else {
+                // doc.data() will be undefined in this case
+                console.log("No such document!");
+            }
+        }
+    }
     const updateUser = () => {
 
         const reference = query(collection(db, "ordenes"));
@@ -96,133 +101,142 @@ export default function PruebasView() {
             querySnapshot.forEach((doc) => {
                 ordenes.push(doc.data());
             });
-
-            setOrdenes(
-                ordenes.filter(item => item.tipotrabajo === "Sistemas" ).sort((a, b) =>{
-                    return b.indice  - a.indice
-                })
-            );
-            ordenesTotales.current = ordenes.filter(item => item.tipotrabajo === "Sistemas" ).sort((a, b) =>{
-                return b.indice  - a.indice
+            let fecha = ordenes.sort((a, b) => {
+                return b.indice - a.indice
             })
-            setCtdPendientes(ordenes.filter(filterStateIniciadas).filter(item => item.tipotrabajo === "Sistemas" ).length);
-            setCtdSolventadas(ordenes.filter(filterStateSolventadas).filter(item => item.tipotrabajo === "Sistemas" ).length);
-
+            let ci = fecha.filter(filterbycedula)
+            ordenesAux.current = ci
+            setOrdenesTecnico(ci);
+            let p = ci.filter(item => item.estado === "Pendiente").length
+            let s = ci.filter(item => item.estado === "Solventado").length
+            setCtdPendientes(p);
+            setCtdSolventadas(s);
         });
-        onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
-            let departamentos_aux = doc.data().departamentos
-            let temp = [{nombre:"TODOS",codigo:9999}] //esta linea de codigo es para agregar el parametro todos al inicio del arreglo
-            departamentos_aux.forEach((doc)=>{
-                temp.push(doc)
-            })
-            console.log(temp)
-            setDepartamentos(temp)
-          });
     }
 
 
-    const filtrarDatos = () => {
-        const data = JSON.parse(JSON.stringify(ordenesTotales.current));
-        let ordenes_filtradas = data.filter(filterbyarea).filter(filterbyprioridad)
-        setOrdenes(ordenes_filtradas);
-        setCtdPendientes(ordenes_filtradas.filter(filterStateIniciadas).length);
-        setCtdSolventadas(ordenes_filtradas.filter(filterStateSolventadas).length);
-    }
-
-
-    const filterbyarea = (orden) => {
-        if (orden.departamento === departamento) {
-            return orden
-        } else if (departamento === 'TODOS') {
+    const filterbycedula = (orden) => {
+        if (orden.cedula === currentUser.indentification) {
             return orden
         } else {
-            return
+            return null
         }
     }
-    const filterbyprioridad = (orden) => {
-        if (orden.prioridad === prioridad) {
-            return orden
-        } else if (prioridad === 'Todas') {
-            return orden
-        } else {
-            return null;
-        }
-    }
-
-    const filterStateSolventadas = (state) => {
-        if (state.estado === "Solventado") {
-            return state;
-        } else {
-            return
-        }
-    }
-
-    const filterStateIniciadas = (state) => {
-        if (state.estado === "Iniciada") {
-            return state;
-        } else {
-            return
-        }
-    }
-
-    const visualizarReporte = async (orden) => {
-        const docRef = doc(db, "reportesint", `${orden.reporteId}`);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            setCurrentReporte(docSnap.data());
-            setModalReportexistente(true);
-        } else {
-            console.log("No such document!");
-        }
-    }
-
     const downloadPdf = () => {
-        var props_pdf ={
-            nombre:  currentReporte.equipo,
-            area_responsable:currentReporte.departamento,
-            tipo:currentReporte.tipo_equipo,
-            nro_orden:currentReporte.orden_id,
-            marca:currentReporte.marca,
-            serie:currentReporte.serie,
-            modelo:currentReporte.modelo,
-            propietario:currentReporte.propietario,
-            fecha:currentReporte.fecha,
-            tipo_mantenimiento:currentReporte.mantenimiento,
-            estado:currentReporte.estado,
-            problema:currentReporte.falla,
-            actividades:currentReporte.actividades,
-            conclusiones:currentReporte.observaciones,
-            causas:currentReporte.causas,
-            responsable:currentReporte.tecnico,
+        var props_pdf = {
+            nombre: currentReporte.equipo,
+            area_responsable: currentReporte.departamento,
+            tipo: currentReporte.tipo_equipo,
+            nro_orden: currentReporte.orden_id,
+            marca: currentReporte.marca,
+            serie: currentReporte.serie,
+            modelo: currentReporte.modelo,
+            propietario: currentReporte.propietario,
+            fecha: currentReporte.fecha,
+            tipo_mantenimiento: currentReporte.mantenimiento,
+            estado: currentReporte.estado,
+            problema: currentReporte.falla,
+            actividades: currentReporte.actividades,
+            conclusiones: currentReporte.observaciones,
+            causas: currentReporte.causas,
+            responsable: currentReporte.tecnico,
         }
         generarPdf(props_pdf)
 
     }
 
-
-    const actualizarValidacion = ()=>{
-        let aux_ordenes = JSON.parse(JSON.stringify(ordenesTotales.current))
-        let ordenes_fitlradas = aux_ordenes.filter(filterStateSolventadas).filter(item => item.verificacion === false)
-     
-        for(let i = 0;i< ordenes_fitlradas.length ; i++){
-            try {
-                let __orden = ordenes_fitlradas[i]
-                emailjs.send("service_22xh03a", "template_o2wssge", {
-                    n_orden: __orden.id,
-                    asunto: __orden.asunto,
-                    departamento:"Jefe de Sistemas",
-                    to_email:__orden.correo,
-                    reply_to:currentUser.email,
-                }, "Z1YvVmzlMz2V1hOEO");
-                console.log("exito")
-            } catch (error) {
-                console.log("error")
+    const filterbyarea = (orden) => {
+        if (departamento !== "") {
+            if (orden.departamento === departamento) {
+                return orden
+            } else {
+                return null
             }
+        } else {
+            return orden
         }
+
     }
 
-    
 
+    const verificacionr = (data) => {
+        if (data.verificacion === false) {
+
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            })
+
+            swalWithBootstrapButtons.fire({
+                title: '¿Recibe conforme esta actividad?',
+                text: "Gracias por su colaboración",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, verificada!',
+                cancelButtonText: 'No, cancelada!',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const reference = doc(db, "ordenes", `${data.id}`);
+                    updateDoc(reference, {
+                        verificacion: true,
+                    });
+
+                    swalWithBootstrapButtons.fire(
+                        '¡Gracias!',
+                        'Actividad Verificada',
+                        'success'
+                    )
+                } else if (
+                    result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    const reference = doc(db, "ordenes", `${data.id}`);
+                    updateDoc(reference, {
+                        verificacion: false,
+                    });
+                    swalWithBootstrapButtons.fire(
+                        '¡Actividad Rechazada!',
+                        '',
+                        'error'
+                    )
+                }
+            })
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Verificada',
+                text: '¡La actividad ya fue verificada !',
+            })
+        }
+
+    };
+
+    const filtrarDatos = () => {
+        let aux_ordenes = JSON.parse(JSON.stringify(ordenesAux.current))
+        const filtro1 = aux_ordenes.filter(filterStateSolventadas).filter(filterbyarea);
+        setOrdenesTecnico(filtro1);
+        setReset(!reset);
+        setDepartamento("");
+        setEstado("");
+
+    }
+
+
+    const filterStateSolventadas = (state) => {
+        if(estado !== ""){
+            if (state.estado === estado) {
+                return state;
+            } else {
+                return null
+            }
+        }else{
+            return state
+        }
+        
+    }
 
     useEffect(() => {
         updateUser();
@@ -231,66 +245,55 @@ export default function PruebasView() {
 
     return (
         <>
-            <div className="container-test">
-                <Grid container spacing={{ xs: 1, md: 4 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                    <Grid item xs={12} sm={6} md={6}>
+            <Container maxWidth="xl" sx={{ paddingTop: 4 }}>
+                <Grid container spacing={{ xs: 1, md: 4 }} >
+                    <Grid item xs={12} md={8}>
                         <div className="card13" >
-                                <div className="header-ev">
-                                    <h5 className="titulo-ev">Filtros</h5>
-                                </div>
-                                <div className="card-body12 small">
-                                    <div className="name-outlined2">{currentUser.name} {currentUser.lastname}</div>
-                                    <Grid container spacing={2}>
-                                        {/* <Grid item xs={12} md={6}>
-                                            <Autocomplete
-                                                disableClearable
-                                                className='seleccionadortabla-jm'
-                                                id="combo-box-demo"
-                                                options={departamentos}
-                                                getOptionLabel={(option) => {
-                                                  return option.nombre;
-                                                }}
-                                                onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
-                                                renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
-                                            />
-                                        </Grid> */}
-                                        {/* <Grid item xs={12} md={3}>
-                                            <Autocomplete
-                                                disableClearable
-                                                className='seleccionadortabla-jm'
-                                                id="combo-box-demo"
-                                                options={prioridades}
-                                                onChange={(event, newvalue) => setPrioridad(newvalue.label)}
-                                                renderInput={(params) => <TextField {...params} fullWidth label="PRIORIDAD" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
-                                            />
-                                        </Grid> */}
-                                    
-                                        {/* <Grid item xs={12} md={3}>
-                                            <Button variant="outlined" className="boton-gestionm" onClick={filtrarDatos} startIcon={<FilterAltIcon />}>
-                                                Filtrar
-                                            </Button>
-                                        </Grid> */}
-                                        <Grid item xs={12} md={6}>
-                                            <Button variant="outlined" onClick={() => {vistaFiltrar() }}  className="boton-gestionm2"startIcon={<TuneIcon />}>
-                                                Filtrar
-                                            </Button>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                        <Button variant="contained" className="boton-gestionm2" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
-                                        </Grid>
+                            <div className="header-ev">
+                                <h5 className="titulo-ev">Información del Usuario</h5>
+                            </div>
+                            <div className="card-body12 small">
+                              
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <div className="name-outlined">{currentUser.name} {currentUser.lastname}</div>
                                     </Grid>
-                                </div>
+                                    <Grid item xs={12}   md={4}>
+                                        <Autocomplete
+                                            key={reset}
+                                            disableClearable
+                                            className='seleccionadortabla-jm'
+                                            id="combo-box-demo"
+                                            options={currentUser.area}
+                                            onChange={(event, newvalue) => setDepartamento(newvalue)}
+                                            renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" type="text" />}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <Autocomplete
+                                            key={reset}
+                                            disableClearable
+                                            className='seleccionadortabla-jm'
+                                            id="combo-box-demo"
+                                            options={['Solventado','Pendiente']}
+                                            onChange={(event, newvalue) => setEstado(newvalue)}
+                                            renderInput={(params) => <TextField {...params} fullWidth label="ESTADO" type="text" />}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <Button variant="outlined" className="boton-gestionm" onClick={filtrarDatos} startIcon={<FilterAltIcon />}>
+                                            Filtrar
+                                        </Button>
+                                    </Grid>
+                                    
+                                </Grid>
+                        
+                            </div>
                         </div>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={6}>
-
-
+                    <Grid item xs={12}  md={4}>
                         <Grid container spacing={{ xs: 1, md: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-{/* 
-                            <Grid item xs={4} sm={6} md={4} >
-                            <Button variant="outlined" onClick={()=>{actualizarValidacion()}}>Actualizar Validacion</Button>
-                            </Grid> */}
                             <Grid item xs={4} sm={6} md={6} >
                                 <TarjetaDashboard
                                     icon={<PendingActionsIcon />}
@@ -311,518 +314,337 @@ export default function PruebasView() {
                             </Grid>
                         </Grid>
                     </Grid>
-
-
-                    <Grid item xs={12} sm={6} md={6}>
-                        <div className="card13" style={{height:400}} >
-
-                                <div className="header-ev">
-                                    <h5 className="titulo-ev">Actividades Pendientes</h5>
-
-                                    <Avatar sx={{ bgcolor: orange[700] }} >
-                                        <WorkHistoryIcon />
-                                    </Avatar>
-
-                                </div>
-                     
-                                <div className="card-body12-tabla small" style={{overflowY:"scroll"}}>
-                                    <div >
-
-                                        <Table className='table table-light table-hover'>
-                                            <Thead>
-                                                <Tr>
-                                                    <Th>#</Th>
-                                                    <Th className="t-encargados">Fecha</Th>
-                                                    <Th className="t-encargados">Asunto</Th>
-                                                    <Th className="t-encargados">Información</Th>
-                                                </Tr>
-                                            </Thead>
-                                            <Tbody>
-                                                {ordenes.filter(filterStateIniciadas).map((dato, index) => (
-                                                    <Tr key={index} >
-                                                        <Td>
-                                                            {index + 1}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {dato.fecha}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {dato.asunto}
-                                                        </Td>
-                                                        <Td>
-                                                            <IconButton aria-label="delete" color="gris" onClick={() => { vistaTablaPendientes(dato) }}  ><InfoIcon /></IconButton>
-                                                        </Td>
-                                                    </Tr>
-                                                ))}
-                                            </Tbody>
-                                        </Table>
-                                    </div>
-
-                                  
-                                </div>
-
-                        </div>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6} md={6}>
-                        <div className="card13" style={{height:400}}>
-                            
-                                <div className="header-ev">
-                                    <h5 className="titulo-ev">Actividades Acabadas</h5>
-                                    <Avatar sx={{ bgcolor: lightGreen[500] }} >
-                                        <DoneAllIcon />
-                                    </Avatar>
-                                </div>
-                            
-                            
-                                <div className="card-body12-tabla small"  style={{overflowY:"scroll"}}>
-                                    <div >
-                                        <Table className='table table-light table-hover'>
-                                            <Thead>
-                                                <Tr>
-                                                    <Th>#</Th>
-                                                    <Th className="t-encargados">Fecha</Th>
-                                                    <Th className="t-encargados">Asunto</Th>
-                                                    <Th className="t-encargados">Información</Th>
-                                                    <Th className="t-encargados">Verificación</Th>
-                                                    <Th className="t-encargados">Reporte</Th>
-                                                </Tr>
-                                            </Thead>
-                                            <Tbody>
-                                                {ordenes.filter(filterStateSolventadas).map((dato, index) => (
-
-                                                    <Tr key={index} >
-                                                        <Td>
-                                                            {index + 1}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {dato.fecha}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {dato.asunto}
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            <IconButton aria-label="informacion" color="gris" onClick={() => { vistainformacion2(dato) }}><InfoIcon /></IconButton>
-                                                        </Td>
-                                                        <Td className="t-encargados">
-                                                            {/* <Checkbox
-                                                                {...label}
-                                                                icon={<CheckBoxOutlinedIcon />}
-                                                                checked={dato.verificacion}
-                                                            /> */}
-                                                            {dato.verificacion? "SI":"NO"}
-                                                        </Td>
-                                                        <Td>
-                                                            <IconButton aria-label="delete" disabled={!dato.reporte} onClick={() => { visualizarReporte(dato) }} color="rosado">
-                                                                <RemoveRedEyeIcon />
+                    <Grid item xs={12}>
+                    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+                        <TableContainer sx={{ maxHeight: 360 }}>
+                            <Table stickyHeader aria-label="sticky table">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell
+                                            align={"left"}
+                                            style={{ minWidth: 190 }}
+                                        >
+                                            Fecha
+                                        </TableCell>
+                                        <TableCell
+                                            align={"left"}
+                                            style={{ minWidth: 200 }}
+                                        >
+                                            Asunto
+                                        </TableCell>
+                                        <TableCell
+                                            align={"left"}
+                                            style={{ minWidth: 100 }}
+                                        >
+                                            Departamento
+                                        </TableCell>
+                                        <TableCell
+                                            align={"left"}
+                                            style={{ minWidth: 100 }}
+                                        >
+                                            Estado
+                                        </TableCell>
+                                        <TableCell
+                                            align={"center"}
+                                            style={{ minWidth: 70 }}
+                                        >
+                                            Verificacion
+                                        </TableCell>
+                                        <TableCell
+                                            align={"center"}
+                                            style={{ minWidth: 100 }}
+                                        >
+                                            Acciones
+                                        </TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {ordenesTecnico.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                        .map((row, index) => {
+                                            return (
+                                                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                                    <TableCell align="left">{row.fecha}</TableCell>
+                                                    <TableCell align="left">{row.asunto}</TableCell>
+                                                    <TableCell align="left">{row.departamento}</TableCell>
+                                                    <TableCell align="left">{row.estado}</TableCell>
+                                                    <TableCell align="center">
+                                                        <Checkbox
+                                                            {...label}
+                                                            icon={<CheckBoxOutlinedIcon />}
+                                                            disabled={row.estado === 'Solventado' ? false : true}
+                                                            checked={row.verificacion}
+                                                            onChange={() => { verificacionr(row) }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Stack direction="row" spacing={0.5} alignitems="center" justifyContent="center" >
+                                                            <IconButton aria-label="informacion" onClick={() => { vistaTablaPendientes(row) }} color="gris"><InfoIcon /></IconButton>
+                                                            <IconButton
+                                                                aria-label="informacion"
+                                                                onClick={() => { visualizarReporte(row) }}
+                                                                disabled={row.estado === 'Solventado' ? false : true}
+                                                                color="primary"
+                                                            >
+                                                                <DescriptionIcon />
                                                             </IconButton>
-                                                        </Td>
-                                                    </Tr>
-                                                ))}
-                                            </Tbody>
-                                        </Table>
-                                    </div>
-                                  
-                                </div>
-                            
-                        </div>
+                                                        </Stack>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 25, 100]}
+                            component="div"
+                            count={ordenesTecnico.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                </Paper>
                     </Grid>
 
                 </Grid>
-            </div>
 
+               
+            </Container>
+          
 
             <Modal isOpen={modalPendientes}>
-                                        <Container>
-                                            <ModalHeader>
-                                                <div><h1> Orden de Trabajo</h1></div>
-                                            </ModalHeader>
-                                            <ModalBody style={{height:500,overflowY:"scroll"}}>
-                                                <FormGroup>
-                                                    <Grid container spacing={2}>
-                                                    <Grid item xs={12}>
-                                            <div className="name-outlined">{currentForm.id}</div>
-                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Asunto: </b>
-                                                                {currentForm.asunto}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Fecha:  </b>
-                                                                {currentForm.fecha}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Departamento:   </b>
-                                                                {currentForm.departamento}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Tipo Trabajo:   </b>
-                                                                "Sistemas"
-                                                            </label>
-
-                                                        </Grid >
-                                            
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Descripción Equipo:   </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Descripción"
-                                                                className="text-area-encargado"
-                                                                name="descripcion"
-                                                                readOnly
-                                                                value={currentForm.descripcion} />
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Problemática:   </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Problematica"
-                                                                className="text-area-encargado"
-                                                                name="problematica"
-                                                                readOnly
-                                                                value={currentForm.problematica} />
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Observaciones:   </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Observaciones"
-                                                                className="text-area-encargado"
-                                                                name="observaciones"
-                                                                readOnly
-                                                                value={currentForm.observaciones} />
-                                                        </Grid >
-                                                    </Grid>
-                                                </FormGroup>
-                                            </ModalBody>
-                                            <ModalFooter className="modal-footer">
-                                                <Button
-                                                    variant="contained"
-                                                    className="boton-modal-d"
-                                                    onClick={cerrarvistainfo}
-                                                >
-                                                    Cerrar
-                                                </Button>
-
-                                            </ModalFooter>
-                                        </Container>
-                                    </Modal>
-
-
-
-
-
-            <Modal isOpen={modalReportexistente}>
-                                <ModalHeader>
-                                    <div><h1>Ver Reporte Interno</h1></div>
-                                </ModalHeader>
-                                <ModalBody style={{height:500,overflowY:"scroll"}}>
+                <ModalHeader>
+                    <div><h1> Orden de Trabajo</h1></div>
+                </ModalHeader>
+                <ModalBody style={{ height: 500, overflowY: "scroll" }}>
+                    <FormGroup>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
-                                <div className="name-outlined">{currentReporte.id}</div>
+                                <div className="name-outlined">{currentForm.id}</div>
                             </Grid >
-                            <Grid item xs={6}>
+                            <Grid item xs={12}>
                                 <label>
-                                    <b>Estado:  </b>
-                                    {currentReporte.estado}
-                                </label>
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Id Orden:  </b>
-                                    {currentReporte.orden_id}
-                                </label>
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Técnico: </b>
-                                    {currentReporte.tecnico}
-                                </label>
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Equipo:  </b>
-                                    {currentReporte.equipo}
-                                </label>
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Código:</b>
-                                    {currentReporte.codigo_equipo}
-                                </label>
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Mantenimiento:  </b>
-                                    {currentReporte.mantenimiento}
-                                </label>
-
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Tiempo:  </b>
-                                    {currentReporte.tiempo}
-                                </label>
-
-                            </Grid >
-                            <Grid item xs={6}>
-                                <label>
-                                    <b>Costo:  </b>
-                                    {currentReporte.costo}
+                                    <b>Asunto: </b>
+                                    {currentForm.asunto}
                                 </label>
 
                             </Grid >
                             <Grid item xs={12}>
-                            <FormLabel id="demo-radio-buttons-group-label">Falla:</FormLabel>
+                                <label>
+                                    <b>Fecha:  </b>
+                                    {currentForm.fecha}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Departamento:   </b>
+                                    {currentForm.departamento}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Prioridad:  </b>
+                                    {currentForm.prioridad}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Tipo de Trabajo:  </b>
+                                    {currentForm.tipotrabajo}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Descripción Equipo:  </b>
+                                </label>
                                 <TextareaAutosize
-                                    style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
                                     minRows={1}
-                                    placeholder="Falla"
+                                    placeholder="Descripción"
                                     className="text-area-encargado"
-                                    name="falla"
+                                    name="descripcion"
                                     readOnly
-                                    value={currentReporte.falla} />
-
+                                    value={currentForm.descripcion} />
                             </Grid >
                             <Grid item xs={12}>
-                            <FormLabel id="demo-radio-buttons-group-label">Causas:</FormLabel>
+                                <label>
+                                    <b>Problemática:  </b>
+                                </label>
                                 <TextareaAutosize
-                                    style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
                                     minRows={1}
-                                    placeholder="Causa"
+                                    placeholder="Problematica"
                                     className="text-area-encargado"
-                                    name="causa"
+                                    name="problematica"
                                     readOnly
-                                    value={currentReporte.causas} />
+                                    value={currentForm.problematica} />
                             </Grid >
                             <Grid item xs={12}>
-                            <FormLabel id="demo-radio-buttons-group-label">Actividades:</FormLabel>
+                                <label>
+                                    <b>Observaciones:  </b>
+                                </label>
                                 <TextareaAutosize
-                                    style={{ textTransform: "uppercase" }}
-                                    aria-label="minimum height"
-                                    minRows={1}
-                                    placeholder="Actividades"
-                                    className="text-area-encargado"
-                                    name="actividadesR"
-                                    readOnly
-                                    value={currentReporte.actividades} />
-                            </Grid >
-                            <Grid item xs={12}>
-                            <FormLabel id="demo-radio-buttons-group-label">Repuestos:</FormLabel>
-                                <TextareaAutosize
-                                    style={{ textTransform: "uppercase" }}
-                                    aria-label="minimum height"
-                                    minRows={1}
-                                    placeholder="Repuestos"
-                                    className="text-area-encargado"
-                                    name="repuestos"
-                                    readOnly
-                                    value={currentReporte.repuestos} />
-                            </Grid >
-
-                            <Grid item xs={12}>
-                            <FormLabel id="demo-radio-buttons-group-label">Observaciones:</FormLabel>
-                                <TextareaAutosize
-                                    style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
                                     minRows={1}
                                     placeholder="Observaciones"
                                     className="text-area-encargado"
                                     name="observaciones"
                                     readOnly
-                                    value={currentReporte.observaciones} />
+                                    value={currentForm.observaciones} />
                             </Grid >
                         </Grid>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button
-                            variant="contained"
-                            className="boton-modal-pdf"
-                            startIcon={<PrintIcon />}
-                            onClick={downloadPdf} >
-                            Imprimir
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            className="boton-modal-d"
-                            onClick={() => { setModalReportexistente(false) }}
-                        >
-                            Cerrar
-                        </Button>
-                    </ModalFooter>
-                </Modal>
-
-
-            <Modal isOpen={modalInformacion2}>
-                                        <Container>
-                                            <ModalHeader>
-                                                <div><h1> Orden de Trabajo</h1></div>
-                                            </ModalHeader>
-                                            <ModalBody>
-                                                <FormGroup>
-                                                    <Grid container spacing={2}>
-                                                    <Grid item xs={12}>
-                                            <div className="name-outlined">{currentForm.id}</div>
-                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Asunto:  </b>
-                                                                {currentForm.asunto}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Fecha: </b>
-                                                                {currentForm.fecha}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Departamento:  </b>
-                                                                {currentForm.departamento}
-                                                            </label>
-
-                                                        </Grid > 
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Prioridad:  </b>
-                                                                {currentForm.prioridad}
-                                                            </label>
-
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Tipo de Trabajo:  </b>
-                                                               "Sistemas"
-                                                            </label>
-                                                        </Grid >
-                                                        {/* <Grid item xs={12}>
-                                                            <label>
-                                                            <b>Código Equipo:  </b>  
-                                                            {currentForm.codigoe}
-                                                            </label>
-                                                        </Grid > */}
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Descripción Equipo:  </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Descripción"
-                                                                className="text-area-encargado"
-                                                                name="descripcion"
-                                                                readOnly
-                                                                value={currentForm.descripcion} />
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Problemática:  </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Problematica"
-                                                                className="text-area-encargado"
-                                                                name="problematica"
-                                                                readOnly
-                                                                value={currentForm.problematica} />
-                                                        </Grid >
-                                                        <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Observaciones:  </b>
-                                                            </label>
-                                                            <TextareaAutosize
-                                                                aria-label="minimum height"
-                                                                minRows={1}
-                                                                placeholder="Observaciones"
-                                                                className="text-area-encargado"
-                                                                name="observaciones"
-                                                                readOnly
-                                                                value={currentForm.observaciones} />
-
-                                                        </Grid >
-                                                    </Grid>
-                                                </FormGroup>
-                                            </ModalBody>
-                                            <ModalFooter className="modal-footer">
-                                                <Button variant="contained"
-                                                    className="boton-modal-d"
-                                                    onClick={cerrarvistainfo2}>Cerrar </Button>
-                                            </ModalFooter>
-                                        </Container>
-                                    </Modal>
-
-                <Modal className="{width:0px}" isOpen={modalFiltrar}>
-                <ModalHeader>
-                    <div><h3>Filtrar Datos</h3></div>
-                </ModalHeader>
-
-                <ModalBody>
-                  <Grid item xs={12} md={6}>
-                                            <Autocomplete
-                                                disableClearable
-                                                className='seleccionadortabla-jm'
-                                                id="combo-box-demo"
-                                                options={departamentos}
-                                                getOptionLabel={(option) => {
-                                                  return option.nombre;
-                                                }}
-                                                onChange={(event, newvalue) => setDepartamento(newvalue.nombre)}
-                                                renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTOS" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
-                                            />
-                                        </Grid> 
-                                         <Grid item xs={12} md={6}>
-                                            <Autocomplete
-                                                disableClearable
-                                                className='seleccionadortabla-jm'
-                                                id="combo-box-demo"
-                                                options={prioridades}
-                                                onChange={(event, newvalue) => setPrioridad(newvalue.label)}
-                                                renderInput={(params) => <TextField {...params} fullWidth label="PRIORIDAD" color={prioridades !== '' ? "gris" : "oficial"} type="text" />}
-                                            />
-                                        </Grid> 
-                                    
-                                     
+                    </FormGroup>
                 </ModalBody>
+                <ModalFooter className="modal-footer">
+                    <Button variant="contained"
+                        className="boton-modal-d"
+                        onClick={cerrarvistainfo}>Cerrar </Button>
+                </ModalFooter>
 
+            </Modal>
+
+            <Modal isOpen={modalReportexistente}>
+                <ModalHeader>
+                    <div><h4>Visualizar Reporte</h4></div>
+                </ModalHeader>
+                <ModalBody style={{ height: 500, overflowY: "scroll" }}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                            <div className="name-outlined">{currentReporte.id}</div>
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Estado:  </b>
+                                {currentReporte.estado}
+                            </label>
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Id Orden:  </b>
+                                {currentReporte.orden_id}
+                            </label>
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Técnico: </b>
+                                {currentReporte.tecnico}
+                            </label>
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Equipo:  </b>
+                                {currentReporte.equipo}
+                            </label>
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Código:</b>
+                                {currentReporte.codigo_equipo}
+                            </label>
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Mantenimiento:  </b>
+                                {currentReporte.mantenimiento}
+                            </label>
+
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Tiempo:  </b>
+                                {currentReporte.tiempo}
+                            </label>
+
+                        </Grid >
+                        <Grid item xs={6}>
+                            <label>
+                                <b>Costo:  </b>
+                                {currentReporte.costo}
+                            </label>
+
+                        </Grid >
+                        <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Falla:</FormLabel>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={1}
+                                placeholder="Falla"
+                                className="text-area-encargado"
+                                name="falla"
+                                readOnly
+                                value={currentReporte.falla} />
+
+                        </Grid >
+                        <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Causas:</FormLabel>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={1}
+                                placeholder="Causa"
+                                className="text-area-encargado"
+                                name="causa"
+                                readOnly
+                                value={currentReporte.causas} />
+                        </Grid >
+                        <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Actividades:</FormLabel>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={1}
+                                placeholder="Actividades"
+                                className="text-area-encargado"
+                                name="actividadesR"
+                                readOnly
+                                value={currentReporte.actividades} />
+                        </Grid >
+                        <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Repuestos:</FormLabel>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={1}
+                                placeholder="Repuestos"
+                                className="text-area-encargado"
+                                name="repuestos"
+                                readOnly
+                                value={currentReporte.repuestos} />
+                        </Grid >
+
+                        <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Observaciones:</FormLabel>
+                            <TextareaAutosize
+                                style={{ textTransform: "uppercase" }}
+                                aria-label="minimum height"
+                                minRows={1}
+                                placeholder="Observaciones"
+                                className="text-area-encargado"
+                                name="observaciones"
+                                readOnly
+                                value={currentReporte.observaciones} />
+                        </Grid >
+                    </Grid>
+                </ModalBody>
                 <ModalFooter>
-
-                <Button 
-      variant="contained"
-      className="boton-modal-pdf"
-                onClick={filtrarDatos} 
-                startIcon={<FilterAltIcon />}>Filtrar
-                </Button>
-                <Button
-                 variant="outlined"
-                 className="boton-modal-d"
-                        onClick={() => cerrarvistaFiltrar()}
+                    <Button
+                        variant="contained"
+                        className="boton-modal-pdf"
+                        startIcon={<LocalPrintshopIcon />}
+                        onClick={downloadPdf} >
+                        Imprimir
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        className="boton-modal-d"
+                        onClick={() => { setModalReportexistente(false) }}
                     >
-                        Cancelar
+                        Cerrar
                     </Button>
                 </ModalFooter>
             </Modal>
