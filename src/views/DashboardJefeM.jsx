@@ -1,14 +1,10 @@
 import { useSelector } from "react-redux";
 import { collection, query, doc, onSnapshot, getDoc } from "firebase/firestore";
 import { pink, lightGreen, orange } from '@mui/material/colors';
-import autoTable from 'jspdf-autotable'
-import { jsPDF } from "jspdf";
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import PrintIcon from '@mui/icons-material/Print';
-import Checkbox from '@mui/material/Checkbox';
 import TuneIcon from '@mui/icons-material/Tune';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 import { Grid } from "@mui/material";
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
@@ -24,9 +20,11 @@ import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import TarjetaDashboard from "../components/TarjetaDashBoard";
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import FormLabel from '@mui/material/FormLabel';
 import emailjs from '@emailjs/browser';
 import '../css/DashboardJefeM.css'
 import { db } from "../firebase/firebase-config"
+import { generarPdf } from "../scripts/pdfReporte";
 import {
     Container,
     Modal,
@@ -55,7 +53,6 @@ const tipos = [
 ]
 
 export default function DashboardJefeM() {
-    const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
     const currentUser = useSelector(state => state.auths);
     const [prioridad, setPrioridad] = useState("Todas");
     const [departamentos, setDepartamentos] = useState([]);
@@ -175,7 +172,7 @@ export default function DashboardJefeM() {
     }
 
     const visualizarReporte = async (orden) => {
-        const docRef = doc(db, "reportesint", `${orden.reporteId.slice(-1)}`);
+        const docRef = doc(db, "reportesint", `${orden.reporteId}`);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             setCurrentReporte(docSnap.data());
@@ -185,38 +182,27 @@ export default function DashboardJefeM() {
         }
     }
 
-    const generarPdf = () => {
-        var doc = new jsPDF({
-            orientation: "portrait",
-        })
-        doc.text("Hospital del Río ", 90, 10); //fontsize 15
-        doc.setFontSize(12)// de aqui para abajo todo estara con fontsize 9
-        doc.text("Reporte de Mantenimiento", 85, 20)
-        doc.setFontSize(10)
-        let aux = 15
-        let datos_tabla =
-         [
-            ["Id Reporte",currentReporte.id],
-            ["Id O/T",currentReporte.OrdenId],
-            ["Código Equipo",currentReporte.codigoe],
-            ["Equipo",currentReporte.equipo],
-            ["Técnico",currentReporte.nombreT],
-            ["Estado",currentReporte.estadof],
-            ["Tipo de Mantenimiento",currentReporte.tmantenimiento],
-            ["Tiempo",currentReporte.tiempo],
-            ["Costo",currentReporte.costo],
-            ["Falla",currentReporte.falla],
-            ["Causas",currentReporte.causas],
-            ["Observaciones",currentReporte.observaciones]
-         ]
+    const downloadPdf = () => {
+        var props_pdf ={
+            nombre:  currentReporte.equipo,
+            area_responsable:currentReporte.departamento,
+            tipo:currentReporte.tipo_equipo,
+            nro_orden:currentReporte.orden_id,
+            marca:currentReporte.marca,
+            serie:currentReporte.serie,
+            modelo:currentReporte.modelo,
+            propietario:currentReporte.propietario,
+            fecha:currentReporte.fecha,
+            tipo_mantenimiento:currentReporte.mantenimiento,
+            estado:currentReporte.estado,
+            problema:currentReporte.falla,
+            actividades:currentReporte.actividades,
+            conclusiones:currentReporte.observaciones,
+            causas:currentReporte.causas,
+            responsable:currentReporte.tecnico,
+        }
+        generarPdf(props_pdf)
 
-        autoTable(doc, {
-            startY:  aux+10,
-            head: [['Item', 'Descripción']],
-            body: datos_tabla,
-          })
-        
-          doc.save(`reporte_${currentReporte.id}.pdf`);
     }
 
 
@@ -440,14 +426,10 @@ export default function DashboardJefeM() {
                                                             <IconButton aria-label="informacion" color="gris" onClick={() => { vistainformacion2(dato) }}><InfoIcon /></IconButton>
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            <Checkbox
-                                                                {...label}
-                                                                icon={<CheckBoxOutlinedIcon />}
-                                                                checked={dato.verificacion}
-                                                            />
+                                                            {dato.verificacion? "SI":"NO"}
                                                         </Td>
                                                         <Td>
-                                                            <IconButton aria-label="delete" onClick={() => { visualizarReporte(dato) }} color="rosado">
+                                                            <IconButton aria-label="delete" disabled={!dato.reporte} onClick={() => { visualizarReporte(dato) }} color="rosado">
                                                                 <RemoveRedEyeIcon />
                                                             </IconButton>
                                                         </Td>
@@ -565,153 +547,147 @@ export default function DashboardJefeM() {
 
 
 
-            <Modal isOpen={modalReportexistente}>
+                                    <Modal isOpen={modalReportexistente}>
                                 <ModalHeader>
                                     <div><h1>Ver Reporte Interno</h1></div>
                                 </ModalHeader>
-                                <ModalBody>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12}>
-                                            <div className="name-outlined">{currentReporte.id}</div>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Estado:  </b>
-                                                {currentReporte.estadof}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Orden Trabajo:  </b>
-                                                {currentReporte.OrdenId}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Técnico: </b>
-                                                {currentReporte.nombreT}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Equipo:  </b>
-                                                {currentReporte.equipo}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Código Equipo:  </b>
-                                                {currentReporte.codigoe}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Tipo de mantenimiento:  </b>
-                                                {currentReporte.tmantenimiento}
-                                            </label>
+                                <ModalBody style={{height:500,overflowY:"scroll"}}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <div className="name-outlined">{currentReporte.id}</div>
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Estado:  </b>
+                                    {currentReporte.estado}
+                                </label>
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Id Orden:  </b>
+                                    {currentReporte.orden_id}
+                                </label>
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Técnico: </b>
+                                    {currentReporte.tecnico}
+                                </label>
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Equipo:  </b>
+                                    {currentReporte.equipo}
+                                </label>
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Código:</b>
+                                    {currentReporte.codigo_equipo}
+                                </label>
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Mantenimiento:  </b>
+                                    {currentReporte.mantenimiento}
+                                </label>
 
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Tiempo:  </b>
-                                                {currentReporte.tiempo}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Costo:  </b>
-                                                {currentReporte.costo}
-                                            </label>
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Falla:  </b>
-                                            </label>
-                                            <TextareaAutosize
-                                                aria-label="minimum height"
-                                                minRows={1}
-                                                placeholder="Falla"
-                                                className="text-area-encargado"
-                                                name="falla"
-                                                readOnly
-                                                value={currentReporte.falla} />
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Tiempo:  </b>
+                                    {currentReporte.tiempo}
+                                </label>
 
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Causas:  </b>
-                                            </label>
-                                            <TextareaAutosize
-                                                aria-label="minimum height"
-                                                minRows={1}
-                                                placeholder="Causa"
-                                                className="text-area-encargado"
-                                                name="causa"
-                                                readOnly
-                                                value={currentReporte.causas} />
+                            </Grid >
+                            <Grid item xs={6}>
+                                <label>
+                                    <b>Costo:  </b>
+                                    {currentReporte.costo}
+                                </label>
 
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Actividades:  </b>
-                                            </label>
-                                            <TextareaAutosize
-                                                aria-label="minimum height"
-                                                minRows={1}
-                                                placeholder="Actividades"
-                                                className="text-area-encargado"
-                                                name="actividadesR"
-                                                readOnly
-                                                value={currentReporte.actividadesR} />
-                                        </Grid >
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Repuestos:  </b>
-                                            </label>
-                                            <TextareaAutosize
-                                                aria-label="minimum height"
-                                                minRows={1}
-                                                placeholder="Repuestos"
-                                                className="text-area-encargado"
-                                                name="repuestos"
-                                                readOnly
-                                                value={currentReporte.repuestos} />
-                                        </Grid >
+                            </Grid >
+                            <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Falla:</FormLabel>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Falla"
+                                    className="text-area-encargado"
+                                    name="falla"
+                                    readOnly
+                                    value={currentReporte.falla} />
 
-                                        <Grid item xs={12}>
-                                            <label>
-                                                <b>Observaciones:  </b>
-                                            </label>
-                                            <TextareaAutosize
-                                                aria-label="minimum height"
-                                                minRows={1}
-                                                placeholder="Observaciones"
-                                                className="text-area-encargado"
-                                                name="observaciones"
-                                                readOnly
-                                                value={currentReporte.observaciones} />
+                            </Grid >
+                            <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Causas:</FormLabel>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Causa"
+                                    className="text-area-encargado"
+                                    name="causa"
+                                    readOnly
+                                    value={currentReporte.causas} />
+                            </Grid >
+                            <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Actividades:</FormLabel>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Actividades"
+                                    className="text-area-encargado"
+                                    name="actividadesR"
+                                    readOnly
+                                    value={currentReporte.actividades} />
+                            </Grid >
+                            <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Repuestos:</FormLabel>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Repuestos"
+                                    className="text-area-encargado"
+                                    name="repuestos"
+                                    readOnly
+                                    value={currentReporte.repuestos} />
+                            </Grid >
 
-                                        </Grid >
-                                    </Grid>
-                                </ModalBody>
-                                <ModalFooter>
-                                    <Button
-                                        variant="contained"
-                                        className="boton-modal-pdf"
-                                        startIcon={<PrintIcon />}
-                                        onClick={generarPdf} >
-                                        Imprimir
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        className="boton-modal-d"
-                                        onClick={() => { setModalReportexistente(false) }}
-                                    >
-                                        Cerrar
-                                    </Button>
-                                </ModalFooter>
-                            </Modal>
-
+                            <Grid item xs={12}>
+                            <FormLabel id="demo-radio-buttons-group-label">Observaciones:</FormLabel>
+                                <TextareaAutosize
+                                    style={{ textTransform: "uppercase" }}
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Observaciones"
+                                    className="text-area-encargado"
+                                    name="observaciones"
+                                    readOnly
+                                    value={currentReporte.observaciones} />
+                            </Grid >
+                        </Grid>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="contained"
+                            className="boton-modal-pdf"
+                            startIcon={<PrintIcon />}
+                            onClick={downloadPdf} >
+                            Imprimir
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            className="boton-modal-d"
+                            onClick={() => { setModalReportexistente(false) }}
+                        >
+                            Cerrar
+                        </Button>
+                    </ModalFooter>
+                </Modal>
 
             <Modal isOpen={modalInformacion2}>
                                         <Container>
