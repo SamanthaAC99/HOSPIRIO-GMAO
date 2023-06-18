@@ -1,14 +1,15 @@
 import { useSelector } from "react-redux";
-
-import { collection, query, doc, updateDoc, onSnapshot, addDoc, getDoc } from "firebase/firestore";
+import { v4 as uuidv4 } from 'uuid';
+import { collection, query, doc, updateDoc, onSnapshot, getDoc,setDoc } from "firebase/firestore";
+import Backdrop from '@mui/material/Backdrop';
 import { db } from "../firebase/firebase-config"
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import InfoIcon from '@mui/icons-material/Info';
-import autoTable from 'jspdf-autotable'
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
+import CircularProgress from '@mui/material/CircularProgress';
 import { pink, cyan, lightGreen, orange } from '@mui/material/colors';
 import { useEffect, useRef, useState } from "react";
 import TextField from '@mui/material/TextField';
@@ -29,8 +30,9 @@ import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import TarjetaDashboard from "../components/TarjetaDashBoard";
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import PrintIcon from '@mui/icons-material/Print';
+import FormLabel from '@mui/material/FormLabel';
 // dependencias para las tablas
-import logoHospi from '../assets/logo_hospi.png'
+
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -38,6 +40,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
+import { generarPdf } from "../scripts/pdfReporte";
 //
 import Swal from 'sweetalert2';
 import {
@@ -51,12 +54,9 @@ import {
 import { Grid } from "@mui/material";
 import '../css/EncargadoView.css'
 import EditIcon from '@mui/icons-material/Edit';
-import { jsPDF } from "jspdf";
-
-
 export default function DashboardTecnicos() {
     const currentUser = useSelector(state => state.auths);
-
+    const [loading,setLoading] = useState(false);
     const [modalPendientes, setModalPendientes] = useState(false);
     const [codigosEquipo, setCodigosEquipo] = useState([]);
     const [estadof, setEstadof] = useState('');
@@ -86,33 +86,9 @@ export default function DashboardTecnicos() {
     // variables del modal reporte
     const codigos_totales = useRef([])
 
-    const [nreporte, setNreporte] = useState({
-        OrdenId: '',
-        cedula: '',
-        nombreT: '',
-        falla: '',
-        id: '',
-        codigoe: '',
-        estadof: '',
-        equipo: '',
-        tmantenimiento: '',
-        costo: '',
-        causas: '',
-        actividadesR: [],
-        repuestos: '',
-        observaciones: '',
-        fecha: '',
-        departamento: '',
-        razonp: '',
-        tiempo: '',
-        horas: 0,
-        tipo: "Interno",
-    });
+    const [nreporte, setNreporte] = useState(reporte_structure);
     const play = async (data) => {
-
         const reference = doc(db, "ordenes", `${data.id}`);
-        //var someDate = Math.round(Date.now() / 1000);
-        //console.log(someDate)
         let register_times;
         var lista_tecnicos = data.tecnicos.map((item) => {
             register_times = item.tiempos.slice()
@@ -192,8 +168,6 @@ export default function DashboardTecnicos() {
                 final.push(arreglo[i])
             }
         }
-        console.log(inicio)
-        console.log(final)
         const temp1 = 0;
         const hinicio = inicio.reduce(
             (previousValue, currentValue) => previousValue + currentValue,
@@ -275,8 +249,6 @@ export default function DashboardTecnicos() {
                         resolve('Necesita seleccionar una opción')
                     } else {
                         const reference = doc(db, "ordenes", `${data.id}`);
-                        //var someDate = Math.round(Date.now() / 1000);
-                        //console.log(someDate)
                         var razonparada = data.tecnicos.find(item => item.id === currentUser.uid).motivos_parada;
                         razonparada.push(value);
                         let register_times;
@@ -471,7 +443,6 @@ export default function DashboardTecnicos() {
                 }
 
             }
-            console.log(a)
             setCtdPendientes(p);
             setCtdSolventadas(s);
             setCtdActivas(aux);
@@ -482,12 +453,14 @@ export default function DashboardTecnicos() {
     }
 
     const selectEquipo = (val) => {
-        const equipos2 = inventario.find(item => item.codigo === val)
-        const equipos = inventario.find(item => item.codigo === val)
-        setEquipment(equipos2);
-
-        setCequipo(equipos.equipo.nombre);
-        setCodigoe(val);
+     
+        if(val !== null){
+            let aux_inventario = JSON.parse(JSON.stringify(inventario))
+            const equipos = aux_inventario.find(item => item.codigo === val)
+            setEquipment(equipos);
+            setCequipo(equipos.equipo.nombre);
+            setCodigoe(val);
+        }
 
     }
     const filterbyId = (item) => {
@@ -531,20 +504,30 @@ export default function DashboardTecnicos() {
 
     const sendReportFirebase = async () => {
         const re = nreporte;
-        re['OrdenId'] = currentOrden.id;
+        setLoading(true)
+        if(cequipo !== "" && rtmantenimiento !== "" && estadof !== ""){
+        let aux = uuidv4()
+        let id_formateada = aux.slice(0,13)
+        re['id'] = id_formateada;
+        re['orden_id'] = currentOrden.id;
         re['cedula'] = currentUser.indentification;
-        re['nombreT'] = currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname;
+        re['tecnico'] = currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname;
         re['equipo'] = cequipo;
-        re['codigoe'] = codigoe;
+        re['codigo_equipo'] = codigoe;
         re['equipo_id'] = equipment.id;
-        re['tmantenimiento'] = rtmantenimiento;
-        re['estadof'] = estadof;
-        re['fecha'] = new Date().toLocaleString("en-US");
+        re['mantenimiento'] = rtmantenimiento;
+        re['estado'] = estadof;
+        re['fecha'] = new Date().toLocaleString("es-EC");
         re['departamento'] = currentOrden.departamento;
         re['razonp'] = currentOrden.razonp;
         re['importancia'] = equipment.importancia;
         re['indice'] = new Date().getTime();
-        let newReporte
+        // parametros adicionales
+        re['marca'] = equipment.marca;
+        re['modelo'] = equipment.modelo;
+        re['serie'] = equipment.serie;
+        re['propietario'] = equipment.responsable.nombre;
+        re['tipo_equipo'] = equipment.tipo_equipo.nombre;
         let tecnicos_aux = JSON.parse(JSON.stringify(currentOrden.tecnicos))
 
         let tiempos_aux = []
@@ -555,60 +538,42 @@ export default function DashboardTecnicos() {
                 tiempos_aux.push(temp[j])
             }
         }
-
         re['horas'] = calcularHoras(tiempos_aux);
         re['tiempo'] = calcularTiempos(tiempos_aux);
-
-
-        console.log(re)
-
         try {
-            newReporte = await addDoc(collection(db, "reportesint"), re);
+            setModalReportin(false);
+            await setDoc(doc(db, "reportesint", re.id),re)
+            const reference = doc(db, "ordenes", `${currentOrden.id}`);
+            updateDoc(reference, {
+                reporte: true,
+                reporteId: re.id,
+            });
+            setLoading(false)
         } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: 'No se agrego el reporte a la orden error:' + error,
             })
+            setModalReportin(false);
+            setLoading(false)
         }
-        if (newReporte.id !== null) {
-            console.log(newReporte.id)
 
-            var reportesID = currentOrden.reporteId
-            reportesID.push(newReporte.id)
-            try {
-                const reference = doc(db, "ordenes", `${currentOrden.id}`);
-                updateDoc(reference, {
-                    reporte: true,
-                    reporteId: reportesID,
-                });
-                const reference2 = doc(db, "reportesint", `${newReporte.id}`);
-                updateDoc(reference2, {
-                    id: newReporte.id,
-                });
-                Swal.fire(
-                    'Completado',
-                    'Reporte Agregado con éxito',
-                    'success'
-                )
-            } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'No se agrego el reporte a la orden',
-                })
-            }
-
-
-
-        } else {
+        }else{
             Swal.fire({
                 icon: 'error',
-                title: 'Oops...',
-                text: 'No se agrego el reporte a la orden',
+                title: 'Error',
+                text: 'Faltan Campos',
             })
+            setModalReportin(false);
+            setLoading(false)
         }
-        cerrarModalReporte();
+        setNreporte(reporte_structure)
+        setEquipment({})
+        setCequipo("")
+        setEstadof("")
+        setRtmantenimiento("")
+       
     }
 
     const vistaTablaPendientes = (data) => {
@@ -628,7 +593,7 @@ export default function DashboardTecnicos() {
                 text: 'Acceso Denegado',
             })
         } else {
-            const docRef = doc(db, "reportesint", `${orden.reporteId.slice(-1)}`);
+            const docRef = doc(db, "reportesint", `${orden.reporteId}`);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 setCurrentReporte(docSnap.data());
@@ -648,182 +613,34 @@ export default function DashboardTecnicos() {
         setModalinformacion2(false);
     };
 
-    const generarPdf = () => {
-        console.log(currentReporte)
+    const downloadPdf = () => {
         var props_pdf ={
             nombre:  currentReporte.equipo,
             area_responsable:currentReporte.departamento,
-            tipo:"EQUIPO DE COMPUTO",
-            nro_orden:currentReporte.OrdenId,
-            tipo_mantenimiento:currentReporte.tmantenimiento,
-            estado:currentReporte.estadof,
+            tipo:currentReporte.tipo_equipo,
+            nro_orden:currentReporte.orden_id,
+            marca:currentReporte.marca,
+            serie:currentReporte.serie,
+            modelo:currentReporte.modelo,
+            propietario:currentReporte.propietario,
+            fecha:currentReporte.fecha,
+            tipo_mantenimiento:currentReporte.mantenimiento,
+            estado:currentReporte.estado,
             problema:currentReporte.falla,
-            actividades:currentReporte.actividadesR,
+            actividades:currentReporte.actividades,
             conclusiones:currentReporte.observaciones,
             causas:currentReporte.causas,
-            responsable:currentReporte.nombreT,
-
-            
+            responsable:currentReporte.tecnico,
         }
-        var doc = new jsPDF({
-            orientation: "portrait",
-        })
-        let encabezado = [
-            [{ content: '', colSpan: 1, rowSpan: 2, styles: { halign: 'center', minCellWidth: 20 } },
-            { content: 'SOLICITUD ORDEN DE TRABAJO', styles: { halign: 'center', fontStyle: 'bold' } },
-            { content: 'MT-RE-01', styles: { halign: 'center', fontStyle: 'bold' } }
-            ], [{ content: 'MANTENIMIENTO', styles: { halign: 'center', fontStyle: 'bold' } },
-            { content: 'Fecha', styles: { halign: 'center', fontStyle: 'bold' } }]
-        ]
-        let aux = 5
-        autoTable(doc, {
-            didDrawCell: (data) => {
-                if (data.section === 'body' && data.column.index === 0) {
-                    doc.addImage(logoHospi, 'png', data.cell.x + 2, data.cell.y + 2, 25, 10)
-                }
-            },
-            theme: "grid",
-            startY: aux + 10,
-            body: encabezado,
-            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
-            styles: {
-                color: 20
-            },
+        generarPdf(props_pdf)
 
-        })
-        aux = 40
-        doc.setFontSize(8)// de aqui para abajo todo estara con fontsize 9
-        doc.text("1.	RESPONSABLE DEL EQUIPO", 20, aux)
-        encabezado = [
-            [
-                { content: 'Nro Orden:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: props_pdf.nro_orden, colSpan: 3, styles: { halign: 'center' } },
-            ],
-            [
-                { content: 'Nombre del Equipo:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold', } },
-                { content: props_pdf.nombre, colSpan: 3, styles: { halign: 'center', minCellWidth: 100 } },
-            ],
-            [
-                { content: 'Area Responsable:  ', styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold', } },
-                { content: props_pdf.area_responsable, colSpan: 3, styles: { halign: 'center', minCellWidth: 100 } },
-            ],
-            [
-                { content: 'Tipo de equipo:  ', styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: props_pdf.tipo, colSpan: 3, styles: { halign: 'center', minCellWidth: 100 } },
-            ],
-            [
-                { content: 'Marca:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } },
-                { content: 'Serie:', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } }
-            ],
-            [
-                { content: 'Modelo:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } },
-                { content: 'Propietario:', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: '', colSpan: 1, styles: { halign: 'center', minCellWidth: 30 } }
-            ],
-            [
-                { content: 'Tipo Mantenimiento:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: props_pdf.tipo_mantenimiento, colSpan: 3, styles: { halign: 'center' } },
-            ],
-            [
-                { content: 'Estado del Equipo:  ', colSpan: 1, styles: { halign: 'left', minCellWidth: 30, fontStyle: 'bold' } },
-                { content: props_pdf.estado, colSpan: 3, styles: { halign: 'center' } },
-            ],
-        ]
-        autoTable(doc, {
-            theme: "grid",
-            startY: aux + 10,
-            body: encabezado,
-            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
-            styles: {
-                color: 20
-            },
-
-        })
-        aux = 120
-        doc.text("2.	PROBLEMA", 20, aux)
-
-        encabezado = [
-            [
-                { content: props_pdf.problema, styles: { halign: 'left' } },
-            ]]
-        autoTable(doc, {
-            theme: "grid",
-            startY: aux + 10,
-            body: encabezado,
-            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
-            styles: {
-                color: 20
-            },
-
-        })
-
-
-        aux = aux + 30
-        doc.text("3.	ACTIVIDADES", 20, aux)
-        encabezado = [
-            [
-                { content: props_pdf.actividades, styles: { halign: 'left' } },
-            ]]
-        autoTable(doc, {
-            theme: "grid",
-            startY: aux + 10,
-            body: encabezado,
-            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
-            styles: {
-                color: 20
-            },
-
-        })
-        aux = aux + 30
-        doc.text("4.	CONCLUSIONES", 20, aux)
-        encabezado = [
-            [
-                { content: props_pdf.conclusiones, styles: { halign: 'left' } },
-            ]]
-        autoTable(doc, {
-            theme: "grid",
-            startY: aux + 10,
-            body: encabezado,
-            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
-            styles: {
-                color: 20
-            },
-
-        })
-        aux = aux + 30
-        doc.text("5.	CAUSAS", 20, aux)
-        encabezado = [
-            [
-                { content: props_pdf.causas, styles: { halign: 'left' } },
-            ]]
-        autoTable(doc, {
-            theme: "grid",
-            startY: aux + 10,
-            body: encabezado,
-            // columnStyles: { 0: { halign: 'center', fillColor: [0, 255, 0] } },
-            styles: {
-                color: 20
-            },
-
-        })
-        aux = aux + 30
-        doc.text(`Responsable: ${props_pdf.responsable}`, 70, aux)
-        aux = aux + 10
-        doc.text("Recibido por:_______________________", 70, aux)
-        doc.save(`REPORTE-${currentReporte.id}.pdf`);
     }
     // creamos el codigo para editar los reportes
     const EditarReporte = async (_data) => {
-
-
-        const docRef = doc(db, "reportesint", `${_data.reporteId.slice(-1)}`);
+        const docRef = doc(db, "reportesint", `${_data.reporteId}`);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             setCurrentReporte(docSnap.data());
-            console.log(docSnap.data())
             setModalEditarReporte(true);
         } else {
             // doc.data() will be undefined in this case
@@ -837,26 +654,32 @@ export default function DashboardTecnicos() {
         });
     }
     const ActualizarReporte = () => {
-
-        const ref = doc(db, "reportesint", `${currentReporte.id}`);
-        updateDoc(ref, {
-            tmantenimiento: rtmantenimiento,
-            costo: currentReporte.costo,
-            falla: currentReporte.falla,
-            causas: currentReporte.causas,
-            actividadesR: currentReporte.actividadesR,
-            repuestos: currentReporte.repuestos,
-            observaciones: currentReporte.observaciones,
-        });
-        setModalEditarReporte(false)
-
-        Swal.fire({
-            icon: 'warning',
-            title: '¡Actividad Actualizada!',
-            showConfirmButton: false,
-            timer: 2000
-
-        })
+        setLoading(true);
+        try {
+            const ref = doc(db, "reportesint", `${currentReporte.id}`);
+            updateDoc(ref, {
+                tmantenimiento: rtmantenimiento,
+                costo: currentReporte.costo,
+                falla: currentReporte.falla,
+                causas: currentReporte.causas,
+                actividades: currentReporte.actividades,
+                repuestos: currentReporte.repuestos,
+                observaciones: currentReporte.observaciones,
+            });
+            setModalEditarReporte(false)
+    
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Actividad Actualizada!',
+                showConfirmButton: false,
+                timer: 2000
+    
+            })
+            setLoading(false);
+        } catch (error) {
+            setLoading(false);
+        }
+       
 
     }
     useEffect(() => {
@@ -888,22 +711,13 @@ export default function DashboardTecnicos() {
                                             <h1 className='texticone mx-4'>{currentUser.cellphone}</h1>
 
                                         </div>
-
-
                                     </div>
-
                                 </div>
                             }
                         </div>
-
                     </Grid>
-
-
                     <Grid item xs={12} sm={6} md={6}>
-
-
                         <Grid container spacing={{ xs: 1, md: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-
                             <Grid item xs={4} sm={6} md={4} >
                                 <TarjetaDashboard
                                     icon={<PlayArrowIcon />}
@@ -1093,7 +907,7 @@ export default function DashboardTecnicos() {
                     <ModalHeader>
                         <div><h1>Reporte Interno</h1></div>
                     </ModalHeader>
-                    <ModalBody>
+                    <ModalBody style={{height:500,overflowY:"scroll"}}>
                         <Grid container spacing={4}>
                             <Grid item xs={12}>
                                 <TextField id="outlined-basic" InputProps={{ readOnly: true }} label="Código Orden" defaultValue={currentOrden.id} variant="outlined" fullWidth />
@@ -1105,17 +919,12 @@ export default function DashboardTecnicos() {
                                 <TextField id="outlined-basic" label="Nombre Técnico" variant="outlined" InputProps={{ readOnly: true }} defaultValue={currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname} fullWidth />
                             </Grid>
                             <Grid item xs={6}>
-
                                 <Autocomplete
-                                    disableClearable
+                                    disablePortal
                                     id="combo-box-demo"
-                                    className='seleccionadortabla'
-
                                     onChange={(event, newValue) => {
                                         selectEquipo(newValue);
-
                                     }}
-                                    value={codigoe}
                                     options={codigosEquipo}
                                     renderInput={(params) => <TextField {...params} fullWidth label="Código Equipo" type="text" />}
                                 />
@@ -1152,20 +961,7 @@ export default function DashboardTecnicos() {
                                     renderInput={(params) => <TextField name="tmantenimiento"  {...params} fullWidth label="Estado" type="text" />}
                                 />
                             </Grid>
-                            {/* <Grid item xs={12}>
-                                <Autocomplete
-                                    disableClearable
-                                    id="combo-box-demo"
-                                    className='seleccionadortabla'
-
-                                    onChange={(event, newValue) => {
-                                        setNivelDeAlerta(newValue);
-                                    }}
-                                    options={["No Funcional", "Funcional"]}
-
-                                    renderInput={(params) => <TextField name="tmantenimiento"  {...params} fullWidth label="Nivel de Alerta" type="text" />}
-                                />
-                            </Grid> */}
+        
                             <Grid item xs={12}>
                                 <TextareaAutosize
                                     style={{ textTransform: "uppercase" }}
@@ -1173,6 +969,7 @@ export default function DashboardTecnicos() {
                                     minRows={2}
                                     placeholder="Falla"
                                     className="text-area-encargado"
+                                    maxLength={300}
                                     name="falla"
                                     onChange={createReport} />
                             </Grid>
@@ -1184,6 +981,7 @@ export default function DashboardTecnicos() {
                                     placeholder="Causas"
                                     className="text-area-encargado"
                                     name="causas"
+                                    maxLength={300}
                                     onChange={createReport}
                                 />
                             </Grid>
@@ -1194,7 +992,8 @@ export default function DashboardTecnicos() {
                                     minRows={2}
                                     placeholder="Actividades"
                                     className="text-area-encargado"
-                                    name="actividadesR"
+                                    name="actividades"
+                                    maxLength={300}
                                     onChange={createReport}
                                 />
                             </Grid>
@@ -1206,6 +1005,7 @@ export default function DashboardTecnicos() {
                                     placeholder="Repuestos"
                                     className="text-area-encargado"
                                     name="repuestos"
+                                    maxLength={300}
                                     onChange={createReport}
                                 />
                             </Grid>
@@ -1217,6 +1017,7 @@ export default function DashboardTecnicos() {
                                     placeholder="Observaciones"
                                     className="text-area-encargado"
                                     name="observaciones"
+                                    maxLength={300}
                                     onChange={createReport}
                                 />
                             </Grid>
@@ -1226,13 +1027,13 @@ export default function DashboardTecnicos() {
                     <ModalFooter>
                         <Button variant="outlined"
                             className="boton-modal-d2"
-                            disabled={btnReport} onClick={sendReportFirebase}>Añadir</Button>
+                            disabled={btnReport} onClick={sendReportFirebase}>CREAR</Button>
                         <Button
                             variant="contained"
                             className="boton-modal-d"
                             onClick={cerrarModalReporte}
                         >
-                            Cancelar
+                            CANCELAR
                         </Button>
 
                     </ModalFooter>
@@ -1240,58 +1041,58 @@ export default function DashboardTecnicos() {
 
                 <Modal isOpen={modalReportexistente}>
                     <ModalHeader>
-                        <div><h1>Ver Reporte Interno</h1></div>
+                        <div><h4>Visualizar Reporte</h4></div>
                     </ModalHeader>
-                    <ModalBody>
+                    <ModalBody style={{height:500,overflowY:"scroll"}}>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <div className="name-outlined">{currentReporte.id}</div>
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
                                     <b>Estado:  </b>
-                                    {currentReporte.estadof}
+                                    {currentReporte.estado}
                                 </label>
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
-                                    <b>Orden Trabajo:  </b>
-                                    {currentReporte.OrdenId}
+                                    <b>Id Orden:  </b>
+                                    {currentReporte.orden_id}
                                 </label>
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
                                     <b>Técnico: </b>
-                                    {currentReporte.nombreT}
+                                    {currentReporte.tecnico}
                                 </label>
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
                                     <b>Equipo:  </b>
                                     {currentReporte.equipo}
                                 </label>
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
-                                    <b>Código Equipo:  </b>
-                                    {currentReporte.codigoe}
+                                    <b>Código:</b>
+                                    {currentReporte.codigo_equipo}
                                 </label>
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
-                                    <b>Tipo de mantenimiento:  </b>
-                                    {currentReporte.tmantenimiento}
+                                    <b>Mantenimiento:  </b>
+                                    {currentReporte.mantenimiento}
                                 </label>
 
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
                                     <b>Tiempo:  </b>
                                     {currentReporte.tiempo}
                                 </label>
 
                             </Grid >
-                            <Grid item xs={12}>
+                            <Grid item xs={6}>
                                 <label>
                                     <b>Costo:  </b>
                                     {currentReporte.costo}
@@ -1299,9 +1100,7 @@ export default function DashboardTecnicos() {
 
                             </Grid >
                             <Grid item xs={12}>
-                                <label>
-                                    <b>Falla:  </b>
-                                </label>
+                            <FormLabel id="demo-radio-buttons-group-label">Falla:</FormLabel>
                                 <TextareaAutosize
                                     style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
@@ -1314,9 +1113,7 @@ export default function DashboardTecnicos() {
 
                             </Grid >
                             <Grid item xs={12}>
-                                <label>
-                                    <b>Causas:  </b>
-                                </label>
+                            <FormLabel id="demo-radio-buttons-group-label">Causas:</FormLabel>
                                 <TextareaAutosize
                                     style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
@@ -1328,9 +1125,7 @@ export default function DashboardTecnicos() {
                                     value={currentReporte.causas} />
                             </Grid >
                             <Grid item xs={12}>
-                                <label>
-                                    <b>Actividades:  </b>
-                                </label>
+                            <FormLabel id="demo-radio-buttons-group-label">Actividades:</FormLabel>
                                 <TextareaAutosize
                                     style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
@@ -1339,12 +1134,10 @@ export default function DashboardTecnicos() {
                                     className="text-area-encargado"
                                     name="actividadesR"
                                     readOnly
-                                    value={currentReporte.actividadesR} />
+                                    value={currentReporte.actividades} />
                             </Grid >
                             <Grid item xs={12}>
-                                <label>
-                                    <b>Repuestos:  </b>
-                                </label>
+                            <FormLabel id="demo-radio-buttons-group-label">Repuestos:</FormLabel>
                                 <TextareaAutosize
                                     style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
@@ -1357,9 +1150,7 @@ export default function DashboardTecnicos() {
                             </Grid >
 
                             <Grid item xs={12}>
-                                <label>
-                                    <b>Observaciones:  </b>
-                                </label>
+                            <FormLabel id="demo-radio-buttons-group-label">Observaciones:</FormLabel>
                                 <TextareaAutosize
                                     style={{ textTransform: "uppercase" }}
                                     aria-label="minimum height"
@@ -1377,7 +1168,7 @@ export default function DashboardTecnicos() {
                             variant="contained"
                             className="boton-modal-pdf"
                             startIcon={<PrintIcon />}
-                            onClick={generarPdf} >
+                            onClick={downloadPdf} >
                             Imprimir
                         </Button>
                         <Button
@@ -1392,9 +1183,9 @@ export default function DashboardTecnicos() {
             </div>
             <Modal isOpen={modalEditarReporte}>
                 <ModalHeader>
-                    <div><h5>Editar Reporte Interno - {currentReporte.OrdenId}</h5></div>
+                    <div><h5>Editar Reporte Interno - {currentReporte.orden_id}</h5></div>
                 </ModalHeader>
-                <ModalBody>
+                <ModalBody style={{height:500,overflowY:"scroll"}}>
                     <Grid container spacing={1}>
                         <Grid item xs={6}>
                             <Autocomplete
@@ -1414,7 +1205,7 @@ export default function DashboardTecnicos() {
                             <TextField inputProps={{ style: { textTransform: "uppercase" } }} id="outlined-basic" value={currentReporte.costo} name="costo" onChange={cambiarDatosReporte} label="Costo" variant="outlined" fullWidth />
                         </Grid>
                         <Grid item xs={12}>
-                            <strong>Falla:</strong>
+                        <FormLabel id="demo-radio-buttons-group-label">Falla:</FormLabel>
                         </Grid>
                         <Grid item xs={12}>
                             <TextareaAutosize
@@ -1428,7 +1219,7 @@ export default function DashboardTecnicos() {
                                 onChange={cambiarDatosReporte} />
                         </Grid>
                         <Grid item xs={12}>
-                            <strong>Causas:</strong>
+                        <FormLabel id="demo-radio-buttons-group-label">Causas:</FormLabel>
                         </Grid>
                         <Grid item xs={12}>
                             <TextareaAutosize
@@ -1443,7 +1234,7 @@ export default function DashboardTecnicos() {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <strong>Actividades:</strong>
+                        <FormLabel id="demo-radio-buttons-group-label">Actividades:</FormLabel>
                         </Grid>
                         <Grid item xs={12}>
                             <TextareaAutosize
@@ -1452,13 +1243,13 @@ export default function DashboardTecnicos() {
                                 minRows={2}
                                 placeholder="Actividades"
                                 className="text-area-encargado"
-                                name="actividadesR"
-                                value={currentReporte.actividadesR}
+                                name="actividades"
+                                value={currentReporte.actividades}
                                 onChange={cambiarDatosReporte}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <strong>Repuestos:</strong>
+                        <FormLabel id="demo-radio-buttons-group-label">Repuestos:</FormLabel>
                         </Grid>
                         <Grid item xs={12}>
                             <TextareaAutosize
@@ -1473,7 +1264,7 @@ export default function DashboardTecnicos() {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <strong>Observaciones:</strong>
+                        <FormLabel id="demo-radio-buttons-group-label">Observaciones:</FormLabel>
                         </Grid>
                         <Grid item xs={12}>
                             <TextareaAutosize
@@ -1511,13 +1302,13 @@ export default function DashboardTecnicos() {
                     <ModalHeader>
                         <div><h1> Orden de Trabajo </h1></div>
                     </ModalHeader>
-                    <ModalBody>
+                    <ModalBody style={{height:500,overflowY:"scroll"}}>
                         <FormGroup>
                             <Grid container spacing={2}>
                                 <Grid item xs={12}>
                                     <div className="name-outlined">{currentForm.id}</div>
                                 </Grid >
-                                <Grid item xs={12}>
+                                <Grid item xs={6}>
                                     <label>
                                         <b>Asunto:  </b>
                                         {currentForm.asunto}
@@ -1529,47 +1320,40 @@ export default function DashboardTecnicos() {
                                         {currentForm.fecha}
                                     </label>
                                 </Grid >
-                                <Grid item xs={12}>
+                                <Grid item xs={8}>
                                     <label>
                                         <b>Departamento:  </b>
                                         {currentForm.departamento}
                                     </label>
 
                                 </Grid >
-                                <Grid item xs={12}>
-                                    <label>
-                                        <b>Responsable:  </b>
-                                        {currentForm.encargado.name}
-                                    </label>
-
-                                </Grid >
-                                {/* <Grid item xs={12}>
-                                                            <label>
-                                                                <b>Cédula Solicitante:  </b>
-                                                                {currentForm.cedula}
-                                                            </label>
-                                                        </Grid > */}
-                                <Grid item xs={12}>
+                                <Grid item xs={4}>
                                     <label>
                                         <b>Prioridad:  </b>
                                         {currentForm.prioridad}
                                     </label>
 
                                 </Grid >
-                                <Grid item xs={12}>
+                                <Grid item xs={6}>
                                     <label>
-                                        <b>Tipo de Trabajo:  </b>
+                                        <b>Responsable:  </b>
+                                        {currentForm.encargado.name}
+                                    </label>
+
+                                </Grid >
+                               
+                                <Grid item xs={6}>
+                                    <label>
+                                        <b>Tipo:  </b>
                                         {currentForm.tipotrabajo}
                                     </label>
                                 </Grid >
                                 <Grid item xs={12}>
-                                    <label>
-                                        <b>Descripción Equipo:  </b>
-                                    </label>
+                                <FormLabel id="demo-radio-buttons-group-label">Descripcion:</FormLabel>
                                     <TextareaAutosize
                                         style={{ textTransform: "uppercase" }}
                                         aria-label="minimum height"
-                                        minRows={1}
+                                        minRows={2}
                                         placeholder="Descripción"
                                         className="text-area-encargado"
                                         name="descripcion"
@@ -1577,13 +1361,11 @@ export default function DashboardTecnicos() {
                                         value={currentForm.descripcion} />
                                 </Grid >
                                 <Grid item xs={12}>
-                                    <label>
-                                        <b>Problemática:  </b>
-                                    </label>
+                                <FormLabel id="demo-radio-buttons-group-label">Problemática:</FormLabel>
                                     <TextareaAutosize
                                         style={{ textTransform: "uppercase" }}
                                         aria-label="minimum height"
-                                        minRows={1}
+                                        minRows={2}
                                         placeholder="Problematica"
                                         className="text-area-encargado"
                                         name="problematica"
@@ -1591,13 +1373,11 @@ export default function DashboardTecnicos() {
                                         value={currentForm.problematica} />
                                 </Grid >
                                 <Grid item xs={12}>
-                                    <label>
-                                        <b>Observaciones:  </b>
-                                    </label>
+                                <FormLabel id="demo-radio-buttons-group-label">Observaciones:</FormLabel>
                                     <TextareaAutosize
                                         style={{ textTransform: "uppercase" }}
                                         aria-label="minimum height"
-                                        minRows={1}
+                                        minRows={2}
                                         placeholder="Observaciones"
                                         className="text-area-encargado"
                                         name="observaciones"
@@ -1723,6 +1503,12 @@ export default function DashboardTecnicos() {
                     </ModalFooter>
                 </Container>
             </Modal>
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={loading}
+                >
+                    <CircularProgress color="inherit" />
+                </Backdrop>
         </>
     );
 }
@@ -1735,4 +1521,27 @@ const orden_initialData = {
         lastname: "",
         secondlastname: "",
     }
+}
+
+let reporte_structure = {
+    orden_id: '',
+    cedula: '',
+    tecnico: '',
+    falla: '',
+    id: '',
+    codigo_equipo: '',
+    estado: '',
+    equipo: '',
+    mantenimiento: '',
+    costo: '',
+    causas: '',
+    actividades:'',
+    repuestos: '',
+    observaciones: '',
+    fecha: '',
+    departamento: '',
+    razon: '',
+    tiempo: '',
+    horas: 0,
+    tipo: "Interno",
 }

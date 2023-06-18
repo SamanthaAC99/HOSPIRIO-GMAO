@@ -89,7 +89,7 @@ export default function OrdenTrabajoView() {
         mparada: [],
         tiempos: [],
         reporte: false,
-        reporteId: [],
+        reporteId: "",
         razonp: "",
         horat: "",
         tiempot: "",
