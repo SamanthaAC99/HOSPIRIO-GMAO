@@ -791,7 +791,7 @@ export default function DashboardTecnicos() {
                                                 .map((row, index) => {
                                                     return (
                                                         <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                                                            <TableCell align="left">{row.priorirdad}</TableCell>
+                                                            <TableCell align="left">{row.prioridad}</TableCell>
                                                             <TableCell align="left">{row.asunto}</TableCell>
                                                             <TableCell align="center">
                                                                 <Stack direction="row" spacing={0.5} alignitems="center" justifyContent="center" >
