@@ -3,8 +3,11 @@
 # dependencies
 /node_modules
 /build
+
+/.firebase
 /.pnp
-/src/firebase/firebase-config.js
+/src/firebase
+
 .pnp.js
 .firebaserc
 # testing
