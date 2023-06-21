@@ -8,13 +8,12 @@ import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDLHzVHC7pYn3oe_vTKAi9H1AJ_zgJ71PE",
-  authDomain: "app-mantenimiento-91156.firebaseapp.com",
-  projectId: "app-mantenimiento-91156",
-  storageBucket: "app-mantenimiento-91156.appspot.com",
-  messagingSenderId: "1093685550719",
-  appId: "1:1093685550719:web:386bf2c7fdd00a599e694a",
-  measurementId: "G-HES8CYTB0N"
+  apiKey: "AIzaSyCscs3BArDRNj2UKv5RfkwzpWXv7htUjps",
+  authDomain: "software-hospirio.firebaseapp.com",
+  projectId: "software-hospirio",
+  storageBucket: "software-hospirio.appspot.com",
+  messagingSenderId: "177583488246",
+  appId: "1:177583488246:web:b587c6bd1b35c2222e80d7"
 };
 
 
