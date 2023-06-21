@@ -593,29 +593,46 @@ export default function Inventarioview() {
 	}
 
 	const mostrarModalReubicar = (_data) => {
-		console.log(_data)
-		setCurrentEquipo(_data)
+		let aux = JSON.parse(JSON.stringify(_data))
+		setCurrentEquipo(aux)
 		setModalReubicar(true)
-		setUbicacion(_data.ubicacion)
-		setDepartamento(_data.departamento)
-		setResponsable(_data.responsable)
-		setTipo(_data.tipo_equipo)
-		setEquipo(_data.equipo)
+		setUbicacion(aux.ubicacion)
+		setDepartamento(aux.departamento)
+		setResponsable(aux.responsable)
+		setTipo(aux.tipo_equipo)
+		setEquipo(aux.equipo)
 	}
 	const reubicarUbicado = () => {
-
-		let aux = JSON.parse(JSON.stringify(currentEquipo))
-		let aux_historial = aux.codigos_historial
-		aux.ubicacion = ubicacion
-		aux.responsable = responsable
-		aux.departamento = departamento
+		let aux_equipos = JSON.parse(JSON.stringify(data))
+		let equipo_modify = JSON.parse(JSON.stringify(currentEquipo))
+		let aux_historial = equipo_modify.codigos_historial
+		console.log(aux_historial)
+		equipo_modify.ubicacion = ubicacion
+		equipo_modify.responsable = responsable
+		equipo_modify.departamento = departamento
+		equipo_modify.reubicado = true
+		console.log("aqui ya cambiamo el valor del objeto",equipo_modify)
 		let newCodigo = generateCodigo()
+		equipo_modify.codigo = newCodigo
 		aux_historial.push(newCodigo)
+		let equipos_edited = aux_equipos.map(item=>{
+			if(item.id === equipo_modify.id){
+				return equipo_modify
+			}else{
+				return item
+			}
+
+		})
+		setData(equipos_edited)
 		const ref = doc(db, "ingreso", `${currentEquipo.id}`);
 		updateDoc(ref, {
 			codigos_historial: aux_historial,
 			codigo: newCodigo,
 			reubicado: true,
+			departamento: departamento,
+			ubicacion: ubicacion,
+			responsable:responsable,
+
 		});
 		setModalReubicar(false)
 
