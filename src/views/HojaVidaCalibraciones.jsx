@@ -35,7 +35,7 @@ import TarjetaGestionar from "../components/TarjetaGestionar";
 import { useNavigate } from 'react-router-dom';
 import { useParams } from "react-router-dom";
 
-export default function HojaVidaView() {
+export default function HojaVidaCalibraciones() {
 
     const currentInventario = useSelector(state => state.inventarios);
     // console.log(currentInventario)
@@ -51,7 +51,7 @@ export default function HojaVidaView() {
     
     const [preventivo, setPreventivo] = useState(0);
     const [correctivo, setCorrectivo] = useState(0);
-    // const [calibraciones, setCalibraciones] = useState(0);
+    const [calibraciones, setCalibraciones] = useState(0);
     const [porcentajePreventivo, setPorcentajePreventivo] = useState(0);
     const [porcentajeCorrectivo, setPorcentajeCorrectivo] = useState(0);
     const codigosEquipo = useRef("");
@@ -62,11 +62,7 @@ export default function HojaVidaView() {
     // const [porcentajeCalibraciones, setPorcentajeCalibraciones] = useState(0);
     const [modalInformacion, setModalinformacion] = useState(false);
     const [codigoSelect,setCodigoSelect] = useState("")
-    // const [ctdMantenimientos, setCtdMantenimientos] = useState({
-    //     correctivo: 4,
-    //     preventivo: 1,
-    //     calibraciones: 2,
-    // });
+   
     const [reportesTotales, setReportesTotales] = useState([]);
 
     const getReportes = () => {
@@ -106,7 +102,6 @@ export default function HojaVidaView() {
         const filtradosTotal = reportesFiltrados.length
         const filtradosPreventivo = reportesFiltrados.filter(filterPreventivo).length
         const filtradosCorrectivo = reportesFiltrados.filter(filterCorrectivo).length
-        // const filtradosCalibraciones = reportesFiltrados.filter(filterCalibraciones).length
 
         const porcentajePreventivo = ((filtradosPreventivo * 100) / filtradosTotal)
         const porcentajeCorrectivo = ((filtradosCorrectivo * 100) / filtradosTotal)
@@ -119,7 +114,7 @@ export default function HojaVidaView() {
 
         setPreventivo(reportesFiltrados.filter(filterPreventivo).length)
         setCorrectivo(reportesFiltrados.filter(filterCorrectivo).length)
-        // setCalibraciones(reportesFiltrados.filter(filterCalibraciones).length)
+        setCalibraciones(reportesFiltrados.filter(filterCalibraciones).length)
     }
 
     const navegarView = (ruta) => {
@@ -178,13 +173,13 @@ export default function HojaVidaView() {
         }
     }
 
-    // const filterCalibraciones = (state) => {
-    //     if (state.tmantenimiento === "Calibracion") {
-    //         return state;
-    //     } else {
-    //         return
-    //     }
-    // }
+    const filterCalibraciones = (state) => {
+        if (state.tmantenimiento === "Calibracion") {
+            return state;
+        } else {
+            return
+        }
+    }
 
     const generarPdf = () => {
         var doc = new jsPDF({
@@ -261,6 +256,14 @@ export default function HojaVidaView() {
 
 
                         <Grid container spacing={{ xs: 3, md: 3 }}>
+                        <Grid item xs={12} sm={2} md={12}>
+                                <Button variant="outlined"
+                                    className="boton-salir"
+                                    fullWidth
+                                    endIcon={<ReplyAllIcon sx={{ fontSize: 90 }} />}
+                                    onClick={() => { salir() }}
+                                >Salir</Button>
+                            </Grid>
                             <Grid item xs={12} sm={6} md={12}>
                                 <div className="card12" style={{height:"100%"}} >
 
@@ -295,64 +298,22 @@ export default function HojaVidaView() {
                                     </div>
                                 </div>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={12}>
-                                <div className="card12" >
-                                    <div className="card-body12 small ">
-                                        {/* <GraficaPie labels={["Mtto. Preventivo", "Mtto. Correctivo", "Calibraciones"]} datos={[ctdMantenimientos.correctivo, ctdMantenimientos.preventivo, ctdMantenimientos.calibraciones]} /> */}
-                                        <GraficaDona labels={["Mtto. Preventivo", "Mtto. Correctivo"]} info={[preventivo, correctivo]} />
-                                    </div>
-                                </div>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-
-                    {/* empieza container tablas  */}
-                    <Grid item xs={12} sm={6} md={8.5}>
-                        <Grid container spacing={{ xs: 3 }} >
-                            <Grid item xs={6} sm={6} md={5}>
-                                <TarjetaGestionar
-                                    icon={<WorkHistoryIcon />}
-                                    headerColor={"#ffff"}
-                                    avatarColor={cyan[700]}
-                                    title={'Mtto. Preventivo'}
-                                    value={`${porcentajePreventivo}%`}
-                                />
-                            </Grid>
-
-
-                            <Grid item xs={6} sm={6} md={5}>
-                                <TarjetaGestionar
-                                    icon={<WorkHistoryIcon />}
-                                    headerColor={"#ffff"}
-                                    avatarColor={cyan[700]}
-                                    title={'Mtto. Correctivo'}
-                                    value={`${porcentajeCorrectivo}%`}
-                                />
-                            </Grid>
-
-
-                            {/* <Grid item xs={6} sm={6} md={3.3}>
+                            <Grid item xs={12} sm={4} md={12}>
                                 <TarjetaGestionar
                                     icon={<WorkHistoryIcon />}
                                     headerColor={"#ffff"}
                                     avatarColor={cyan[700]}
                                     title={'Calibraciones'}
-                                    value={`${porcentajeCalibraciones}%`}
+                                    value={`${calibraciones}`}
                                 />
-                            </Grid> */}
-
-                            <Grid item xs={12} sm={2} md={2}>
-                                <Button variant="outlined"
-                                    className="boton-salir"
-                                    fullWidth
-                                    endIcon={<ReplyAllIcon sx={{ fontSize: 90 }} />}
-                                    onClick={() => { salir() }}
-                                >Salir</Button>
                             </Grid>
+                            
                         </Grid>
+                    </Grid>
 
-
-
+                    {/* empieza container tablas  */}
+                    <Grid item xs={12} sm={6} md={8.5}>
+                   
                         <div className="card-tabla-hv"  >
                         
                                 <div className="header-ev">

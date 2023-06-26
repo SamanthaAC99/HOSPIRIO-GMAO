@@ -54,6 +54,11 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import ReportesExternosNew from "./ReporteExternoNew";
 import PruebasPdf from "./PruebasPdf";
+import EquiposCalibracionview from "./EquiposCalibración";
+import ParametrosView from "./DeclararParametros";
+import HojaVidaCalibraciones from "./HojaVidaCalibraciones";
+import PlanCalibraciones from "./PlanCalibraciones";
+import ActividadesView from "./DeclararActividades";
 
 export default function MultiView() {
     const currentUser = useSelector(state => state.auths);
@@ -164,10 +169,8 @@ export default function MultiView() {
                         </PrivateRoute>
                     } />
                 <Route path="pruebas"
-                    element={
-                       
-                            <PruebasView />
-                  
+                    element={                
+                            <PruebasView /> 
                     } />
 
 
@@ -381,8 +384,38 @@ export default function MultiView() {
                         </PrivateRoute>
 
                     }
-
                 />
+                <Route path="calibracion/equipos"
+                    element={
+                        <PrivateRoute auth={currentUser.permisions.gestionr}>
+                            <EquiposCalibracionview />
+                        </PrivateRoute>
+
+                    }
+                />
+
+<Route path="calibracion/equipos/declarar_parametros"
+                    element={<PrivateRoute auth={currentUser.permisions.gestioni}><ParametrosView /></PrivateRoute>}
+                    />
+
+<Route path="calibracion/equipos/hojadevida"
+                    element={
+                        <PrivateRoute auth={currentUser.permisions.gestioni}>
+                            <HojaVidaCalibraciones />
+                        </PrivateRoute>
+                    }
+                />
+                <Route path="calibracion/planmantenimiento"
+                    element={
+                        <PrivateRoute auth={currentUser.permisions.gestionr}>
+                            <PlanCalibraciones />
+                        </PrivateRoute>
+
+                    }
+                />
+                <Route path="calibracion/planmantenimiento/declarar_actividades"
+                    element={<PrivateRoute auth={currentUser.permisions.gestioni}><ActividadesView /></PrivateRoute>}
+                    />
 
             </Routes>
         </>

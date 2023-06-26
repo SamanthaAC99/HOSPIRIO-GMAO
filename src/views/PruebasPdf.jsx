@@ -608,60 +608,63 @@ export default function PruebasPdf() {
         });
     }
 
-
     const generarPdf = () => {
-        var doc = new jsPDF({
-            orientation: "portrait",
-        })
-        doc.text("Hospital del Río ", 90, 10); //fontsize 15
-        doc.setFontSize(12)// de aqui para abajo todo estara con fontsize 9
-        doc.text("Reporte de Mantenimiento", 85, 20)
-        // doc.setFontSize(10)
-        // doc.text("Id Reporte:",20, 30)
-        // doc.text(currentReporte.id,70, 30)
-        // doc.text("Id Orden de Trabajo:",20, 40)
-        // doc.text(currentReporte.OrdenId,70, 40)
-        // doc.text("Código Equipo:",20, 50)
-        // doc.text(currentReporte.codigoe,70, 50)
-        // doc.text("Equipo:",20, 60)
-        // doc.text(currentReporte.equipo,70, 60)
-        // doc.text("Técnico:",20, 70)
-        // doc.text(currentReporte.nombreT,70, 70)
-        // doc.text("Estado:",20, 80)
-        // doc.text(currentReporte.estadof,70, 80)
-        // doc.text("Tipo de Mantenimiento:",20, 90)
-        // doc.text(currentReporte.tmantenimiento,70, 90)
-        // doc.text("Tiempo:",20, 100)
-        // doc.text(currentReporte.tiempo,70, 100)
-        // doc.text("Costo:",20, 110)
-        // doc.text(currentReporte.costo,70, 110)
-
-        let aux = 15
-        let datos_tabla =
-            [
-                ["Id Reporte", currentReporte.id],
-                ["Id O/T", currentReporte.OrdenId],
-                ["Código Equipo", currentReporte.codigoe],
-                ["Equipo", currentReporte.equipo],
-                ["Técnico", currentReporte.nombreT],
-                ["Estado", currentReporte.estadof],
-                ["Tipo de Mantenimiento", currentReporte.tmantenimiento],
-                ["Tiempo", currentReporte.tiempo],
-                ["Costo", currentReporte.costo],
-                ["Falla", currentReporte.falla],
-                ["Causas", currentReporte.causas],
-                ["Observaciones", currentReporte.observaciones]
-            ]
-
-        autoTable(doc, {
-            startY: aux + 10,
-            head: [['Item', 'Descripción']],
-            body: datos_tabla,
-        })
-
-        doc.save(`reporte_${currentReporte.id}.pdf`);
-
+        
     }
+
+    // const generarPdf = () => {
+    //     var doc = new jsPDF({
+    //         orientation: "portrait",
+    //     })
+    //     doc.text("Hospital del Río ", 90, 10); //fontsize 15
+    //     doc.setFontSize(12)// de aqui para abajo todo estara con fontsize 9
+    //     doc.text("Reporte de Mantenimiento", 85, 20)
+    //     // doc.setFontSize(10)
+    //     // doc.text("Id Reporte:",20, 30)
+    //     // doc.text(currentReporte.id,70, 30)
+    //     // doc.text("Id Orden de Trabajo:",20, 40)
+    //     // doc.text(currentReporte.OrdenId,70, 40)
+    //     // doc.text("Código Equipo:",20, 50)
+    //     // doc.text(currentReporte.codigoe,70, 50)
+    //     // doc.text("Equipo:",20, 60)
+    //     // doc.text(currentReporte.equipo,70, 60)
+    //     // doc.text("Técnico:",20, 70)
+    //     // doc.text(currentReporte.nombreT,70, 70)
+    //     // doc.text("Estado:",20, 80)
+    //     // doc.text(currentReporte.estadof,70, 80)
+    //     // doc.text("Tipo de Mantenimiento:",20, 90)
+    //     // doc.text(currentReporte.tmantenimiento,70, 90)
+    //     // doc.text("Tiempo:",20, 100)
+    //     // doc.text(currentReporte.tiempo,70, 100)
+    //     // doc.text("Costo:",20, 110)
+    //     // doc.text(currentReporte.costo,70, 110)
+
+    //     let aux = 15
+    //     let datos_tabla =
+    //         [
+    //             ["Id Reporte", currentReporte.id],
+    //             ["Id O/T", currentReporte.OrdenId],
+    //             ["Código Equipo", currentReporte.codigoe],
+    //             ["Equipo", currentReporte.equipo],
+    //             ["Técnico", currentReporte.nombreT],
+    //             ["Estado", currentReporte.estadof],
+    //             ["Tipo de Mantenimiento", currentReporte.tmantenimiento],
+    //             ["Tiempo", currentReporte.tiempo],
+    //             ["Costo", currentReporte.costo],
+    //             ["Falla", currentReporte.falla],
+    //             ["Causas", currentReporte.causas],
+    //             ["Observaciones", currentReporte.observaciones]
+    //         ]
+
+    //     autoTable(doc, {
+    //         startY: aux + 10,
+    //         head: [['Item', 'Descripción']],
+    //         body: datos_tabla,
+    //     })
+
+    //     doc.save(`reporte_${currentReporte.id}.pdf`);
+
+    // }
     // creamos el codigo para editar los reportes
     const EditarReporte= async(_data)=>{
 

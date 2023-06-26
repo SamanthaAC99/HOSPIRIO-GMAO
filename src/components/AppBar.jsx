@@ -36,6 +36,7 @@ import Pruebas from './MenuContent/Pruebas';
 import IndicadoresA from './MenuContent/Indicadores';
 import DashboardE from './MenuContent/DashboardE';
 import CalendarioM from './MenuContent/Calendario';
+import CalibracionMenu from './MenuContent/Calibracion';
 export default function ToolBar() {
     let params = useParams();
     const currentUser = useSelector(state => state.auths);
@@ -64,6 +65,11 @@ export default function ToolBar() {
         },
         {
             child: <InventarioMenu />,
+            visibility: currentUser.permisions.gestioni,
+            key: 4
+        },
+        {
+            child: <CalibracionMenu />,
             visibility: currentUser.permisions.gestioni,
             key: 4
         },
