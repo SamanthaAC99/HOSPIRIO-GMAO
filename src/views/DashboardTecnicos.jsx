@@ -526,7 +526,8 @@ export default function DashboardTecnicos() {
         re['marca'] = equipment.marca;
         re['modelo'] = equipment.modelo;
         re['serie'] = equipment.serie;
-        re['propietario'] = equipment.responsable.nombre;
+        re['responsable'] = equipment.responsable.nombre;
+        re['propietario'] = equipment.propietario.nombre;
         re['tipo_equipo'] = equipment.tipo_equipo.nombre;
         let tecnicos_aux = JSON.parse(JSON.stringify(currentOrden.tecnicos))
 
@@ -956,7 +957,7 @@ export default function DashboardTecnicos() {
                                     onChange={(event, newValue) => {
                                         setEstadof(newValue);
                                     }}
-                                    options={["ARREGLADO", "REPARADO"]}
+                                    options={["ARREGLADO", "OPERATIVO","NO OPERATIVO"]}
 
                                     renderInput={(params) => <TextField name="tmantenimiento"  {...params} fullWidth label="Estado" type="text" />}
                                 />

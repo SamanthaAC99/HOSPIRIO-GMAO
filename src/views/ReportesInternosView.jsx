@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-
-
 import { collection,query, doc, onSnapshot } from "firebase/firestore";
 import Paper from '@mui/material/Paper';
 import Grid from "@mui/material/Grid";
-
+import * as XLSX from 'xlsx';
 import { db } from "../firebase/firebase-config";
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Table from '@mui/material/Table';
@@ -22,7 +20,7 @@ import TextareaAutosize from '@mui/material/TextareaAutosize';
 import '../css/Tabla.css';
 import '../css/Presentacion.css';
 import '../css/EncargadoView.css';
-
+import DescriptionIcon from '@mui/icons-material/Description';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
@@ -70,6 +68,28 @@ export default function ReportesInternosView(){
         setPage(0);
     };
 
+
+    const agruparPorCodigo =(datos)=> {
+        const grupos = {};
+
+        datos.forEach(obj => {
+            const codigo = obj.codigo;
+
+            if (!grupos[codigo]) {
+            grupos[codigo] = [];
+            }
+
+            grupos[codigo].push(obj);
+        });
+
+        const resultado = [];
+
+        for (const codigo in grupos) {
+            resultado.push(grupos[codigo]);
+        }
+
+        return resultado;
+      }
     const getData = async () => {
         const reference = query(collection(db, "reportesint"));
         onSnapshot(reference, (querySnapshot) => {
@@ -184,7 +204,32 @@ export default function ReportesInternosView(){
            
 
     }
-
+    const generarReporte =()=>{
+        let aux_datos = JSON.parse(JSON.stringify(data))
+        let datos_modify = agruparPorCodigo(aux_datos)
+        console.log(datos_modify[0])
+        let datos_formated = datos_modify[0].map(item=>{
+            let aux = {
+                tipo: item.tipo_equipo,
+                codigo:item.codigo_equipo,
+                equipo:item.equipo,
+                departamento:item.departamento,
+                fecha:item.fecha,
+                tipo_mantenimiento:item.tipo,
+                mantenimiento:item.mantenimiento,
+                falla:item.falla,
+                actividades:item.actividades
+            }
+            return aux
+    })
+        const myHeader = ["tipo", "codigo", "equipo","departamento","fecha","tipo_mantenimiento","mantenimiento","falla","actividades"];
+        const worksheet = XLSX.utils.json_to_sheet(datos_formated, { header: myHeader });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.sheet_add_aoa(worksheet, [["TIPO", "COD", "EQUIPO","DEPARTAMENTO","FECHA","TIPO DE MANTENIMIENTO","MANTENIMIENTO","FALLA","ACTIVIDADES"]], { origin: "A1" });
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
+        XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+    }
 
 
 
@@ -255,7 +300,11 @@ export default function ReportesInternosView(){
                         Filtrar
                     </Button>
                 </Grid >
-              
+                <Grid item xs={12}>
+                <Button  variant="contained"  onClick={generarReporte}  endIcon={<DescriptionIcon />}>
+                        Generar Reporte
+                    </Button>
+                </Grid >
                 <Grid item xs={12}>
 
                  <Paper sx={{ width: '100%', overflow: 'hidden' }}>
