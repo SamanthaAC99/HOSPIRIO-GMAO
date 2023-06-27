@@ -36,6 +36,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 export default function Contactosempresas() {
     const [data, setData] = useState([]);
     const [modalInsertar, setModalinsertar] = useState(false);
+    const [modalCalibraciones, setModalCalibraciones] = useState(false);
     const [modalInformacion, setModalinformacion] = useState(false);
     const [empresa, setEmpresa] = useState('');
     const [file, setFile] = useState(null);
@@ -88,7 +89,7 @@ export default function Contactosempresas() {
             setData(temp);
             reportes.current = temp
         });
-        const reference = query(collection(db, "ingreso"));
+        const reference = query(collection(db, "ingresocalibracion"));
         onSnapshot(reference, (querySnapshot) => {
             var inventarioD = [];
             querySnapshot.forEach((doc) => {
@@ -235,6 +236,14 @@ const seleccionarEquipo =(_data)=> {
         setModalinsertar(false);
     };
 
+    const mostrarModalCalibraciones = () => {
+        setModalCalibraciones(true);
+    };
+
+    const cerrarModalCalibraciones = () => {
+        setModalCalibraciones(false);
+    };
+
     const eliminar = async (dato) => {
         Swal.fire({
             title: '¿Deseas eliminar el reporte?',
@@ -255,6 +264,34 @@ const seleccionarEquipo =(_data)=> {
           })
     };
   
+    const crearReporteCalibraciones = async () => {
+       const re = nreporte;
+        re['empresa'] = empresa;
+        re['equipo'] = cequipo.nombre;
+        re['codigoe'] = codigoe;
+        re['id_equipo'] = equipoObjeto.current;
+       re['tmantenimiento'] ="CALIBRACION";
+       re['indice'] = new Date().getTime();
+       console.log(re)
+       const newReporte = await addDoc(collection(db, "reportesext"), re);
+        if (newReporte.id !== null) {
+            console.log(newReporte.id)
+            const reference2 = doc(db, "reportesext", `${newReporte.id}`);
+            updateDoc(reference2, {
+                id: newReporte.id,
+            });
+            sendStorage(newReporte.id)
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'No se agrego el reporte a la orden',
+            })
+        }
+        setModalCalibraciones(false)
+    }
+
+
 
     const crearReporte = async () => {
         let horasAux=parseInt(nreporte.horasi)
@@ -335,6 +372,14 @@ const seleccionarEquipo =(_data)=> {
                         <Button variant="contained"
                             className="boton-modal-d"
                             onClick={() => mostrarModalInsertar()}>Agregar Reporte
+                        </Button>
+                    </Grid>
+
+                
+                    <Grid item xs={12} md={12} sm={3}>
+                        <Button variant="contained"
+                            className="boton-modal-d"
+                            onClick={() => mostrarModalCalibraciones()}>Calibraciones
                         </Button>
                     </Grid>
                     <Grid item xs={2.4}>
@@ -853,6 +898,101 @@ const seleccionarEquipo =(_data)=> {
 
                     </ModalFooter>
                 </Modal>
+
+                <Modal className="{width:0px}" isOpen={modalCalibraciones}>
+                <ModalHeader>
+                    <div><h3>Reporte Calibraciones</h3></div>
+                </ModalHeader>
+
+                <ModalBody>
+                    <FormGroup>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    
+                                    id="combo-box-demo"
+                                    options={empresa2}
+                                    getOptionLabel={(option) => {
+                                        return option.empresa;
+                                    }}
+                                    onChange={(event, newvalue) => setEmpresa(newvalue.empresa)}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="EMPRESA" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <strong>TIPO MTTO: CALIBRACION</strong>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <strong>FECHA CALIBRACION:</strong>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <strong>PROXIMA CALIBRACION:</strong>
+                            </Grid>
+                            <Grid item xs={6}>
+
+                            <Autocomplete
+                                disableClearable
+                                id="combo-box-demo"
+                                className='seleccionadortabla'
+
+                                onChange={(event, newValue) => {
+                                    selectEquipo(newValue);
+                                }}
+                                value={codigoe}
+                                options={codigosEquipo}
+                                renderInput={(params) => <TextField {...params} fullWidth label="CÓDIGO EQUIPO" type="text" />}
+                            />
+                            </Grid>
+                                <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="EQUIPO" variant="outlined" InputProps={{ readOnly: true }} value={cequipo.nombre} fullWidth />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{textTransform:"uppercase"}} 
+                                    aria-label="minimum height"
+                                    minRows={2}
+                                    placeholder="Magnitud Calibrada"
+                                    className="text-area-encargado"
+                                    name="actividadesR"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{textTransform:"uppercase"}} 
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Observaciones"
+                                    className="text-area-encargado"
+                                    name="observaciones"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <label> Cargar reporte físico:</label>
+                                <input className="form-control " onChange={buscarImagen} type="file" id="formFile" />
+                            </Grid>
+                        </Grid>
+                    </FormGroup>
+                </ModalBody>
+
+        
+                <ModalFooter>
+                    <Button     variant="outlined"
+                          className="boton-modal-d2"
+                        onClick={crearReporteCalibraciones}
+                        >Añadir</Button>
+                    <Button
+                               variant="contained"
+                               className="boton-modal-d"
+                        onClick={() => cerrarModalCalibraciones()}
+                    >
+                        Cancelar
+                    </Button>
+
+                </ModalFooter>
+            </Modal>
         </>
     );
 }

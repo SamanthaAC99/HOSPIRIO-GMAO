@@ -174,7 +174,7 @@ export default function HojaVidaCalibraciones() {
     }
 
     const filterCalibraciones = (state) => {
-        if (state.tmantenimiento === "Calibracion") {
+        if (state.tmantenimiento === "CALIBRACION") {
             return state;
         } else {
             return
