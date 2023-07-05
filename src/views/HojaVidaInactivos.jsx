@@ -162,7 +162,7 @@ export default function HojaVidaInactivos() {
     // }
 
     const filterPreventivo = (state) => {
-        if (state.tmantenimiento === "PREVENTIVO") {
+        if (state.mantenimiento === "PREVENTIVO") {
             return state;
         } else {
             return
@@ -170,7 +170,7 @@ export default function HojaVidaInactivos() {
     }
 
     const filterCorrectivo = (state) => {
-        if (state.tmantenimiento === "CORRECTIVO") {
+        if (state.mantenimiento === "CORRECTIVO") {
             return state;
         } else {
             return
@@ -384,16 +384,16 @@ export default function HojaVidaInactivos() {
                                                             {index + 1}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.tmantenimiento}
+                                                            {reporte.mantenimiento}
                                                         </Td>
                                                         <Td className="t-encargados">
                                                             {reporte.tipo}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.nombreT}
+                                                            {reporte.tecnico}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.estadof}
+                                                            {reporte.estado}
                                                         </Td>
                                                         <Td className="t-encargados">
                                                             {reporte.tiempo}
@@ -440,7 +440,7 @@ export default function HojaVidaInactivos() {
                                                     </Grid>
                                                     <Grid item xs={12} md={12}>
 
-                                                        <p style={{ margin: 0 }}><strong style={{ marginRight: 4 }}>Actividades:</strong>{currentreport.actividadesR}</p>
+                                                        <p style={{ margin: 0 }}><strong style={{ marginRight: 4 }}>Actividades:</strong>{currentreport.actividades}</p>
 
                                                     </Grid>
                                                     <Grid item xs={12} md={12}>

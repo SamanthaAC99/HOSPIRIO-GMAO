@@ -163,7 +163,7 @@ export default function HojaVidaView() {
     // }
 
     const filterPreventivo = (state) => {
-        if (state.tmantenimiento === "PREVENTIVO") {
+        if (state.mantenimiento === "PREVENTIVO") {
             return state;
         } else {
             return
@@ -171,7 +171,7 @@ export default function HojaVidaView() {
     }
 
     const filterCorrectivo = (state) => {
-        if (state.tmantenimiento === "CORRECTIVO") {
+        if (state.mantenimiento === "CORRECTIVO") {
             return state;
         } else {
             return
@@ -356,7 +356,7 @@ export default function HojaVidaView() {
                         <div className="card-tabla-hv"  >
                         
                                 <div className="header-ev">
-                                    <h5 className="titulo-ev">Hoja de Vida</h5>
+                                    <h5 className="titulo-ev">Hoja de Vida Activos</h5>
 
                                     <Avatar sx={{ bgcolor: blue[700] }} >
                                         <HandymanIcon />
@@ -386,16 +386,16 @@ export default function HojaVidaView() {
                                                             {index + 1}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.tmantenimiento}
+                                                            {reporte.mantenimiento}
                                                         </Td>
                                                         <Td className="t-encargados">
                                                             {reporte.tipo}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.nombreT}
+                                                            {reporte.tecnico}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.estadof}
+                                                            {reporte.estado}
                                                         </Td>
                                                         <Td className="t-encargados">
                                                             {reporte.tiempo}
@@ -442,7 +442,7 @@ export default function HojaVidaView() {
                                                     </Grid>
                                                     <Grid item xs={12} md={12}>
 
-                                                        <p style={{ margin: 0 }}><strong style={{ marginRight: 4 }}>Actividades:</strong>{currentreport.actividadesR}</p>
+                                                        <p style={{ margin: 0 }}><strong style={{ marginRight: 4 }}>Actividades:</strong>{currentreport.actividades}</p>
 
                                                     </Grid>
                                                     <Grid item xs={12} md={12}>
