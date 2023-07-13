@@ -34,12 +34,11 @@ export default function Usuarios_menu() {
     const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
     const checkedIcon = <CheckBoxIcon fontSize="small" />;
     const [departamentos, setDepartamentos] = useState([]);
-    const [verification, setVerification] = useState('');
     const [area, setArea] = useState([]);
-    const [reset,setReset] = useState(false);
+    const [reset, setReset] = useState(false);
     const [file, setFile] = useState(null);
     const [cargo, setCargo] = useState("");
-    const deshabilitar =  useRef(false);
+    const deshabilitar = useRef(false);
     const [urlObject, setUrlObject] = useState(imagen1);
     const [state, setState] = useState({
         compras: false,
@@ -92,7 +91,7 @@ export default function Usuarios_menu() {
     const buscarImagen = (e) => {
         if (e.target.files[0] !== undefined) {
             setFile(e.target.files[0]);
-            setUrlObject(URL.createObjectURL(e.target.files[0]))
+            setUrlObject(URL.createObjectURL(e.target.files[0]));
             console.log(e.target.files[0]);
         } else {
             console.log('no hay archivo');
@@ -143,10 +142,11 @@ export default function Usuarios_menu() {
             dashboardJS: false,
             // dashboardE: false,
         });
-        setVerification('');
+        setFile(null);
+ 
         setCargo("")
     }
-    const enviarDatosFirebase = () => {
+    const enviarDatosFirebase = async() => {
         var datos = newUserInformation;
         datos['area'] = area
         datos['permisions'] = state
@@ -159,13 +159,45 @@ export default function Usuarios_menu() {
         var contra = datos.password.length
         console.log('Contraseña tiene ' + newUserInformation.password.length + ' caracteres');
         if (newUserInformation.lastname !== '' && newUserInformation.name !== '' && newUserInformation.indentification !== '' && newUserInformation.email !== '' && contra >= 8) {
-            agregarNuevoUsuario();
+            const auth = getAuth();
+            await createUserWithEmailAndPassword(auth, datos.email, datos.password)
+                .then((userCredential) => {
+                    let user = userCredential.user;
+                    try {
+                        if(file !== null){
+                            setDoc(doc(db, "usuarios", `${user.uid}`), datos);
+                            sendStorage(user.uid);
+                        }else{
+                            datos.photo = custom_photo
+                            datos.uid = user.uid
+                            setDoc(doc(db, "usuarios", `${user.uid}`), datos);
+                            sendStorage(user.uid);
+                        }
+                        Swal.fire(
+                            'Usuario Registrado',
+                            '',
+                            'success'
+                        )
+                      
+                    } catch (e) {
+                        console.error("Error adding document: ", e);
+                    }
+
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    console.log(errorCode)
+                    console.log(errorMessage)
+                    Swal.fire(
+                        'Usuario ya Registrado',
+                        '',
+                        'error'
+                    )
+                    // ..
+                });
             limpiarCampos();
-            Swal.fire(
-                'Usuario Registrado',
-                '',
-                'success'
-            )
+            
         } else {
             Swal.fire({
                 position: 'center',
@@ -191,87 +223,7 @@ export default function Usuarios_menu() {
 
     }
 
-    const sendFirestore = (uid) => {
-        try {
-            setDoc(doc(db, "usuarios", `${uid}`), newUserInformation);
-
-            sendStorage(uid);
-        } catch (e) {
-            console.error("Error adding document: ", e);
-        }
-    };
-
-    // const arreglar =()=>{
-
-    //     let arreglos =  {
-    //     tareas: [
-    //         "0b35e643-70d7",
-    //         "12d9ee74-438d",
-    //         "2a8b3bd3-21d6",
-    //         "53169ec6-e75b",
-    //         "54f4d170-3aab",
-    //         "5f0a9566-f31d",
-    //         "6b2c0f20-a60f",
-    //         "768f84b5-6728",
-    //         "76e63ee5-deed",
-    //         "a7d619b9-23ce",
-    //         "a905b17c-ff1f",
-    //         "da6cef06-ca19",
-    //         "daf8a4de-b37f",
-    //         "ed13319e-f09c",
-    //         "f3531653-cb22"
-    //     ],
-    //     auth: false,
-    //     name: 'Samantha',
-    //     lastname: 'Avila',
-    //     secondlastname: '',
-    //     photo: 'https://firebasestorage.googleapis.com/v0/b/app-mantenimiento-91156.appspot.com/o/usuarios%2Fc5EbazdxwoQyzkrGSyQ1QjXapEz1%2Fprofile.jpeg?alt=media&token=a6dd9a49-d6af-4a13-bf1d-fdcafc602a5c',
-    //     indentification: '0103399456',
-    //     password: 'facil123',
-    //     birthday: 0,
-    //     cellphone: '',
-    //     email: 'sami1salome@gmail.com',
-    //     nivelEdu: '',
-    //     area: [
-    //         "Emergencia","Hemodinamia"
-    //     ],
-    //     titulacion: '',
-    //     uid: 'HJc70PTUBSdeG1yNoL6VBuiC2is2',
-    //     cargo: 'Jefe Mantenimiento',
-    //     actividades: [
-    //         "Mantenimiento","Inventario","Reparaciones","Sistemas"
-    //     ],
-    //     capacitacion: '',
-    //     curriculum: '',
-    //     codigo: '',
-    //     icontrato: 0,
-    //     fincontrato: 0,
-    //     permisions: {
-    //         compras: true,
-    //         gestiona: true,
-    //         gestioni: true,
-    //         gestionm: true,
-    //         gestionp: true,
-    //         gestionr: true,
-    //         gestiont: true,
-    //         otrabajo: true,
-    //         dashboardT: true,
-    //         dashboardU: true,
-    //         dashboardJM: true,
-    //         dashboardJS: true,
-    //         dashboardE: true,
-    //     }
-    // }
-
-    //     try {
-    //         setDoc(doc(db, "usuarios", `HJc70PTUBSdeG1yNoL6VBuiC2is2`), arreglos);
-
-    //     } catch (e) {
-    //         console.error("Error adding document: ", e);
-    //     }
-        
-    // }
-
+ 
 
 
     const permisionByCargo = (event) => {
@@ -357,7 +309,7 @@ export default function Usuarios_menu() {
             permisos['gestiona'] = false
             setState(permisos);
             deshabilitar.current = false;
-    
+
         }
 
     }
@@ -371,46 +323,21 @@ export default function Usuarios_menu() {
     //funcion para mandar imagen a firebase storage
     const sendStorage = (uid) => {
         const storageRef = ref(storage, `usuarios/${uid}/profile.jpeg`);
-        uploadBytes(storageRef, file).then((snapshot) => {
-            obtenerUrlPhoto(uid);
-        });
+        if (file !== null) {
+            uploadBytes(storageRef, file).then((snapshot) => {
+                obtenerUrlPhoto(uid);
+            });
+        } else {
+            console.log("se manda la imagen1")
+            const storageRef2 = ref(storage, `usuarios/${uid}/profile.png`);
+            uploadBytes(storageRef2, imagen1).then((snapshot) => {
+
+                obtenerUrlPhoto(uid);
+            });
+        }
+
     };
 
-    // const sendStorage = async (id) => {
-    //     const storageRef = ref(storage, `inventario/${id}`);
-    //     try {
-    //       let url2 = await uploadBytes(storageRef, file).then((snapshot) => {
-    //         let url = getDownloadURL(storageRef).then((downloadURL) => {
-    //           console.log('File available at', downloadURL);
-    //           return downloadURL;
-    //         });
-    //         return url
-    //       });
-    //       return url2
-    //     } catch (error) {
-    //       return no_img
-    //     }
-    
-    //   };
-
-    // funcion para autenticar al usuario
-    const agregarNuevoUsuario = () => {
-        const newUser = newUserInformation;
-        const auth = getAuth();
-        createUserWithEmailAndPassword(auth, newUser.email, newUser.password)
-            .then((userCredential) => {
-                // Signed in
-                const user = userCredential.user;
-                sendFirestore(user.uid);
-            })
-            .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.log(errorCode)
-                console.log(errorMessage)
-                // ..
-            });
-    }
 
 
     const handleUserForm = (event) => {
@@ -437,9 +364,9 @@ export default function Usuarios_menu() {
 
     return (
         <>
-          <Typography component="div" variant="h4" className="princicrear" >
-        REGISTRO DE USUARIOS
-      </Typography>
+            <Typography component="div" variant="h4" className="princicrear" >
+                REGISTRO DE USUARIOS
+            </Typography>
             {/* <Typography component="div" variant="h4" sx={{ color: "black", marginY: '20px' }}>
                 <b>Registro de Usuarios</b>
             </Typography> */}
@@ -492,7 +419,7 @@ export default function Usuarios_menu() {
                                                 >
                                                     <MenuItem value={'Usuario'}>USUARIO</MenuItem>
                                                     <MenuItem value={'Administrativos'}>ADMINISTRATIVOS</MenuItem>
-                                                    <MenuItem value={'Técnico Interno'}>TÉCNICO INTERNO</MenuItem>        
+                                                    <MenuItem value={'Técnico Interno'}>TÉCNICO INTERNO</MenuItem>
                                                     <MenuItem value={'Jefe Sistemas'}>JEFE SISTEMAS</MenuItem>
                                                     <MenuItem value={'Jefe Mantenimiento'}>JEJE MANTENIMIENTO</MenuItem>
                                                 </Select>
@@ -537,7 +464,7 @@ export default function Usuarios_menu() {
 
                                                 <Button variant="contained" color="enviarcp" className="botone" endIcon={<SendIcon />} onClick={enviarDatosFirebase}>
                                                     Enviar</Button>
-                                                    {/* <Button variant="contained" color="enviarcp" className="botone" endIcon={<SendIcon />} onClick={arreglar}>
+                                                {/* <Button variant="contained" color="enviarcp" className="botone" endIcon={<SendIcon />} onClick={arreglar}>
                                                     arreglar</Button> */}
 
 
@@ -587,9 +514,9 @@ export default function Usuarios_menu() {
                                                 }
                                                 label="Dashboard Usuarios"
                                             />
-                                            
 
-          
+
+
 
                                         </FormGroup>
                                     </FormControl>
@@ -600,21 +527,21 @@ export default function Usuarios_menu() {
                                     </Typography>
                                     <FormControl component="fieldset" variant="standard">
                                         <FormGroup>
-                                        <FormControlLabel
+                                            <FormControlLabel
                                                 control={
                                                     <Switch checked={state.gestionm} onChange={handleChange} name="gestionm" />
                                                 }
                                                 label="Gestión Mantenimiento"
                                             />
-                                               <FormControlLabel
+                                            <FormControlLabel
                                                 control={
                                                     <Switch checked={state.gestioni} onChange={handleChange} name="gestioni" />
                                                 }
                                                 label="Gestión Inventario e Indicadores"
                                             />
-                                         
-                                         
-                                         
+
+
+
                                             <FormControlLabel
                                                 control={
                                                     <Switch checked={state.gestionr} onChange={handleChange} name="gestionr" />
@@ -628,7 +555,7 @@ export default function Usuarios_menu() {
                                                 label="Gestión Personal"
                                             />
 
-                                        <FormControlLabel
+                                            <FormControlLabel
                                                 control={
                                                     <Switch checked={state.gestiona} onChange={handleChange} name="gestiona" />
                                                 }
@@ -663,3 +590,4 @@ export default function Usuarios_menu() {
 }
 
 
+let custom_photo = 'https://firebasestorage.googleapis.com/v0/b/software-hospirio.appspot.com/o/userPhotos%2Fdefault_men_avatar.png?alt=media&token=29af3c40-1c51-4c97-897a-5c7cf6bda22c'

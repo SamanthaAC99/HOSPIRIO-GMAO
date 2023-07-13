@@ -68,6 +68,7 @@ export default function Plan() {
     // variables para editar la fecha
     const [equipoEmpresa, setEquipoEmpresa] = useState('');
     const [equipoPeriodicidad, setEquipoPeriodicidad] = useState(4);
+    const [modalReportes,setModalReportes] = useState(false);
     const aux_equipos = useRef([])
     const equipos_totales = useRef([])
     const codigo_seleccionado = useRef("")
@@ -87,6 +88,12 @@ export default function Plan() {
     const [planes, setPlanes] = useState({ equipo: { nombre: '' }, mantenimientos: [{ start: '2/9/2023, 15:00:00' }], departamento: { nombre: '' }, verificacion: false })
     const [pageMan, setPageMan] = useState(0);
     const [pagesMan, setPagesMan] = useState(10);
+    //variables para reporte
+    const [flagTipo,setFlagTipo] = useState(true)
+    const [flagDepartamento,setFlagDepartamento] = useState(true)
+    const [reporteTipo,setReporteTipo] = useState(1)
+    const [tipoEquipo,setTipoEquipo] = useState(1)
+
     // funciones para la tabla de mantenimientos
     const handleVerificacion = (__data) => {
         let aux_data = JSON.parse(JSON.stringify(__data))
@@ -295,10 +302,29 @@ export default function Plan() {
     }
 
     // funciones para crear el plan
-
+    const handleReporte = (event) => {
+        if(parseInt(event.target.value) === 3){
+            setFlagTipo(true)
+            setFlagDepartamento(false)
+            setReporteTipo(3)
+        }else if(parseInt(event.target.value) === 2){
+            setFlagTipo(false)
+            setFlagDepartamento(true)
+            setReporteTipo(2)
+        }else{
+            setFlagTipo(true)
+            setFlagDepartamento(true)
+            setReporteTipo(1)
+        }
+       
+    };
 
     const handleChangePeriodicidad = (event) => {
         setEquipoPeriodicidad(parseInt(event.target.value));
+    };
+
+    const handleTipoEquipo = (event) => {
+        setTipoEquipo(parseInt(event.target.value));
     };
     const crearPlanMantenimiento = (_date) => {
 
@@ -578,7 +604,55 @@ export default function Plan() {
 
     }
 
+ 
+    const generarReporte=()=>{
 
+        let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
+
+        let dataFilter = []
+        if(reporteTipo === 2){
+            dataFilter = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
+        }else if(reporteTipo ===3){
+            console.log(departamento)
+            dataFilter = equipos_mantenimiento.filter(item=> item.departamento.nombre === departamento.nombre)
+        }else{
+            dataFilter = equipos_mantenimiento
+        }
+
+        let format_data = dataFilter.map((item) =>{
+            let string_fechas = ""
+           
+            item.mantenimientos.forEach(item=> {
+                let fecha = new Date(item.start).toLocaleString('es-EC', { dateStyle: 'short'})
+                string_fechas += fecha+" ; "
+            })
+            let data = {
+                codigo:item.codigo,
+                departamento : item.departamento.nombre,
+                equipo: item.equipo.nombre,
+                tipo_equipo: item.tipo_equipo.nombre,
+                man_periodicidad: item.mantenimientos[0].periodicidad,
+                man_inicio: new Date(item.mantenimientos[0].start).toLocaleString('es-EC', { dateStyle: 'short'}),
+                fechas: string_fechas
+            }
+     
+            return data
+        })
+
+        // if(reporteTipo === 2){
+
+        // }
+        const myHeader = ["departamento","codigo","equipo","tipo_equipo","man_periodicidad","man_inicio","fechas"];
+        const worksheet = XLSX.utils.json_to_sheet(format_data, { header: myHeader });
+        XLSX.utils.sheet_add_aoa(worksheet, [["Departamento", "Código", "Equipo","Tipo de Equipo","Periodicidad","Fecha De Inicio","Fechas"]], { origin: "A1" });
+        // XLSX.utils.sheet_add_aoa(worksheet, [[1],["hola"]], { origin: "B5" });
+        const workbook = XLSX.utils.book_new();
+       
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 },{ wch: 60 }];
+        XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+        
+    }
 
     useEffect(() => {
 
@@ -590,9 +664,14 @@ export default function Plan() {
                 <Grid container spacing={2}>
 
 
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                         <Button variant="contained" onClick={getData} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
                             LEER DATOS
+                        </Button>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button variant="contained" onClick={()=>{setModalReportes(true)}} disabled={deshabilitar} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
+                            GENERAR REPORTE
                         </Button>
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -793,6 +872,119 @@ export default function Plan() {
                         <Grid item xs={6}>
                             <Button
                                 onClick={() => cerrarModalInsertar()}
+                                variant="outlined"
+                                size="large"
+                                className="boton-plan"
+                                fullWidth startIcon={<ClearIcon />}
+                            >
+                                Cancelar
+                            </Button>
+                        </Grid>
+                    </Grid>
+
+                </ModalFooter>
+            </Modal>
+            <Modal className="{width:0px}" isOpen={modalReportes}>
+                <ModalHeader>
+                    <div><h3>Generar Reporte de Mantenimiento</h3></div>
+                </ModalHeader>
+                <ModalBody>
+                    <FormGroup>
+                        <Grid container spacing={4}>
+                            <Grid item xs={12}>
+                            <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Generar reporte por</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={reporteTipo}
+                                        label="Generar reporte por"
+                                        onChange={handleReporte}
+                                    >
+                                        <MenuItem value={1}>Todos</MenuItem>
+                                        <MenuItem value={2}>Tipo de Equipo</MenuItem>
+                                        <MenuItem value={3}>Departamento</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            {/* <Grid item xs={6}>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DesktopDatePicker
+                                        label={"Inicio"}
+                                        inputFormat="MM/dd/yyyy"
+                                        value={time1}
+                                        onChange={SelectFecha1}
+                                        renderInput={(params) => <TextField fullWidth {...params} />}
+                                    />
+                                </LocalizationProvider>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DesktopDatePicker
+                                        label={"Final"}
+                                        inputFormat="MM/dd/yyyy"
+                                        value={time1}
+                                        onChange={SelectFecha1}
+                                        renderInput={(params) => <TextField fullWidth {...params} />}
+                                    />
+                                </LocalizationProvider>
+                            </Grid> */}
+                            <Grid item xs={6}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    disabled = {flagDepartamento}
+                                    options={departamentos}
+                                    getOptionLabel={(option) => {
+                                        return option.nombre;
+                                    }}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Departamentos" type="text" />}
+                                    onChange={(event, newvalue) => setDepartamento(newvalue)}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Tipo de Equipo</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={tipoEquipo}
+                                        label="Tipo de Equipo"
+                                        disabled = {flagTipo}
+                                        onChange={handleTipoEquipo}
+                                    >
+                                        <MenuItem value={1}>Equipo Medico</MenuItem>
+                                        <MenuItem value={2}>Equipo de Computo</MenuItem>
+                                        <MenuItem value={3}>Equipo de Oficina</MenuItem>
+                                        <MenuItem value={4}>Mobilario</MenuItem>
+                                        <MenuItem value={5}>Maquinaria</MenuItem>
+                                        <MenuItem value={6}>Equipo de Seguridad</MenuItem>
+                                        <MenuItem value={7}>Equipo de Medicion</MenuItem>
+                                        <MenuItem value={8}>Equipo de Operacion</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                            </Grid>
+                        </Grid>
+                    </FormGroup>
+                </ModalBody>
+                <ModalFooter>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Button
+                      
+                                onClick={generarReporte}
+                                variant="outlined"
+                                size="large"
+                                className="boton-plan"
+                
+                            >
+                                generar Reporte
+                            </Button>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Button
+                                onClick={() => setModalReportes(false)}
                                 variant="outlined"
                                 size="large"
                                 className="boton-plan"

@@ -158,7 +158,7 @@ export default function HojaVidaCalibraciones() {
     // }
 
     const filterPreventivo = (state) => {
-        if (state.tmantenimiento === "PREVENTIVO") {
+        if (state.mantenimiento === "PREVENTIVO") {
             return state;
         } else {
             return
@@ -166,7 +166,7 @@ export default function HojaVidaCalibraciones() {
     }
 
     const filterCorrectivo = (state) => {
-        if (state.tmantenimiento === "CORRECTIVO") {
+        if (state.mantenimiento === "CORRECTIVO") {
             return state;
         } else {
             return
@@ -174,7 +174,7 @@ export default function HojaVidaCalibraciones() {
     }
 
     const filterCalibraciones = (state) => {
-        if (state.tmantenimiento === "CALIBRACION") {
+        if (state.mantenimiento === "CALIBRACION") {
             return state;
         } else {
             return
@@ -347,16 +347,16 @@ export default function HojaVidaCalibraciones() {
                                                             {index + 1}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.tmantenimiento}
+                                                            {reporte.manteninmiento}
                                                         </Td>
                                                         <Td className="t-encargados">
                                                             {reporte.tipo}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.nombreT}
+                                                            {reporte.tecnico}
                                                         </Td>
                                                         <Td className="t-encargados">
-                                                            {reporte.estadof}
+                                                            {reporte.estado}
                                                         </Td>
                                                         <Td className="t-encargados">
                                                             {reporte.tiempo}
