@@ -80,7 +80,7 @@ export default function ToolBar() {
         },
         {
             child: <IndicadoresA />,
-            visibility: currentUser.permisions.gestionp,
+            visibility: currentUser.permisions.gestioni,
             key: 3
         },
         {

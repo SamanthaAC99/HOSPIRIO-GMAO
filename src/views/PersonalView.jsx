@@ -79,6 +79,22 @@ export default function PersonalView() {
     const [open, setOpen] = useState(false);
     const [data, setData] = useState([]);
     const [modalActualizar, setModalactualizar] = useState(false);
+    const [permisos, setPermisos] = useState({ 
+        compras: false,
+        gestiona: false,
+        gestioni: false,
+        gestionm: false,
+        gestionp: false,
+        gestionr: false,
+        gestiont: false,
+        otrabajo: false,
+        usuarios: false,
+        dashboardT:false,
+        dashboardU:false,
+        dashboardJM:false,
+        dashboardJS:false,
+        dashboardE:false,
+});
     const [form, setForm] = useState({
         auth: false,
         name: '',
@@ -146,8 +162,8 @@ export default function PersonalView() {
     };
 
     const handleChange = (event) => {
-        setState({
-          ...state,
+        setPermisos({
+          ...permisos,
           [event.target.name]: event.target.checked,
         });
       };
@@ -318,13 +334,16 @@ export default function PersonalView() {
       
       const editarU = async (dato) => {
         setModalactualizar(true); 
-        setForm(dato)     
+        setForm(dato)    
+        console.log("usuarios",form)
+        setPermisos(dato.permisions)
+        console.log("permisos",permisos)
       };
 
     const actualizarUsuario= async()=>{
         const database = doc(db, "usuarios", form.uid);
         await updateDoc(database,{
-            permisions:state
+            permisions:permisos
         })
         cerrarModalActualizar();
     }
@@ -550,7 +569,7 @@ export default function PersonalView() {
                     <Grid item xs={12}>
                         <FormControlLabel
                         control={
-                          <Switch checked={state.compras} onChange={handleChange} name="compras" />
+                          <Switch checked={permisos.compras} onChange={handleChange} name="compras" />
                         }
                         label="Compras"
                       /></Grid>
@@ -558,7 +577,7 @@ export default function PersonalView() {
 <Grid item xs={12}>
                         <FormControlLabel
                         control={
-                          <Switch checked={state.dashboardE} onChange={handleChange} name="dashboardE" />
+                          <Switch checked={permisos.dashboardE} onChange={handleChange} name="dashboardE" />
                         }
                         label="Dashboard Técnico Externo"
                       /></Grid>
@@ -566,7 +585,7 @@ export default function PersonalView() {
                       <Grid item xs={12}>
                         <FormControlLabel
                         control={
-                          <Switch checked={state.dashboardJM} onChange={handleChange} name="dashboardJM" />
+                          <Switch checked={permisos.dashboardJM} onChange={handleChange} name="dashboardJM" />
                         }
                         label="Dashboard Jefe de Mantenimiento"
                       /></Grid>
@@ -574,7 +593,7 @@ export default function PersonalView() {
                         <Grid item xs={12}>
                         <FormControlLabel
                         control={
-                          <Switch checked={state.dashboardJS} onChange={handleChange} name="dashboardJS" />
+                          <Switch checked={permisos.dashboardJS} onChange={handleChange} name="dashboardJS" />
                         }
                         label="Dashboard Jefe de Sistemas"
                       />
@@ -583,7 +602,7 @@ export default function PersonalView() {
                         <Grid item xs={12}>
                         <FormControlLabel
                         control={
-                          <Switch checked={state.dashboardT} onChange={handleChange} name="dashboardT" />
+                          <Switch checked={permisos.dashboardT} onChange={handleChange} name="dashboardT" />
                         }
                         label="Dashboard Técnico Interno"
                       />
@@ -592,7 +611,7 @@ export default function PersonalView() {
                         <Grid item xs={12}>
                         <FormControlLabel
                         control={
-                          <Switch checked={state.dashboardU} onChange={handleChange} name="dashboardU" />
+                          <Switch checked={permisos.dashboardU} onChange={handleChange} name="dashboardU" />
                         }
                         label="Dashboard Usuarios"
                       />
@@ -601,7 +620,7 @@ export default function PersonalView() {
                         <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch checked={state.gestioni} onChange={handleChange} name="gestioni" />
+                          <Switch checked={permisos.gestioni} onChange={handleChange} name="gestioni" />
                         }
                         label="Inventario"
                       />
@@ -609,7 +628,7 @@ export default function PersonalView() {
                         <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch checked={state.gestionm} onChange={handleChange} name="gestionm" />
+                          <Switch checked={permisos.gestionm} onChange={handleChange} name="gestionm" />
                         }
                         label="Mantenimiento"
                       />
@@ -617,7 +636,7 @@ export default function PersonalView() {
                          <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch checked={state.gestionp} onChange={handleChange} name="gestionp" />
+                          <Switch checked={permisos.gestionp} onChange={handleChange} name="gestionp" />
                         }
                         label="Personal"
                       />
@@ -625,7 +644,7 @@ export default function PersonalView() {
                          <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch checked={state.gestionr} onChange={handleChange} name="gestionr" />
+                          <Switch checked={permisos.gestionr} onChange={handleChange} name="gestionr" />
                         }
                         label="Reportes"
                       />
@@ -633,7 +652,7 @@ export default function PersonalView() {
                          <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch checked={state.gestiont} onChange={handleChange} name="gestiont" />
+                          <Switch checked={permisos.gestiont} onChange={handleChange} name="gestiont" />
                         }
                         label="Tercerizados"
                       />
@@ -641,7 +660,7 @@ export default function PersonalView() {
                          <Grid item xs={12}>
                       <FormControlLabel
                         control={
-                          <Switch checked={state.otrabajo} onChange={handleChange} name="otrabajo" />
+                          <Switch checked={permisos.otrabajo} onChange={handleChange} name="otrabajo" />
                         }
                         label="Orden Trabajo"
                       />
