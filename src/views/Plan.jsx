@@ -303,15 +303,11 @@ export default function Plan() {
 
     // funciones para crear el plan
     const handleReporte = (event) => {
-        if(parseInt(event.target.value) === 3){
-            setFlagTipo(true)
-            setFlagDepartamento(false)
-            setReporteTipo(3)
-        }else if(parseInt(event.target.value) === 2){
+        if(parseInt(event.target.value) === 2){
             setFlagTipo(false)
-            setFlagDepartamento(true)
+            setFlagDepartamento(false)
             setReporteTipo(2)
-        }else{
+        }else if(parseInt(event.target.value) === 2){
             setFlagTipo(true)
             setFlagDepartamento(true)
             setReporteTipo(1)
@@ -608,15 +604,15 @@ export default function Plan() {
     const generarReporte=()=>{
 
         let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
-
+        let equipos_filtrados= []
         let dataFilter = []
         if(reporteTipo === 2){
-            dataFilter = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
-        }else if(reporteTipo ===3){
-            console.log(departamento)
-            dataFilter = equipos_mantenimiento.filter(item=> item.departamento.nombre === departamento.nombre)
-        }else{
-            dataFilter = equipos_mantenimiento
+            equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
+            console.log("tipo",equipos_filtrados)
+            dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
+            console.log("depa",dataFilter)
+        }else if(reporteTipo ===1){
+            dataFilter = equipos_mantenimiento   
         }
 
         let format_data = dataFilter.map((item) =>{
@@ -902,8 +898,7 @@ export default function Plan() {
                                         onChange={handleReporte}
                                     >
                                         <MenuItem value={1}>Todos</MenuItem>
-                                        <MenuItem value={2}>Tipo de Equipo</MenuItem>
-                                        <MenuItem value={3}>Departamento</MenuItem>
+                                        <MenuItem value={2}>Específico</MenuItem>
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -953,14 +948,14 @@ export default function Plan() {
                                         disabled = {flagTipo}
                                         onChange={handleTipoEquipo}
                                     >
-                                        <MenuItem value={1}>Equipo Medico</MenuItem>
+                                        <MenuItem value={1}>Equipo Médico</MenuItem>
                                         <MenuItem value={2}>Equipo de Computo</MenuItem>
                                         <MenuItem value={3}>Equipo de Oficina</MenuItem>
                                         <MenuItem value={4}>Mobilario</MenuItem>
                                         <MenuItem value={5}>Maquinaria</MenuItem>
                                         <MenuItem value={6}>Equipo de Seguridad</MenuItem>
-                                        <MenuItem value={7}>Equipo de Medicion</MenuItem>
-                                        <MenuItem value={8}>Equipo de Operacion</MenuItem>
+                                        <MenuItem value={7}>Equipo de Medición</MenuItem>
+                                        <MenuItem value={8}>Equipo de Operación</MenuItem>
                                     </Select>
                                 </FormControl>
 
@@ -979,7 +974,7 @@ export default function Plan() {
                                 className="boton-plan"
                 
                             >
-                                generar Reporte
+                                Generar Reporte
                             </Button>
                         </Grid>
                         <Grid item xs={6}>
