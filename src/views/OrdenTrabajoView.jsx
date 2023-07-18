@@ -72,11 +72,12 @@ export default function OrdenTrabajoView() {
         indice: Date.now(),
         cedula: currentUser.indentification,
         departamento: departamento,
-        descripcion: descripcion.toUpperCase(),
-        problematica: problematica.toUpperCase(),
-        observaciones: obserAux.toUpperCase(),
+        descripcion: descripcion,
+        problematica: problematica,
+        observaciones: obserAux,
         verificacion: false,
-        asunto:asunto.toUpperCase(),
+        numero:cantidad,
+        asunto:asunto,
         estado: "Pendiente", // valores iniciados por defecto
         prioridad: "Pendiente", // valores iniciados por defecto
         tipotrabajo: "Pendiente", // valores iniciados por defecto
@@ -210,7 +211,7 @@ export default function OrdenTrabajoView() {
                   <div className="panelt2">
                     <Grid container spacing={4}>
                       <Grid item xs={12}>
-                        <TextField inputProps={{ style: { textTransform: "uppercase", maxLength: 30 } }} value={asunto} color={asunto !== '' ? "gris" : "oficial"} fullWidth label="ASUNTO" type="text" onChange={(e) => setAsunto(e.target.value)} />
+                        <TextField inputProps={{ style: { maxLength: 30 } }} value={asunto} color={asunto !== '' ? "gris" : "oficial"} fullWidth label="ASUNTO" type="text" onChange={(e) => setAsunto(e.target.value)} />
                       </Grid>
                       <Grid item xs={12}>
                         <Autocomplete
@@ -225,7 +226,7 @@ export default function OrdenTrabajoView() {
             
                       <Grid item xs={12}>
                         <TextareaAutosize
-                          style={{textTransform:"uppercase"}} 
+
                           aria-label="minimum height"
                           value={descripcion}
                           minRows={3}
@@ -237,7 +238,7 @@ export default function OrdenTrabajoView() {
                       </Grid>
                       <Grid item xs={12}>
                         <TextareaAutosize
-                          style={{textTransform:"uppercase"}} 
+        
                           aria-label="minimum height"
                           value={problematica}
                           minRows={3}
@@ -249,7 +250,7 @@ export default function OrdenTrabajoView() {
                       </Grid>
                       <Grid item xs={12}>
                         <TextareaAutosize
-                          style={{textTransform:"uppercase"}} 
+
                           aria-label="minimum height"
                           value={observaciones}
                           minRows={3}

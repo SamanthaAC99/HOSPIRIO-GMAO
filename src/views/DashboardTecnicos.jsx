@@ -519,6 +519,7 @@ export default function DashboardTecnicos() {
         re['estado'] = estadof;
         re['fecha'] = new Date().toLocaleString("es-EC");
         re['departamento'] = currentOrden.departamento;
+        re['nro_orden'] = currentOrden.numero;
         re['razonp'] = currentOrden.razonp;
         re['importancia'] = equipment.importancia;
         re['indice'] = new Date().getTime();
@@ -619,7 +620,7 @@ export default function DashboardTecnicos() {
             nombre:  currentReporte.equipo,
             area_responsable:currentReporte.departamento,
             tipo:currentReporte.tipo_equipo,
-            nro_orden:currentReporte.orden_id,
+            nro_orden:currentReporte.nro_orden,
             marca:currentReporte.marca,
             serie:currentReporte.serie,
             modelo:currentReporte.modelo,
