@@ -86,6 +86,11 @@ export default function Plan() {
     const [currentPlan, setCurrentPlan] = useState({ id: '', empresa: '', end: '2/9/2023, 15:00:00', start: '2/9/2023, 15:00:00', periodicidad: 0, title: '', verificacion: false })
     const [fechaPlan, setFechanPlan] = useState("2/9/2023, 15:00:00")
     const [planes, setPlanes] = useState({ equipo: { nombre: '' }, mantenimientos: [{ start: '2/9/2023, 15:00:00' }], departamento: { nombre: '' }, verificacion: false })
+    const meses = [{nombre:"TODOS",codigo:13},{nombre:"enero",codigo:0},{nombre:"febrero",codigo:1},
+                        {nombre:"marzo",codigo:2},{nombre:"abril",codigo:3},{nombre:"mayo",codigo:4},
+                        {nombre:"junio",codigo:5},{nombre:"julio",codigo:6},{nombre:"agosto",codigo:7},
+                        {nombre:"octubre",codigo:8},{nombre:"septiembre",codigo:9},{nombre:"noviembre",codigo:10},{nombre:"diciembre",codigo:11}]
+    const [mesFiltro,setMesFiltro] = useState();
     const [pageMan, setPageMan] = useState(0);
     const [pagesMan, setPagesMan] = useState(10);
     //variables para reporte
@@ -484,7 +489,10 @@ export default function Plan() {
             const params = await getDoc(refParam);
             if (params.exists()) {
                 setNombresEquipo(params.data().equipos);
-                setDepartamentos(params.data().departamentos)
+                let aux_departamentos =  params.data().departamentos
+                aux_departamentos.unshift({codigo:1000,nombre:"TODOS"})
+                console.log(aux_departamentos)
+                setDepartamentos(aux_departamentos)
             } else {
                 console.log("No such document!");
             }
@@ -607,10 +615,18 @@ export default function Plan() {
         let equipos_filtrados= []
         let dataFilter = []
         if(reporteTipo === 2){
-            equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
-            console.log("tipo",equipos_filtrados)
-            dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
-            console.log("depa",dataFilter)
+            if(tipoEquipo === 0){
+                equipos_filtrados = equipos_mantenimiento
+            }else{
+                equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
+            }
+           
+            if(departamento.nombre === "TODOS"){
+                dataFilter = equipos_filtrados
+            }else{
+                dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
+            }
+ 
         }else if(reporteTipo ===1){
             dataFilter = equipos_mantenimiento   
         }
@@ -880,6 +896,7 @@ export default function Plan() {
 
                 </ModalFooter>
             </Modal>
+
             <Modal className="{width:0px}" isOpen={modalReportes}>
                 <ModalHeader>
                     <div><h3>Generar Reporte de Mantenimiento</h3></div>
@@ -929,7 +946,7 @@ export default function Plan() {
                                     disableClearable
                                     id="combo-box-demo"
                                     disabled = {flagDepartamento}
-                                    options={departamentos}
+                                    options={meses}
                                     getOptionLabel={(option) => {
                                         return option.nombre;
                                     }}
@@ -948,6 +965,7 @@ export default function Plan() {
                                         disabled = {flagTipo}
                                         onChange={handleTipoEquipo}
                                     >
+                                        <MenuItem value={0}>TODOS</MenuItem>
                                         <MenuItem value={1}>Equipo Médico</MenuItem>
                                         <MenuItem value={2}>Equipo de Computo</MenuItem>
                                         <MenuItem value={3}>Equipo de Oficina</MenuItem>
@@ -959,6 +977,19 @@ export default function Plan() {
                                     </Select>
                                 </FormControl>
 
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    disabled = {flagDepartamento}
+                                    options={meses}
+                                    getOptionLabel={(option) => {
+                                        return option.nombre;
+                                    }}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Mes" type="text" />}
+                                    onChange={(event, newvalue) => setMesFiltro(newvalue)}
+                                />
                             </Grid>
                         </Grid>
                     </FormGroup>
