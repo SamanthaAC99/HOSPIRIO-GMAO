@@ -67,6 +67,7 @@ export default function DashboardTecnicos() {
     const [currentForm, setCurrentForm] = useState(orden_initialData);
     const [modalReportexistente, setModalReportexistente] = useState(false);
     const [modalReportin, setModalReportin] = useState(false);
+    const [modalReportesCalibracion, setModalReportesCalibracion] = useState(false);
     const [currentOrden, setCurrentOrden] = useState([]);
     const [inventario, setInventario] = useState([]);
     const [cequipo, setCequipo] = useState("");
@@ -87,6 +88,7 @@ export default function DashboardTecnicos() {
     const codigos_totales = useRef([])
 
     const [nreporte, setNreporte] = useState(reporte_structure);
+    const [nreporte2, setNreporte2] = useState(reporte_calibracion);
     const play = async (data) => {
         const reference = doc(db, "ordenes", `${data.id}`);
         let register_times;
@@ -197,10 +199,38 @@ export default function DashboardTecnicos() {
             let aux_codigos = JSON.parse(JSON.stringify(codigos_totales.current))
             let codigos_filter = aux_codigos.filter(item => item.departamento.nombre === data.departamento).map(item => (item.codigo))
             setCodigosEquipo(codigos_filter)
-            setModalReportin(true);
+            // setModalReportin(true);
             setCurrentOrden(data);
 
             //let codigos_filtrados = aux_codigos.filter(item)
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                confirmButton:'btn btn-outline-primary',
+                cancelButton:'btn btn-outline-primary',  
+                },
+                buttonsStyling: true
+              })
+              
+              swalWithBootstrapButtons.fire({
+                title: 'Tipo de Trabajo',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Mantenimiento',
+                cancelButtonText: 'Calibracion',
+             
+              }).then((result) => {
+                if (result.isConfirmed) {
+                    setModalReportin(true)
+                } else if (
+                  /* Read more about handling dismissals below */
+                  result.dismiss === Swal.DismissReason.cancel
+                ) {
+                    setModalReportesCalibracion(true)
+                }
+              })
+
+
+
 
         } else {
             Swal.fire({
@@ -214,6 +244,10 @@ export default function DashboardTecnicos() {
     const cerrarModalReporte = () => {
         setModalReportin(false);
     }
+    const cerrarModalReporteCalibracion = () => {
+        setModalReportesCalibracion(false);
+    }
+  
     // funciones para las tablas
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -405,11 +439,7 @@ export default function DashboardTecnicos() {
             codigos_totales.current = inventarioD;
             setInventario(inventarioD);
             setCodigosEquipo(codigos);
-
         });
-
-
-
     }
 
     const updateOrdenes = (usern) => {
@@ -463,6 +493,19 @@ export default function DashboardTecnicos() {
         }
 
     }
+
+    const selectEquipoCalibracion = (val) => {
+     
+        if(val !== null){
+            let aux_inventario = JSON.parse(JSON.stringify(inventario))
+            const equipos = aux_inventario.find(item => item.codigo === val)
+            setEquipment(equipos);
+            setCequipo(equipos.equipo.nombre);
+            setCodigoe(val);
+        }
+
+    }
+
     const filterbyId = (item) => {
         if (user.tareas.includes(item.id)) {
             return item;
@@ -498,6 +541,13 @@ export default function DashboardTecnicos() {
     const createReport = (event) => {
         setNreporte({
             ...nreporte,
+            [event.target.name]: event.target.value,
+        });
+    }
+
+    const createReporte = (event) => {
+        setNreporte2({
+            ...nreporte2,
             [event.target.name]: event.target.value,
         });
     }
@@ -576,6 +626,20 @@ export default function DashboardTecnicos() {
         setEstadof("")
         setRtmantenimiento("")
        
+    }
+
+
+
+    const sendReportFirebase2 = async () => {
+        const re = nreporte2;
+        re['orden_id'] = currentOrden.id;
+        re['cedula'] = currentUser.indentification;
+        re['tecnico'] = currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname;
+        re['equipo'] = cequipo;
+        re['codigo_equipo'] = codigoe;
+        re['tipom'] = rtmantenimiento;
+        setNreporte2(reporte_calibracion)
+        console.log(nreporte2)
     }
 
     const vistaTablaPendientes = (data) => {
@@ -1505,6 +1569,79 @@ export default function DashboardTecnicos() {
                     </ModalFooter>
                 </Container>
             </Modal>
+
+            <Modal isOpen={modalReportesCalibracion}>
+                    <ModalHeader>
+                        <div><h1>Reporte Calibración</h1></div>
+                    </ModalHeader>
+                    <ModalBody style={{height:500,overflowY:"scroll"}}>
+                        <Grid container spacing={4}>
+                            <Grid item xs={12}>
+                                <TextField id="outlined-basic" InputProps={{ readOnly: true }} label="Código Orden" defaultValue={currentOrden.id} variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="Cédula Técnico" variant="outlined" InputProps={{ readOnly: true }} defaultValue={currentUser.indentification} fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="Nombre Técnico" variant="outlined" InputProps={{ readOnly: true }} defaultValue={currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname} fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Autocomplete
+                                    disablePortal
+                                    id="combo-box-demo"
+                                    onChange={(event, newValue) => {
+                                        selectEquipo(newValue);
+                                    }}
+                                    options={codigosEquipo}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Código Equipo" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" label="Equipo" variant="outlined" InputProps={{ readOnly: true }} value={cequipo} fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    className='seleccionadortabla'
+                                    onChange={(event, newValue) => {
+                                        setRtmantenimiento(newValue);
+                                    }}
+                                    options={["CALIBRACIÓN", "VERIFICACIÓN"]}
+                                    renderInput={(params) => <TextField name="tipom"  {...params} fullWidth label="T.Mantenimiento" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="codigo_calibracion" onChange={createReporte} label="Código Calibración" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="fecha_calibracion" onChange={createReporte} label="Fecha Calibración" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="fecha_proximacalibracion" onChange={createReporte} label="Fecha Proxima Calibración" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="fecha_verificacion" onChange={createReporte} label="Fecha Verificación" variant="outlined" fullWidth />
+                            </Grid>
+                        </Grid>
+
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="outlined"
+                            className="boton-modal-d2"
+                            disabled={btnReport} onClick={sendReportFirebase2}>CREAR</Button>
+                        <Button
+                            variant="contained"
+                            className="boton-modal-d"
+                            onClick={cerrarModalReporteCalibracion}
+                        >
+                            CANCELAR
+                        </Button>
+
+                    </ModalFooter>
+                </Modal>            
+
+
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={loading}
@@ -1546,4 +1683,20 @@ let reporte_structure = {
     tiempo: '',
     horas: 0,
     tipo: "Interno",
+}
+
+
+
+let reporte_calibracion = {
+    orden_id: '',
+    cedula: '',
+    tecnico: '',
+    id: '',
+    codigo_equipo: '',
+    equipo: '',
+    tipom:'',
+    codigo_calibracion: '',
+    fecha_calibracion: '',
+    fecha_proximacalibracion: '',
+    fecha_verificacion: '',
 }
