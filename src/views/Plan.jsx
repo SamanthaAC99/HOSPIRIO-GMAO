@@ -610,60 +610,116 @@ export default function Plan() {
 
  
     const generarReporte=()=>{
-
-        let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
-        let equipos_filtrados= []
-        let dataFilter = []
-        if(reporteTipo === 2){
-            if(tipoEquipo === 0){
-                equipos_filtrados = equipos_mantenimiento
-            }else{
-                equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
-            }
-           
-            if(departamento.nombre === "TODOS"){
-                dataFilter = equipos_filtrados
-            }else{
-                dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
-            }
+       
  
-        }else if(reporteTipo ===1){
-            dataFilter = equipos_mantenimiento   
+        if(mesFiltro.nombre === "TODOS"){
+            let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
+            let equipos_filtrados= []
+            let dataFilter = []
+            if(reporteTipo === 2){
+                if(tipoEquipo === 0){
+                    equipos_filtrados = equipos_mantenimiento
+                }else{
+                    equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
+                }
+            
+                if(departamento.nombre === "TODOS"){
+                    dataFilter = equipos_filtrados
+                }else{
+                    dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
+                }
+    
+            }else if(reporteTipo ===1){
+                dataFilter = equipos_mantenimiento   
+            }
+
+            let format_data = dataFilter.map((item) =>{
+                let string_fechas = ""
+                
+                item.mantenimientos.forEach(item=> {
+                    let fecha = new Date(item.start).toLocaleString('es-EC', { dateStyle: 'short'})
+                    string_fechas += fecha+" ; "
+                })
+                let data = {
+                    codigo:item.codigo,
+                    departamento : item.departamento.nombre,
+                    equipo: item.equipo.nombre,
+                    tipo_equipo: item.tipo_equipo.nombre,
+                    man_periodicidad: item.mantenimientos[0].periodicidad,
+                    man_inicio: new Date(item.mantenimientos[0].start).toLocaleString('es-EC', { dateStyle: 'short'}),
+                    fechas: string_fechas
+                }
+        
+                return data
+            })
+
+            const myHeader = ["departamento","codigo","equipo","tipo_equipo","man_periodicidad","man_inicio","fechas"];
+            const worksheet = XLSX.utils.json_to_sheet(format_data, { header: myHeader });
+            XLSX.utils.sheet_add_aoa(worksheet, [["Departamento", "Código", "Equipo","Tipo de Equipo","Periodicidad","Fecha De Inicio","Fechas"]], { origin: "A1" });
+            // XLSX.utils.sheet_add_aoa(worksheet, [[1],["hola"]], { origin: "B5" });
+            const workbook = XLSX.utils.book_new();
+           
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+            worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 },{ wch: 60 }];
+            XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+        }else{
+            let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
+            let equipos_filtrados= []
+            let dataFilter = []
+            if(reporteTipo === 2){
+                if(tipoEquipo === 0){
+                    equipos_filtrados = equipos_mantenimiento
+                }else{
+                    equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
+                }
+            
+                if(departamento.nombre === "TODOS"){
+                    dataFilter = equipos_filtrados
+                }else{
+                    dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
+                }
+    
+            }else if(reporteTipo ===1){
+                dataFilter = equipos_mantenimiento   
+            }
+
+            let format_data = []
+            dataFilter.forEach(item=>{
+                item.mantenimientos.forEach(element=>{
+                    let data = {
+                        codigo:item.codigo,
+                        departamento : item.departamento.nombre,
+                        equipo: item.equipo.nombre,
+                        tipo_equipo: item.tipo_equipo.nombre,
+                        man_periodicidad: element.periodicidad,
+                        man_inicio: element.start
+                    }
+                    format_data.push(data)
+                })
+            })
+
+           let filter_by_mes = format_data.filter(filterbyMonth)
+            console.log(filter_by_mes)
+            const myHeader = ["departamento","codigo","equipo","tipo_equipo","man_periodicidad","man_inicio"];
+            const worksheet = XLSX.utils.json_to_sheet(filter_by_mes, { header: myHeader });
+            XLSX.utils.sheet_add_aoa(worksheet, [["Departamento", "Código", "Equipo","Tipo de Equipo","Periodicidad","Fecha De Inicio"]], { origin: "A1" });
+            // XLSX.utils.sheet_add_aoa(worksheet, [[1],["hola"]], { origin: "B5" });
+            const workbook = XLSX.utils.book_new();
+           
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+            worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 },{ wch: 60 }];
+            XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+
+        }
+        
+    }
+    const filterbyMonth =(item)=>{
+        let item_date = new Date(item.man_inicio)
+        let mes = item_date.getMonth()
+        if(mes === mesFiltro.codigo){
+            return item
         }
 
-        let format_data = dataFilter.map((item) =>{
-            let string_fechas = ""
-           
-            item.mantenimientos.forEach(item=> {
-                let fecha = new Date(item.start).toLocaleString('es-EC', { dateStyle: 'short'})
-                string_fechas += fecha+" ; "
-            })
-            let data = {
-                codigo:item.codigo,
-                departamento : item.departamento.nombre,
-                equipo: item.equipo.nombre,
-                tipo_equipo: item.tipo_equipo.nombre,
-                man_periodicidad: item.mantenimientos[0].periodicidad,
-                man_inicio: new Date(item.mantenimientos[0].start).toLocaleString('es-EC', { dateStyle: 'short'}),
-                fechas: string_fechas
-            }
-     
-            return data
-        })
-
-        // if(reporteTipo === 2){
-
-        // }
-        const myHeader = ["departamento","codigo","equipo","tipo_equipo","man_periodicidad","man_inicio","fechas"];
-        const worksheet = XLSX.utils.json_to_sheet(format_data, { header: myHeader });
-        XLSX.utils.sheet_add_aoa(worksheet, [["Departamento", "Código", "Equipo","Tipo de Equipo","Periodicidad","Fecha De Inicio","Fechas"]], { origin: "A1" });
-        // XLSX.utils.sheet_add_aoa(worksheet, [[1],["hola"]], { origin: "B5" });
-        const workbook = XLSX.utils.book_new();
-       
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 },{ wch: 60 }];
-        XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
-        
     }
 
     useEffect(() => {
@@ -946,10 +1002,11 @@ export default function Plan() {
                                     disableClearable
                                     id="combo-box-demo"
                                     disabled = {flagDepartamento}
-                                    options={meses}
+                                    options={departamentos}
                                     getOptionLabel={(option) => {
                                         return option.nombre;
                                     }}
+                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
                                     renderInput={(params) => <TextField {...params} fullWidth label="Departamentos" type="text" />}
                                     onChange={(event, newvalue) => setDepartamento(newvalue)}
                                 />
@@ -987,6 +1044,7 @@ export default function Plan() {
                                     getOptionLabel={(option) => {
                                         return option.nombre;
                                     }}
+                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
                                     renderInput={(params) => <TextField {...params} fullWidth label="Mes" type="text" />}
                                     onChange={(event, newvalue) => setMesFiltro(newvalue)}
                                 />
