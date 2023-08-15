@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { collection,query, doc, onSnapshot } from "firebase/firestore";
+import React, {  useState } from "react";
+import { collection,query, doc,getDoc,getDocs } from "firebase/firestore";
 import Paper from '@mui/material/Paper';
 import Grid from "@mui/material/Grid";
 import * as XLSX from 'xlsx';
@@ -28,23 +28,29 @@ import Button from '@mui/material/Button';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { generarPdf } from "../scripts/pdfReporte";
 import Autocomplete from '@mui/material/Autocomplete';
+import FormControl from '@mui/material/FormControl';
+import ClearIcon from '@mui/icons-material/Clear';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import {
     Modal,
     ModalHeader,
     ModalBody,
+    FormGroup,
     ModalFooter,
 } from "reactstrap";
 import TextField from '@mui/material/TextField';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { useRef } from "react";
-
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 
 export default function ReportesInternosView(){
 
     const [data, setData] = useState([]);
     const [nombresEquipos,setNombresEquipos] = useState([])
-
+    const [modalReportes,setModalReportes] = useState(false);
     const [codigosEquipos,setCodigosEquipos] = useState([]);
     const equipos = useRef([])
     const [time1, setTime1] = useState(new Date('Sat Dec 31 2022 24:00:00 GMT-0500'));
@@ -54,9 +60,20 @@ export default function ReportesInternosView(){
     const [currentReporte, setCurrentReporte] = useState({});
     const [modalReportexistente, setModalReportexistente] = useState(false);
     const [reset,setReset] = useState(false);
-
+    const meses = [{nombre:"TODOS",codigo:13},{nombre:"enero",codigo:0},{nombre:"febrero",codigo:1},
+                        {nombre:"marzo",codigo:2},{nombre:"abril",codigo:3},{nombre:"mayo",codigo:4},
+                        {nombre:"junio",codigo:5},{nombre:"julio",codigo:6},{nombre:"agosto",codigo:7},
+                        {nombre:"octubre",codigo:8},{nombre:"septiembre",codigo:9},{nombre:"noviembre",codigo:10},{nombre:"diciembre",codigo:11}]
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+        //variables para reporte
+    const [flagTipo,setFlagTipo] = useState(true);
+    const [flagDepartamento,setFlagDepartamento] = useState(true);
+    const [reporteTipo,setReporteTipo] = useState(1);
+    const [tipoEquipo,setTipoEquipo] = useState(1);
+    const [departamentos,setDepartamentos] = useState([]);
+    const [departamento,setDepartamento]  = useState({});
+    const [mesFiltro,setMesFiltro] = useState();
 
 
     const handleChangePage = (event, newPage) => {
@@ -66,6 +83,12 @@ export default function ReportesInternosView(){
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
+    };
+
+
+
+    const handleTipoEquipo = (event) => {
+        setTipoEquipo(parseInt(event.target.value));
     };
 
 
@@ -91,21 +114,38 @@ export default function ReportesInternosView(){
         return resultado;
       }
     const getData = async () => {
-        const reference = query(collection(db, "reportesint"));
-        onSnapshot(reference, (querySnapshot) => {
-            let temp = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
-            setData(temp);
-            reportes.current = temp
-        });
-        onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
-            setNombresEquipos(doc.data().equipos)
-          });
-          const reference2 = query(collection(db, "ingreso"));
-          onSnapshot(reference2, (querySnapshot) => {
 
-             equipos.current = querySnapshot.docs.map((doc) => ({ ...doc.data() }))
+            let internos_aux = []
+            let externos_aux = []
+            let aux_equipos = []
+            const q = query(collection(db, "reportesint"));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+            internos_aux.push(doc.data())
+            });
+            const q2 = query(collection(db, "reportesext"));
+            const querySnapshot2 = await getDocs(q2);
+            querySnapshot2.forEach((doc) => {
+            externos_aux.push(doc.data())
+            });
+            const q3 = query(collection(db, "ingreso"));
+            const querySnapshot3 = await getDocs(q3);
+            querySnapshot3.forEach((doc) => {
+            aux_equipos.push(doc.data())
+            });
+            const docRef = doc(db, "informacion", "parametros");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              setNombresEquipos(docSnap.data().equipos);
+              setDepartamentos(docSnap.data().departamentos);
+            } else {
+              // docSnap.data() will be undefined in this case
+              console.log("No such document!");
+            }
+            equipos.current = aux_equipos
+            setData(internos_aux.concat(externos_aux));
            
-          });
+ 
     }
 
     const seleccionarEquipo =(_data)=> {
@@ -134,6 +174,9 @@ export default function ReportesInternosView(){
         setModalReportexistente(true);
     };
 
+    const abrirModalReportes= ()=>{
+        setModalReportes(true);
+    }
 
 
     const downloadPdf = () => {
@@ -232,11 +275,20 @@ export default function ReportesInternosView(){
     }
 
 
+    const handleReporte = (event) => {
+        if(parseInt(event.target.value) === 2){
+            setFlagTipo(false)
+            setFlagDepartamento(false)
+            setReporteTipo(2)
+        }else if(parseInt(event.target.value) === 2){
+            setFlagTipo(true)
+            setFlagDepartamento(true)
+            setReporteTipo(1)
+        }
+       
+    };
 
 
-    useEffect(() => {
-        getData();
-    }, [])
 
 
 
@@ -246,8 +298,23 @@ export default function ReportesInternosView(){
             <Grid container spacing={2}>
             <Grid item xs={12}>
                 <Typography component="div" variant="h3" className="princi3" >
-                    MANTENIMIENTO INTERNO - REPORTES INTERNOS
+                GESTIÓN DE REPORTES INTERNOS Y EXTERNOS
                 </Typography>
+                </Grid >
+                <Grid item xs={4} >
+                <Button  variant="contained" onClick={getData}  endIcon={<CloudDownloadIcon />}>
+                        LEER DATOS
+                    </Button>
+                </Grid >
+                 <Grid item xs={4}>
+                <Button  variant="contained"  onClick={abrirModalReportes}  endIcon={<DescriptionIcon />}>
+                        Crear Reporte externo
+                    </Button>
+                </Grid >
+                <Grid item xs={4}>
+                <Button  variant="contained"  onClick={abrirModalReportes}  endIcon={<DescriptionIcon />}>
+                        Generar Informe de los Reportes
+                    </Button>
                 </Grid >
                 <Grid item xs={2.4}>
                 <Autocomplete
@@ -300,11 +367,7 @@ export default function ReportesInternosView(){
                         Filtrar
                     </Button>
                 </Grid >
-                <Grid item xs={12}>
-                <Button  variant="contained"  onClick={generarReporte}  endIcon={<DescriptionIcon />}>
-                        Generar Reporte
-                    </Button>
-                </Grid >
+         
                 <Grid item xs={12}>
 
                  <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -521,7 +584,135 @@ export default function ReportesInternosView(){
                 </ModalFooter>
             </Modal>
 
-           
+            <Modal className="{width:0px}" isOpen={modalReportes}>
+                <ModalHeader>
+                    <div><h3>Generar Reporte de Mantenimiento</h3></div>
+                </ModalHeader>
+                <ModalBody>
+                    <FormGroup>
+                        <Grid container spacing={4}>
+                            <Grid item xs={12}>
+                            <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Generar reporte por</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={reporteTipo}
+                                        label="Generar reporte por"
+                                        onChange={handleReporte}
+                                    >
+                                        <MenuItem value={1}>Todos</MenuItem>
+                                        <MenuItem value={2}>Específico</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            {/* <Grid item xs={6}>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DesktopDatePicker
+                                        label={"Inicio"}
+                                        inputFormat="MM/dd/yyyy"
+                                        value={time1}
+                                        onChange={SelectFecha1}
+                                        renderInput={(params) => <TextField fullWidth {...params} />}
+                                    />
+                                </LocalizationProvider>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                                    <DesktopDatePicker
+                                        label={"Final"}
+                                        inputFormat="MM/dd/yyyy"
+                                        value={time1}
+                                        onChange={SelectFecha1}
+                                        renderInput={(params) => <TextField fullWidth {...params} />}
+                                    />
+                                </LocalizationProvider>
+                            </Grid> */}
+                            <Grid item xs={6}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    disabled = {flagDepartamento}
+                                    options={departamentos}
+                                    getOptionLabel={(option) => {
+                                        return option.nombre;
+                                    }}
+                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Departamentos" type="text" />}
+                                    onChange={(event, newvalue) => setDepartamento(newvalue)}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Tipo de Equipo</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={tipoEquipo}
+                                        label="Tipo de Equipo"
+                                        disabled = {flagTipo}
+                                        onChange={handleTipoEquipo}
+                                    >
+                                        <MenuItem value={0}>TODOS</MenuItem>
+                                        <MenuItem value={1}>Equipo Médico</MenuItem>
+                                        <MenuItem value={2}>Equipo de Computo</MenuItem>
+                                        <MenuItem value={3}>Equipo de Oficina</MenuItem>
+                                        <MenuItem value={4}>Mobilario</MenuItem>
+                                        <MenuItem value={5}>Maquinaria</MenuItem>
+                                        <MenuItem value={6}>Equipo de Seguridad</MenuItem>
+                                        <MenuItem value={7}>Equipo de Medición</MenuItem>
+                                        <MenuItem value={8}>Equipo de Operación</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    disabled = {flagDepartamento}
+                                    options={meses}
+                                    getOptionLabel={(option) => {
+                                        return option.nombre;
+                                    }}
+                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Mes" type="text" />}
+                                    onChange={(event, newvalue) => setMesFiltro(newvalue)}
+                                />
+                            </Grid>
+                        </Grid>
+                    </FormGroup>
+                </ModalBody>
+                <ModalFooter>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Button
+                      
+                                onClick={generarReporte}
+                                variant="outlined"
+                                size="large"
+                                className="boton-plan"
+                
+                            >
+                                Generar Reporte
+                            </Button>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Button
+                                onClick={() => setModalReportes(false)}
+                                variant="outlined"
+                                size="large"
+                                className="boton-plan"
+                                fullWidth startIcon={<ClearIcon />}
+                            >
+                                Cancelar
+                            </Button>
+                        </Grid>
+                    </Grid>
+
+                </ModalFooter>
+            </Modal>
+
 
         </>
     );
