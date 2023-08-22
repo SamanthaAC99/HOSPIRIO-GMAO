@@ -1,8 +1,9 @@
 import React, {  useState } from "react";
-import { collection,query, doc,getDoc,getDocs } from "firebase/firestore";
+import { collection,query, doc,getDoc,getDocs,addDoc,setDoc } from "firebase/firestore";
 import Paper from '@mui/material/Paper';
 import Grid from "@mui/material/Grid";
 import * as XLSX from 'xlsx';
+import Swal from 'sweetalert2';
 import { db } from "../firebase/firebase-config";
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Table from '@mui/material/Table';
@@ -31,6 +32,8 @@ import Autocomplete from '@mui/material/Autocomplete';
 import FormControl from '@mui/material/FormControl';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import PrintIcon from '@mui/icons-material/Print';
+import { v4 } from 'uuid';
 import {
     Modal,
     ModalHeader,
@@ -51,7 +54,7 @@ export default function ReportesInternosView(){
     const [data, setData] = useState([]);
     const [nombresEquipos,setNombresEquipos] = useState([])
     const [modalReportes,setModalReportes] = useState(false);
-    const [codigosEquipos,setCodigosEquipos] = useState([]);
+
     const equipos = useRef([])
     const [time1, setTime1] = useState(new Date('Sat Dec 31 2022 24:00:00 GMT-0500'));
     const [time2, setTime2] = useState(new Date('Sun Dec 31 2023 23:59:59 GMT-0500'));
@@ -72,13 +75,45 @@ export default function ReportesInternosView(){
     const [reporteTipo,setReporteTipo] = useState(1);
     const [tipoEquipo,setTipoEquipo] = useState(1);
     const [departamentos,setDepartamentos] = useState([]);
+    const [desactivar,setDesactivar] = useState(true)
     const [departamento,setDepartamento]  = useState({});
     const [mesFiltro,setMesFiltro] = useState();
-
-
+    const [modalExterno,setModalExterno] = useState(false);
+    const [currentform, setCurrentform] = useState({});
+    const [empresas, setEmpresas] = useState([]);
+    const [empresa, setEmpresa] = useState('');
+    const [cequipo, setCequipo] = useState("");
+    const equipoObjeto = useRef();
+    const [inventario, setInventario] = useState([]);
+    const [currentEquipo,setCurrentEquipo] = useState({});
+    const [mantenimiento, setMantenimiento] = useState("");
+    const [estado, setEstado] = useState('');
+    const [codigosEquipos,setCodigosEquipos] = useState([]);
+    const [nreporte, setNreporte] = useState({
+        tecnico: '',
+        codigo_equipo: '',
+        equipo: '',
+        mantenimiento: '',
+        estado: '',
+        costo: '',
+        falla: '',
+        causas: '',
+        actividades: [],
+        repuestos: '',
+        observaciones: '',
+        fecha: '',
+        tiempo: '',
+        horas: '',
+        horasi:'',
+        min:'',
+        tipo: "Externo",
+ 
+    });
+   
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
+
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
@@ -114,38 +149,88 @@ export default function ReportesInternosView(){
         return resultado;
       }
     const getData = async () => {
+            try {
+                let internos_aux = []
+                let externos_aux = []
+                let aux_equipos = []
+                let aux_empresas = []
+                const q = query(collection(db, "reportesint"));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                internos_aux.push(doc.data())
+                });
+                const q2 = query(collection(db, "reportesext"));
+                const querySnapshot2 = await getDocs(q2);
+                querySnapshot2.forEach((doc) => {
+                externos_aux.push(doc.data())
+                });
+                const q3 = query(collection(db, "ingreso"));
+                const querySnapshot3 = await getDocs(q3);
+                querySnapshot3.forEach((doc) => {
+                aux_equipos.push(doc.data())
+                });
 
-            let internos_aux = []
-            let externos_aux = []
-            let aux_equipos = []
-            const q = query(collection(db, "reportesint"));
-            const querySnapshot = await getDocs(q);
-            querySnapshot.forEach((doc) => {
-            internos_aux.push(doc.data())
-            });
-            const q2 = query(collection(db, "reportesext"));
-            const querySnapshot2 = await getDocs(q2);
-            querySnapshot2.forEach((doc) => {
-            externos_aux.push(doc.data())
-            });
-            const q3 = query(collection(db, "ingreso"));
-            const querySnapshot3 = await getDocs(q3);
-            querySnapshot3.forEach((doc) => {
-            aux_equipos.push(doc.data())
-            });
-            const docRef = doc(db, "informacion", "parametros");
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              setNombresEquipos(docSnap.data().equipos);
-              setDepartamentos(docSnap.data().departamentos);
-            } else {
-              // docSnap.data() will be undefined in this case
-              console.log("No such document!");
+                const q4 = query(collection(db, "empresas"));
+                const querySnapshot4 = await getDocs(q4);
+                querySnapshot4.forEach((doc) => {
+                aux_empresas.push(doc.data())
+                });
+                const docRef = doc(db, "informacion", "parametros");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                  setNombresEquipos(docSnap.data().equipos);
+                  setDepartamentos(docSnap.data().departamentos);
+                } else {
+                  // docSnap.data() will be undefined in this case
+                  console.log("No such document!");
+                }
+                equipos.current = aux_equipos
+                setEmpresas(aux_empresas)
+                setData(internos_aux.concat(externos_aux));
+                setDesactivar(false);
+            } catch (error) {
+                setDesactivar(true)
             }
-            equipos.current = aux_equipos
-            setData(internos_aux.concat(externos_aux));
+           
            
  
+    }
+
+    const crearReporte = async () => {
+        let horasAux=parseInt(nreporte.horasi)
+        let minAux=parseInt(nreporte.min)
+        let tiempom=minAux/60
+        let h=(horasAux+tiempom).toFixed(2);
+       const re = nreporte;
+        re['empresa'] = empresa;
+        re['equipo_id'] =  currentEquipo.id;
+        re['tipo'] =  currentEquipo.tipo_equipo.nombre;
+        re['departamento'] =  departamento.nombre;
+        re['mantenimiento'] =  estado;
+        re['estado'] =  mantenimiento;
+        re['departamento'] =  departamento.nombre;
+        re['marca'] =  currentEquipo.marca;
+        re['modelo'] =  currentEquipo.modelo;
+        re['equipo'] =  currentEquipo.equipo.nombre;
+        re['serie'] =  currentEquipo.serie;
+        re['codigo_equipo'] = currentEquipo.codigo;
+        re['causas'] = "";
+        re['fecha'] = new Date().toLocaleDateString();
+        re['horas']= parseFloat(h)
+        re['indice'] = new Date().getTime();
+        re['tiempo'] = `${horasAux}h${Math.round(minAux)}m`
+        re['id'] = v4()
+       console.log(re)
+       try {
+        await setDoc(doc(db, "reportesext",re['id']), re);
+       } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'No se agrego el reporte a la orden',
+        })
+       }
+        setModalExterno(false)
     }
 
     const seleccionarEquipo =(_data)=> {
@@ -274,6 +359,9 @@ export default function ReportesInternosView(){
         XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
     }
 
+    const abrirReporteExterno = ()=>{
+        setModalExterno(true);
+    }
 
     const handleReporte = (event) => {
         if(parseInt(event.target.value) === 2){
@@ -287,9 +375,14 @@ export default function ReportesInternosView(){
         }
        
     };
+    const createReport = (event) => {
+        setNreporte({
+            ...nreporte,
+            [event.target.name]: event.target.value,
+        });
+    }
 
-
-
+   //FILTROS 
 
 
     return (
@@ -307,12 +400,12 @@ export default function ReportesInternosView(){
                     </Button>
                 </Grid >
                  <Grid item xs={4}>
-                <Button  variant="contained"  onClick={abrirModalReportes}  endIcon={<DescriptionIcon />}>
+                <Button disabled={desactivar} variant="contained"  onClick={abrirReporteExterno}  endIcon={<DescriptionIcon />}>
                         Crear Reporte externo
                     </Button>
                 </Grid >
                 <Grid item xs={4}>
-                <Button  variant="contained"  onClick={abrirModalReportes}  endIcon={<DescriptionIcon />}>
+                <Button  variant="contained"  disabled={desactivar}  onClick={abrirModalReportes}  endIcon={<DescriptionIcon />}>
                         Generar Informe de los Reportes
                     </Button>
                 </Grid >
@@ -322,6 +415,7 @@ export default function ReportesInternosView(){
                             key={reset}
                             id="combo-box-demo"
                             options={nombresEquipos}
+                            disabled={desactivar}
                             getOptionLabel={(option) => {
                                 return option.nombre;
                               }}
@@ -335,6 +429,7 @@ export default function ReportesInternosView(){
                             key={reset}
                             id="combo-box-demo"
                             options={codigosEquipos}
+                            disabled={desactivar}
                             onChange={(event, newvalue) => setCodigo(newvalue)}
                             renderInput={(params) => <TextField {...params} fullWidth label="CÓDIGO"  type="text" />}
                         />
@@ -344,6 +439,7 @@ export default function ReportesInternosView(){
                             <DesktopDatePicker
                                 label={"Desde"}
                                 inputFormat="MM/dd/yyyy"
+                                disabled={desactivar}
                                 value={time1}
                                 onChange={SelectFecha1}
                                 renderInput={(params) => <TextField {...params} fullWidth />}
@@ -356,6 +452,7 @@ export default function ReportesInternosView(){
                                 label={"Hasta"}
                                 inputFormat="MM/dd/yyyy"
                                 value={time2}
+                                disabled={desactivar}
                                 onChange={SelectFecha2}
                                 renderInput={(params) => <TextField {...params} fullWidth />}
                             />
@@ -363,7 +460,7 @@ export default function ReportesInternosView(){
                     </Grid>
           
                 <Grid item xs={2.4}>
-                <Button  variant="contained" className="boton-gestion" onClick={filtrarReportes}  endIcon={<FilterAltIcon />}>
+                <Button  variant="contained" disabled={desactivar} fullWidth sx={{height:"100%"}} onClick={filtrarReportes}  endIcon={<FilterAltIcon />}>
                         Filtrar
                     </Button>
                 </Grid >
@@ -713,7 +810,170 @@ export default function ReportesInternosView(){
                 </ModalFooter>
             </Modal>
 
+            <Modal className="{width:0px}" isOpen={modalExterno}>
+                <ModalHeader>
+                    <div><h3>Insertar</h3></div>
+                </ModalHeader>
 
+                <ModalBody>
+                    <FormGroup>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    
+                                    id="combo-box-demo"
+                                    options={empresas}
+                                    getOptionLabel={(option) => {
+                                        return option.empresa;
+                                    }}
+                                    
+                                    onChange={(event, newvalue) => setEmpresa(newvalue.empresa)}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="EMPRESA" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+
+                            <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    options={departamentos}
+                                    getOptionLabel={(option) => {
+                                        return option.nombre;
+                                    }}
+                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Departamento" type="text" />}
+                                    onChange={(event, newvalue) => setDepartamento(newvalue)}
+                                />
+                            </Grid>
+                                <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    options={nombresEquipos}
+                                    getOptionLabel={(option) => {
+                                        return option.nombre;
+                                    }}
+                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Equipo" type="text" />}
+                                    onChange={(event, newvalue) => setDepartamento(newvalue)}
+                                />
+                                    </Grid>
+                            
+                            <Grid item xs={6}>
+                            <Autocomplete
+                                disableClearable
+                                id="combo-box-demo"
+                                options={equipos.current}
+                                getOptionLabel={(option) => {
+                                    return option.codigo;
+                                }}
+                                onChange={(event, newValue) => {
+                                    setCurrentEquipo(newValue);
+                                }}
+                                renderInput={(params) => <TextField {...params} fullWidth label="Codigo" type="text" />}
+                            />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    className='seleccionadortabla'
+                              
+                                    options={["PREVENTIVO", "CORRECTIVO"]}
+                                    onChange={(event, newValue) => {
+                                        setMantenimiento(newValue);
+                                    }}
+                                    renderInput={(params) => <TextField   {...params} fullWidth label="T.MANTENIMIENTO" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="costo"   onChange={createReport}  label="COSTO" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="horasi"   onChange={createReport}  label="HORAS" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="min"    onChange={createReport}  label="MINUTOS" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    className='seleccionadortabla'
+                                    options={["ARREGLADO", "REPARADO"]}
+                                    onChange={(event, newValue) => {
+                                        setEstado(newValue);
+                                    }}
+                                    renderInput={(params) => <TextField  {...params} fullWidth label="ESTADO" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{textTransform:"uppercase"}} 
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Falla"
+                                    className="text-area-encargado"
+                                    name="falla"
+                                    onChange={createReport} />
+                            </Grid>
+                            
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{textTransform:"uppercase"}} 
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Actividades"
+                                    className="text-area-encargado"
+                                    name="actividades"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{textTransform:"uppercase"}} 
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Repuestos"
+                                    className="text-area-encargado"
+                                    name="repuestos"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextareaAutosize
+                                    style={{textTransform:"uppercase"}} 
+                                    aria-label="minimum height"
+                                    minRows={1}
+                                    placeholder="Observaciones"
+                                    className="text-area-encargado"
+                                    name="observaciones"
+                                    onChange={createReport}
+                                />
+                            </Grid>
+                           
+                        </Grid>
+                    </FormGroup>
+                </ModalBody>
+
+        
+                <ModalFooter>
+                    <Button     variant="outlined"
+                          className="boton-modal-d2"
+                        onClick={crearReporte}>Añadir</Button>
+                    <Button
+                               variant="contained"
+                               className="boton-modal-d"
+                        onClick={() => setModalExterno(false)}
+                    >
+                        Cancelar
+                    </Button>
+
+                </ModalFooter>
+            </Modal>
+
+          
         </>
     );
 
