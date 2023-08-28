@@ -10,7 +10,7 @@
 
 
 .pnp.js
-.firebaserc
+/.firebaserc
 # testing
 /coverage
 

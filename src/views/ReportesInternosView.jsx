@@ -32,7 +32,6 @@ import Autocomplete from '@mui/material/Autocomplete';
 import FormControl from '@mui/material/FormControl';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import PrintIcon from '@mui/icons-material/Print';
 import { v4 } from 'uuid';
 import {
     Modal,
@@ -48,14 +47,13 @@ import { useRef } from "react";
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-
 export default function ReportesInternosView(){
 
     const [data, setData] = useState([]);
     const [nombresEquipos,setNombresEquipos] = useState([])
     const [modalReportes,setModalReportes] = useState(false);
 
-    const equipos = useRef([])
+
     const [time1, setTime1] = useState(new Date('Sat Dec 31 2022 24:00:00 GMT-0500'));
     const [time2, setTime2] = useState(new Date('Sun Dec 31 2023 23:59:59 GMT-0500'));
     const reportes =  useRef([])
@@ -76,39 +74,33 @@ export default function ReportesInternosView(){
     const [tipoEquipo,setTipoEquipo] = useState(1);
     const [departamentos,setDepartamentos] = useState([]);
     const [desactivar,setDesactivar] = useState(true)
-    const [departamento,setDepartamento]  = useState({});
+
     const [mesFiltro,setMesFiltro] = useState();
     const [modalExterno,setModalExterno] = useState(false);
-    const [currentform, setCurrentform] = useState({});
     const [empresas, setEmpresas] = useState([]);
     const [empresa, setEmpresa] = useState('');
-    const [cequipo, setCequipo] = useState("");
-    const equipoObjeto = useRef();
-    const [inventario, setInventario] = useState([]);
-    const [currentEquipo,setCurrentEquipo] = useState({});
+
+
     const [mantenimiento, setMantenimiento] = useState("");
-    const [estado, setEstado] = useState('');
+
     const [codigosEquipos,setCodigosEquipos] = useState([]);
-    const [nreporte, setNreporte] = useState({
-        tecnico: '',
-        codigo_equipo: '',
-        equipo: '',
-        mantenimiento: '',
-        estado: '',
-        costo: '',
-        falla: '',
-        causas: '',
-        actividades: [],
-        repuestos: '',
-        observaciones: '',
-        fecha: '',
-        tiempo: '',
-        horas: '',
-        horasi:'',
-        min:'',
-        tipo: "Externo",
- 
-    });
+    //parametros del reporte externo
+    const [departamento,setDepartamento]  = useState({});
+    const equipos = useRef([])
+    const equipos_filtered = useRef([]) // aqui se almacenan los equipos que se han filtrado por departamento
+    const [currentEquipo,setCurrentEquipo] = useState({});
+    const [causas,setCausas] = useState({});
+    const [costo,setCosto] = useState("");
+    const [horas,setHoras] = useState("");
+    const [minutos,setMinutos] = useState("");
+    const [estado, setEstado] = useState('');
+    const [falla,setFalla] = useState('');
+    const [repuestos,setRepuestos] = useState('');
+    const [actividades,setActividades] = useState('');
+    const [observaciones,setObservaciones] = useState('');
+    const [tipo,setTipo] = useState();
+
+
    
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -187,6 +179,7 @@ export default function ReportesInternosView(){
                 equipos.current = aux_equipos
                 setEmpresas(aux_empresas)
                 setData(internos_aux.concat(externos_aux));
+                reportes.current = internos_aux.concat(externos_aux)
                 setDesactivar(false);
             } catch (error) {
                 setDesactivar(true)
@@ -197,32 +190,47 @@ export default function ReportesInternosView(){
     }
 
     const crearReporte = async () => {
-        let horasAux=parseInt(nreporte.horasi)
-        let minAux=parseInt(nreporte.min)
+        let horasAux= parseInt(horas)
+        let minAux= parseInt(minutos)
         let tiempom=minAux/60
         let h=(horasAux+tiempom).toFixed(2);
-       const re = nreporte;
-        re['empresa'] = empresa;
-        re['equipo_id'] =  currentEquipo.id;
-        re['tipo'] =  currentEquipo.tipo_equipo.nombre;
-        re['departamento'] =  departamento.nombre;
-        re['mantenimiento'] =  estado;
-        re['estado'] =  mantenimiento;
-        re['departamento'] =  departamento.nombre;
-        re['marca'] =  currentEquipo.marca;
-        re['modelo'] =  currentEquipo.modelo;
-        re['equipo'] =  currentEquipo.equipo.nombre;
-        re['serie'] =  currentEquipo.serie;
-        re['codigo_equipo'] = currentEquipo.codigo;
-        re['causas'] = "";
-        re['fecha'] = new Date().toLocaleDateString();
-        re['horas']= parseFloat(h)
-        re['indice'] = new Date().getTime();
-        re['tiempo'] = `${horasAux}h${Math.round(minAux)}m`
-        re['id'] = v4()
-       console.log(re)
+        const new_repport = {
+            empresa:empresa,
+            actividades:actividades,
+            causas:causas ,
+            // cedula:currentUser.indentification,
+            codigo_equipo:currentEquipo.codigo,
+            costo:costo,
+            departamento:currentEquipo.departamento.nombre,
+            equipo:currentEquipo.equipo.nombre,
+            equipo_id: currentEquipo.id,
+            estado:estado,
+            falla:falla,
+            fecha:new Date().toLocaleString("es-EC"),
+            horas:parseFloat(h),
+            id:v4(),
+            importancia:"Normal",
+            indice:new Date().getTime(),
+            mantenimiento:mantenimiento,
+            marca:currentEquipo.marca,
+            modelo:currentEquipo.modelo,
+            nro_orden:"n/a",
+            observaciones:observaciones,
+            orden_id: "n/a",
+            propietario: currentEquipo.propietario.nombre,
+            repuestos:repuestos,
+            responsable: currentEquipo.responsable.nombre,
+            serie:currentEquipo.serie,
+            // tecnico:currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname,
+            tiempo:`${horasAux}h${Math.round(minAux)}m`,
+            tipo:"Externo",
+            tipo_equipo:currentEquipo.tipo_equipo.nombre,
+        }
+    
+        console.log(new_repport)
        try {
-        await setDoc(doc(db, "reportesext",re['id']), re);
+        await setDoc(doc(db, "reportesext",new_repport['id']), new_repport);
+        setModalExterno(false)
        } catch (error) {
         Swal.fire({
             icon: 'error',
@@ -230,19 +238,13 @@ export default function ReportesInternosView(){
             text: 'No se agrego el reporte a la orden',
         })
        }
-        setModalExterno(false)
     }
 
     const seleccionarEquipo =(_data)=> {
         let aux = equipos.current.filter(item =>  item.equipo.nombre === _data).map(item => (item.codigo))
-        // aux.push("TODOS")
         setCodigosEquipos(aux)
     }
-    // const SelectFecha1 = (newValue) => {
-    //     const fechaformateada = new Date(newValue).getTime()
-    //     const datoFormat2 = new Date(fechaformateada).toLocaleDateString("en-US")
-    //     setTime1(datoFormat2);
-    // };
+ 
 
     const SelectFecha1 = (newValue) => {
         setTime1(newValue);
@@ -291,30 +293,42 @@ export default function ReportesInternosView(){
 
 
     const filtrarReportes = () =>{
-        let aux = JSON.parse(JSON.stringify(reportes.current))
-        if (codigo!==""){
-            let datos_filtrados = aux.filter(filteryByDateReportes).filter(filtrobyCodigo)
-            setData(datos_filtrados)
-            setReset(!reset);
-            setCodigo("")
-        } else{
-            let datos_filtrados = JSON.parse(JSON.stringify(reportes.current))
-            setData(datos_filtrados)
-            setReset(!reset);
-            console.log(datos_filtrados)
+        console.log(codigo)
+        let aux_data = JSON.parse(JSON.stringify(reportes.current))
+        console.log(aux_data)
+        let datos_filtrados = aux_data.filter(filteryByDateReportes).filter(filtrobyCodigo).filter(filteryByTipo)
+        setData(datos_filtrados)
+        setReset(!reset);
+        setCodigo("")
+        setTipo("")
+       
+    }
+    const filteryByTipo = (_reporte) => {
+       
+        if(tipo !== ""){
+            if (_reporte.tipo === tipo) {
+                return _reporte;
+            } 
+            else {
+                return null;
+            }
+        }else{
+            return _reporte;
         }
     }
 
 
     const filteryByDateReportes = (_reporte) => {
-        //console.log(ordenes)
-        const aux1 = new Date(time1)
-        const fechaInicio = aux1.getTime()
-        const aux2 = new Date(time2)
-        const fechaFinal = aux2.getTime()
-        const fechaOrden = new Date(_reporte.indice).getTime()
-
-        if (fechaOrden >= fechaInicio && fechaOrden <= fechaFinal) {
+        var aux1 = new Date(time1)
+        var fechaInicio = aux1.getTime()
+        var aux2 = new Date(time2)
+        var fechaFinal = aux2.getTime()
+        const [fechaPart, horaPart] = _reporte.fecha.split(', ');
+        const [dia, mes, año] = fechaPart.split('/');
+        const [hora, minutos, segundos] = horaPart.split(':');
+        const fecha = new Date(año, mes - 1, dia, hora, minutos, segundos);
+        const timestamp = fecha.getTime();
+        if (timestamp >= fechaInicio && timestamp <= fechaFinal) {
             return _reporte
         } else {
             return null;
@@ -322,13 +336,17 @@ export default function ReportesInternosView(){
     }
 
     const filtrobyCodigo =(_reporte)=>{
-      
-            if (_reporte.codigoe === codigo) {
-                return _reporte
+            if(codigo !== ""){
+                if (_reporte.codigo_equipo === codigo) {
+                    return _reporte;
+                }
+                else {
+                    return null;
+                }
+            }else{
+                return _reporte;
             }
-            else {
-                return null;
-            }
+           
            
 
     }
@@ -338,7 +356,7 @@ export default function ReportesInternosView(){
         console.log(datos_modify[0])
         let datos_formated = datos_modify[0].map(item=>{
             let aux = {
-                tipo: item.tipo_equipo,
+                tipo: "externo",
                 codigo:item.codigo_equipo,
                 equipo:item.equipo,
                 departamento:item.departamento,
@@ -375,16 +393,18 @@ export default function ReportesInternosView(){
         }
        
     };
-    const createReport = (event) => {
-        setNreporte({
-            ...nreporte,
-            [event.target.name]: event.target.value,
-        });
-    }
+
 
    //FILTROS 
 
 
+   const filterByDepartamento = (newValue) =>{
+
+    let aux_equipos = JSON.parse(JSON.stringify(equipos.current))
+    let filtered = aux_equipos.filter(item=> item.departamento.nombre === newValue.nombre)
+    equipos_filtered.current = filtered
+
+   }
     return (
         <>
             <Container>
@@ -409,11 +429,23 @@ export default function ReportesInternosView(){
                         Generar Informe de los Reportes
                     </Button>
                 </Grid >
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                 <Autocomplete
                             disableClearable
                             key={reset}
-                            id="combo-box-demo"
+      
+                            options={['Externo','Interno']}
+                            disabled={desactivar}
+                   
+                            onChange={(event, newvalue) => setTipo(newvalue)}
+                            renderInput={(params) => <TextField {...params} fullWidth label="TIPO"  type="text" />}
+                        />
+                </Grid >
+                <Grid item xs={2}>
+                <Autocomplete
+                            disableClearable
+                            key={reset}
+                 
                             options={nombresEquipos}
                             disabled={desactivar}
                             getOptionLabel={(option) => {
@@ -423,18 +455,18 @@ export default function ReportesInternosView(){
                             renderInput={(params) => <TextField {...params} fullWidth label="EQUIPO"  type="text" />}
                         />
                 </Grid >
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                 <Autocomplete
                             disableClearable
                             key={reset}
-                            id="combo-box-demo"
+
                             options={codigosEquipos}
                             disabled={desactivar}
                             onChange={(event, newvalue) => setCodigo(newvalue)}
                             renderInput={(params) => <TextField {...params} fullWidth label="CÓDIGO"  type="text" />}
                         />
                 </Grid >
-                <Grid item xs={12} sm={12} md={2.4}>
+                <Grid item xs={12} sm={12} md={2}>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
                             <DesktopDatePicker
                                 label={"Desde"}
@@ -446,7 +478,7 @@ export default function ReportesInternosView(){
                             />
                         </LocalizationProvider>
                     </Grid>
-                    <Grid item xs={12} sm={12} md={2.4}>
+                    <Grid item xs={12} sm={12} md={2}>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
                             <DesktopDatePicker
                                 label={"Hasta"}
@@ -459,7 +491,7 @@ export default function ReportesInternosView(){
                         </LocalizationProvider>
                     </Grid>
           
-                <Grid item xs={2.4}>
+                <Grid item xs={2}>
                 <Button  variant="contained" disabled={desactivar} fullWidth sx={{height:"100%"}} onClick={filtrarReportes}  endIcon={<FilterAltIcon />}>
                         Filtrar
                     </Button>
@@ -483,6 +515,12 @@ export default function ReportesInternosView(){
                                             style={{ minWidth: 200 }}
                                         >
                                             Duración
+                                        </TableCell>
+                                        <TableCell
+                                            align={"left"}
+                                            style={{ minWidth: 200 }}
+                                        >
+                                            Tipo
                                         </TableCell>
                                         <TableCell
                                             align={"left"}
@@ -511,6 +549,7 @@ export default function ReportesInternosView(){
                                                 <TableRow hover role="checkbox" tabIndex={-1} key={index}>
                                                     <TableCell align="left">{row.fecha}</TableCell>
                                                     <TableCell align="left">{row.tiempo}</TableCell>
+                                                    <TableCell align="left">{row.tipo}</TableCell>
                                                     <TableCell align="left">{row.equipo}</TableCell>
                                                     <TableCell align="left">{row.codigo_equipo}</TableCell>
                                                     <TableCell align="center">
@@ -812,11 +851,11 @@ export default function ReportesInternosView(){
 
             <Modal className="{width:0px}" isOpen={modalExterno}>
                 <ModalHeader>
-                    <div><h3>Insertar</h3></div>
+                    <div><h3>Crear Reporte Externo</h3></div>
                 </ModalHeader>
 
                 <ModalBody>
-                    <FormGroup>
+                    <FormGroup  style={{overflowY:"scroll",height:"450px"}}>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <Autocomplete
@@ -843,31 +882,20 @@ export default function ReportesInternosView(){
                                     }}
                                     isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
                                     renderInput={(params) => <TextField {...params} fullWidth label="Departamento" type="text" />}
-                                    onChange={(event, newvalue) => setDepartamento(newvalue)}
+                                    onChange={(event, newvalue) => filterByDepartamento(newvalue)}
                                 />
                             </Grid>
-                                <Grid item xs={12}>
-                                <Autocomplete
-                                    disableClearable
-                                    id="combo-box-demo"
-                                    options={nombresEquipos}
-                                    getOptionLabel={(option) => {
-                                        return option.nombre;
-                                    }}
-                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
-                                    renderInput={(params) => <TextField {...params} fullWidth label="Equipo" type="text" />}
-                                    onChange={(event, newvalue) => setDepartamento(newvalue)}
-                                />
-                                    </Grid>
-                            
+                        
                             <Grid item xs={6}>
                             <Autocomplete
                                 disableClearable
                                 id="combo-box-demo"
-                                options={equipos.current}
+                                options={equipos_filtered.current}
                                 getOptionLabel={(option) => {
                                     return option.codigo;
                                 }}
+     
+                                isOptionEqualToValue={(option, value) => option.codigo === value.codigo}
                                 onChange={(event, newValue) => {
                                     setCurrentEquipo(newValue);
                                 }}
@@ -888,13 +916,13 @@ export default function ReportesInternosView(){
                                 />
                             </Grid>
                             <Grid item xs={6}>
-                                <TextField id="outlined-basic" name="costo"   onChange={createReport}  label="COSTO" variant="outlined" fullWidth />
+                                <TextField id="outlined-basic" name="costo"   onChange={(event)=>{setCosto(event.target.value)}}  label="COSTO" variant="outlined" fullWidth />
                             </Grid>
                             <Grid item xs={6}>
-                                <TextField id="outlined-basic" name="horasi"   onChange={createReport}  label="HORAS" variant="outlined" fullWidth />
+                                <TextField id="outlined-basic" name="horasi"   onChange={(event)=>{setHoras(event.target.value)}}  label="HORAS" variant="outlined" fullWidth />
                             </Grid>
                             <Grid item xs={6}>
-                                <TextField id="outlined-basic" name="min"    onChange={createReport}  label="MINUTOS" variant="outlined" fullWidth />
+                                <TextField id="outlined-basic" name="min"    onChange={(event)=>{setMinutos(event.target.value)}}  label="MINUTOS" variant="outlined" fullWidth />
                             </Grid>
                             <Grid item xs={6}>
                                 <Autocomplete
@@ -909,48 +937,19 @@ export default function ReportesInternosView(){
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextareaAutosize
-                                    style={{textTransform:"uppercase"}} 
-                                    aria-label="minimum height"
-                                    minRows={1}
-                                    placeholder="Falla"
-                                    className="text-area-encargado"
-                                    name="falla"
-                                    onChange={createReport} />
-                            </Grid>
-                            
-                            <Grid item xs={12}>
-                                <TextareaAutosize
-                                    style={{textTransform:"uppercase"}} 
-                                    aria-label="minimum height"
-                                    minRows={1}
-                                    placeholder="Actividades"
-                                    className="text-area-encargado"
-                                    name="actividades"
-                                    onChange={createReport}
-                                />
+                                <TextField  id="outlined-multiline-static" name="falla" multiline  onChange={(event)=>{setFalla(event.target.value)}}  rows={3}  label="FALLA" variant="outlined" fullWidth />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextareaAutosize
-                                    style={{textTransform:"uppercase"}} 
-                                    aria-label="minimum height"
-                                    minRows={1}
-                                    placeholder="Repuestos"
-                                    className="text-area-encargado"
-                                    name="repuestos"
-                                    onChange={createReport}
-                                />
+                                <TextField  id="outlined-multiline-static" name="causas" multiline  onChange={(event)=>{setCausas(event.target.value)}}  rows={3}  label="CAUSAS" variant="outlined" fullWidth />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextareaAutosize
-                                    style={{textTransform:"uppercase"}} 
-                                    aria-label="minimum height"
-                                    minRows={1}
-                                    placeholder="Observaciones"
-                                    className="text-area-encargado"
-                                    name="observaciones"
-                                    onChange={createReport}
-                                />
+                                 <TextField  id="outlined-multiline-static" name="actividades" multiline onChange={(event)=>{setActividades(event.target.value)}}    rows={3}  label="ACTIVIDADES" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={12}>
+                                  <TextField  id="outlined-multiline-static" name="repuestos" multiline    onChange={(event)=>{setRepuestos(event.target.value)}}  rows={3}  label="REPUESTOS" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={12}>
+                                 <TextField  id="outlined-multiline-static" name="observaciones" multiline onChange={(event)=>{setObservaciones(event.target.value)}}   rows={3}  label="OBSERVACIONES" variant="outlined" fullWidth />
                             </Grid>
                            
                         </Grid>

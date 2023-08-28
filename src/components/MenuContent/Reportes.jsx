@@ -40,12 +40,12 @@ export default function ReportesMenu(){
                                 <ListItemText primary="R. Internos" />
                             </ListItemButton>
 
-                            <ListItemButton onClick={() =>Changeview('reportes/externos')} sx={{ pl: 4 }}>
+                            {/* <ListItemButton onClick={() =>Changeview('reportes/externos')} sx={{ pl: 4 }}>
                                 <ListItemIcon>
                                     <StarBorder />
                                 </ListItemIcon>
                                 <ListItemText primary="R. Externos" />
-                            </ListItemButton>
+                            </ListItemButton> */}
                         </List>
                     </Collapse>
         </>
