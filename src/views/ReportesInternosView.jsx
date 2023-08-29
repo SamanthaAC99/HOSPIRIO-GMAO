@@ -353,31 +353,67 @@ export default function ReportesInternosView(){
            
 
     }
+
+    const filterbyDepa = (_reporte)=>{
+        if(departamento.nombre !== "TODOS"){
+            if (_reporte.departamento === departamento.nombre) {
+                return _reporte;
+            }
+            else {
+                return null;
+            }
+        }else{
+            return _reporte;
+        }
+    }
+    const filterbyMonth =(_reporte)=>{
+        const [fechaPart, horaPart] = _reporte.fecha.split(', ');
+        const [dia, mes, año] = fechaPart.split('/');
+
+
+        console.log(mes)
+        if(mesFiltro.nombre !== "TODOS"){
+            if(parseInt(mes) === mesFiltro.codigo+1){
+                return _reporte
+            }else{
+                return null
+            }
+        }else{
+            return _reporte
+        }
+       
+
+    }
+
     const generarReporte =()=>{
         let aux_datos = JSON.parse(JSON.stringify(reportes.current))
-        let datos_modify = agruparPorCodigo(aux_datos)
-        console.log(datos_modify[0])
-        let datos_formated = datos_modify[0].map(item=>{
-            let aux = {
-                tipo: "externo",
-                codigo:item.codigo_equipo,
-                equipo:item.equipo,
-                departamento:item.departamento,
-                fecha:item.fecha,
-                tipo_mantenimiento:item.tipo,
-                mantenimiento:item.mantenimiento,
-                falla:item.falla,
-                actividades:item.actividades
-            }
-            return aux
-    })
-        const myHeader = ["tipo", "codigo", "equipo","departamento","fecha","tipo_mantenimiento","mantenimiento","falla","actividades"];
-        const worksheet = XLSX.utils.json_to_sheet(datos_formated, { header: myHeader });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.sheet_add_aoa(worksheet, [["TIPO", "COD", "EQUIPO","DEPARTAMENTO","FECHA","TIPO DE MANTENIMIENTO","MANTENIMIENTO","FALLA","ACTIVIDADES"]], { origin: "A1" });
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
-        XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+        console.log(departamento)
+        let filter_reportes = aux_datos.filter(filteryByTipo).filter(filterbyDepa).filter(filterbyMonth)
+        let datos_modify = agruparPorCodigo(filter_reportes)
+      
+
+            console.log(datos_modify[0])
+            let datos_formated = datos_modify[0].map(item=>{
+                let aux = {
+                    tipo: "externo",
+                    codigo:item.codigo_equipo,
+                    equipo:item.equipo,
+                    departamento:item.departamento,
+                    fecha:item.fecha,
+                    tipo_mantenimiento:item.tipo,
+                    mantenimiento:item.mantenimiento,
+                    falla:item.falla,
+                    actividades:item.actividades
+                }
+                return aux
+        })
+            const myHeader = ["tipo", "codigo", "equipo","departamento","fecha","tipo_mantenimiento","mantenimiento","falla","actividades"];
+            const worksheet = XLSX.utils.json_to_sheet(datos_formated, { header: myHeader });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.sheet_add_aoa(worksheet, [["TIPO", "COD", "EQUIPO","DEPARTAMENTO","FECHA","TIPO DE MANTENIMIENTO","MANTENIMIENTO","FALLA","ACTIVIDADES"]], { origin: "A1" });
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+            worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
+            XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
     }
 
     const abrirReporteExterno = ()=>{
@@ -729,7 +765,7 @@ export default function ReportesInternosView(){
                 </ModalHeader>
                 <ModalBody>
                     <FormGroup>
-                        <Grid container spacing={4}>
+                        <Grid container spacing={2}>
                             <Grid item xs={12}>
                             <FormControl fullWidth>
                                     <InputLabel id="demo-simple-select-label">Generar reporte por</InputLabel>
@@ -769,31 +805,8 @@ export default function ReportesInternosView(){
                                     onChange={(event, newvalue) => setDepartamento(newvalue)}
                                 />
                             </Grid>
+                           
                             <Grid item xs={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel id="demo-simple-select-label">Tipo de Equipo</InputLabel>
-                                    <Select
-                                        labelId="demo-simple-select-label"
-                                        id="demo-simple-select"
-                                        value={tipoEquipo}
-                                        label="Tipo de Equipo"
-                                        disabled = {flagTipo}
-                                        onChange={handleTipoEquipo}
-                                    >
-                                        <MenuItem value={0}>TODOS</MenuItem>
-                                        <MenuItem value={1}>Equipo Médico</MenuItem>
-                                        <MenuItem value={2}>Equipo de Computo</MenuItem>
-                                        <MenuItem value={3}>Equipo de Oficina</MenuItem>
-                                        <MenuItem value={4}>Mobilario</MenuItem>
-                                        <MenuItem value={5}>Maquinaria</MenuItem>
-                                        <MenuItem value={6}>Equipo de Seguridad</MenuItem>
-                                        <MenuItem value={7}>Equipo de Medición</MenuItem>
-                                        <MenuItem value={8}>Equipo de Operación</MenuItem>
-                                    </Select>
-                                </FormControl>
-
-                            </Grid>
-                            <Grid item xs={12}>
                                 <Autocomplete
                                     disableClearable
                                     id="combo-box-demo"
