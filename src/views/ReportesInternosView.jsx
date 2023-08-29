@@ -171,12 +171,15 @@ export default function ReportesInternosView(){
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                   setNombresEquipos(docSnap.data().equipos);
-                  setDepartamentos(docSnap.data().departamentos);
+                  let aux_departamentos = docSnap.data().departamentos
+                  aux_departamentos.unshift({codigo:1000,nombre:"TODOS"})
+                  setDepartamentos(aux_departamentos);
                 } else {
                   // docSnap.data() will be undefined in this case
                   console.log("No such document!");
                 }
                 equipos.current = aux_equipos
+        
                 setEmpresas(aux_empresas)
                 setData(internos_aux.concat(externos_aux));
                 reportes.current = internos_aux.concat(externos_aux)
@@ -351,7 +354,7 @@ export default function ReportesInternosView(){
 
     }
     const generarReporte =()=>{
-        let aux_datos = JSON.parse(JSON.stringify(data))
+        let aux_datos = JSON.parse(JSON.stringify(reportes.current))
         let datos_modify = agruparPorCodigo(aux_datos)
         console.log(datos_modify[0])
         let datos_formated = datos_modify[0].map(item=>{
@@ -386,7 +389,7 @@ export default function ReportesInternosView(){
             setFlagTipo(false)
             setFlagDepartamento(false)
             setReporteTipo(2)
-        }else if(parseInt(event.target.value) === 2){
+        }else if(parseInt(event.target.value) === 1){
             setFlagTipo(true)
             setFlagDepartamento(true)
             setReporteTipo(1)
@@ -742,28 +745,16 @@ export default function ReportesInternosView(){
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            {/* <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Inicio"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
+                            <Grid item xs={12}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    disabled = {flagDepartamento}
+                                    options={["Interno","Externo"]}
+                                    renderInput={(params) => <TextField {...params} fullWidth label="Tipo" type="text" />}
+                                    onChange={(event, newvalue) => setTipo(newvalue)}
+                                />
                             </Grid>
-                            <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Final"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
-                            </Grid> */}
                             <Grid item xs={6}>
                                 <Autocomplete
                                     disableClearable
