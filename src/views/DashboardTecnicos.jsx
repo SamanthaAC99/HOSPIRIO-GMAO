@@ -59,6 +59,7 @@ export default function DashboardTecnicos() {
     const [loading,setLoading] = useState(false);
     const [modalPendientes, setModalPendientes] = useState(false);
     const [codigosEquipo, setCodigosEquipo] = useState([]);
+    const [codigosEquipoCal, setCodigosEquipoCal] = useState([]);
     const [estadof, setEstadof] = useState('');
     const [ctdPendientes, setCtdPendientes] = useState(0);
     const [ctdSolventadas, setCtdSolventadas] = useState(0);
@@ -66,10 +67,12 @@ export default function DashboardTecnicos() {
     const [modalInformacion2, setModalinformacion2] = useState(false);
     const [currentForm, setCurrentForm] = useState(orden_initialData);
     const [modalReportexistente, setModalReportexistente] = useState(false);
+    const [modalReportexistenteCal, setModalReportexistenteCal] = useState(false);
     const [modalReportin, setModalReportin] = useState(false);
     const [modalReportesCalibracion, setModalReportesCalibracion] = useState(false);
     const [currentOrden, setCurrentOrden] = useState([]);
     const [inventario, setInventario] = useState([]);
+    const [inventariocal, setInventariocal] = useState([]);
     const [cequipo, setCequipo] = useState("");
     const [codigoe, setCodigoe] = useState("");
     const [rtmantenimiento, setRtmantenimiento] = useState("");
@@ -77,6 +80,7 @@ export default function DashboardTecnicos() {
     const [equipment, setEquipment] = useState({});
     const [currentReporte, setCurrentReporte] = useState({});
     const [modalEditarReporte, setModalEditarReporte] = useState(false);
+    const [modalEditarReporteCal, setModalEditarReporteCal] = useState(false);
     //variables para las tablas
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -440,6 +444,20 @@ export default function DashboardTecnicos() {
             setInventario(inventarioD);
             setCodigosEquipo(codigos);
         });
+
+
+        const reference2 = query(collection(db, "ingresocalibracion"));
+        onSnapshot(reference2, (querySnapshot) => {
+            var inventarioC = [];
+            querySnapshot.forEach((doc) => {
+                inventarioC.push(doc.data());
+            });
+            var codigosC = inventarioC.map(item => item.codigo);
+            codigos_totales.current = inventarioC;
+            setInventariocal(inventarioC);
+            setCodigosEquipoCal(codigosC);
+        });
+
     }
 
     const updateOrdenes = (usern) => {
@@ -497,8 +515,8 @@ export default function DashboardTecnicos() {
     const selectEquipoCalibracion = (val) => {
      
         if(val !== null){
-            let aux_inventario = JSON.parse(JSON.stringify(inventario))
-            const equipos = aux_inventario.find(item => item.codigo === val)
+            let aux_inventariocal = JSON.parse(JSON.stringify(inventariocal))
+            const equipos = aux_inventariocal.find(item => item.codigo === val)
             setEquipment(equipos);
             setCequipo(equipos.equipo.nombre);
             setCodigoe(val);
@@ -632,6 +650,9 @@ export default function DashboardTecnicos() {
 
     const sendReportFirebase2 = async () => {
         const re = nreporte2;
+        let aux = uuidv4()
+        let id_formateada = aux.slice(0,13)
+        re['id'] = id_formateada;
         re['orden_id'] = currentOrden.id;
         re['cedula'] = currentUser.indentification;
         re['tecnico'] = currentUser.name + ' ' + currentUser.lastname + ' ' + currentUser.secondlastname;
@@ -640,6 +661,27 @@ export default function DashboardTecnicos() {
         re['tipom'] = rtmantenimiento;
         setNreporte2(reporte_calibracion)
         console.log(nreporte2)
+
+
+        try {
+            setModalReportesCalibracion(false);
+            await setDoc(doc(db, "reportescalibraciones", re.id),re)
+            const reference = doc(db, "ordenes", `${currentOrden.id}`);
+            updateDoc(reference, {
+                reporte: true,
+                reporteId: re.id,
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se agrego el reporte a la orden error:' + error,
+            })
+            setModalReportesCalibracion(false);
+        }
+        setEquipment({})
+        setCequipo("")
+        setEstadof("")
     }
 
     const vistaTablaPendientes = (data) => {
@@ -665,11 +707,17 @@ export default function DashboardTecnicos() {
                 setCurrentReporte(docSnap.data());
                 setModalReportexistente(true);
             } else {
-                // doc.data() will be undefined in this case
-                console.log("No such document!");
+                const docRef = doc(db, "reportescalibraciones", `${orden.reporteId}`);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setCurrentReporte(docSnap.data());
+                setModalReportexistenteCal(true);
+            } else{
+            console.log("No such document!"); } 
+        } 
             }
         }
-    }
+    
 
     const vistainformacion2 = (data) => {
         setCurrentForm(data);
@@ -709,9 +757,14 @@ export default function DashboardTecnicos() {
             setCurrentReporte(docSnap.data());
             setModalEditarReporte(true);
         } else {
-            // doc.data() will be undefined in this case
-            console.log("No such document!");
-        }
+                const docRef = doc(db, "reportescalibraciones", `${_data.reporteId}`);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setCurrentReporte(docSnap.data());
+                setModalEditarReporteCal(true);
+            } else{
+            console.log("No such document!"); } 
+            }
     }
     const cambiarDatosReporte = (event) => {
         setCurrentReporte({
@@ -731,6 +784,34 @@ export default function DashboardTecnicos() {
                 actividades: currentReporte.actividades,
                 repuestos: currentReporte.repuestos,
                 observaciones: currentReporte.observaciones,
+            });
+            setModalEditarReporte(false)
+    
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Actividad Actualizada!',
+                showConfirmButton: false,
+                timer: 2000
+    
+            })
+            setLoading(false);
+        } catch (error) {
+            setLoading(false);
+        }
+       
+
+    }
+
+
+    const ActualizarReporteCal = () => {
+        try {
+            const ref = doc(db, "reportescalibraciones", `${currentReporte.id}`);
+            updateDoc(ref, {
+                tipom: rtmantenimiento,
+                fecha_calibracion: currentReporte.fecha_calibracion,
+                fecha_verificacion: currentReporte.fecha_calibracion,
+                fecha_proximacalibracion: currentReporte.fecha_proximacalibracion,
+                codigo_calibracion: currentReporte.codigo_calibracion,
             });
             setModalEditarReporte(false)
     
@@ -916,7 +997,7 @@ export default function DashboardTecnicos() {
                                                     align={"left"}
                                                     style={{ minWidth: 100 }}
                                                 >
-                                                    Informacion
+                                                    Información
                                                 </TableCell>
                                                 <TableCell
                                                     align={"left"}
@@ -1374,7 +1455,7 @@ export default function DashboardTecnicos() {
                                 <Grid item xs={12}>
                                     <div className="name-outlined">{currentForm.id}</div>
                                 </Grid >
-                                <Grid item xs={6}>
+                                <Grid item xs={12}>
                                     <label>
                                         <b>Asunto:  </b>
                                         {currentForm.asunto}
@@ -1386,21 +1467,21 @@ export default function DashboardTecnicos() {
                                         {currentForm.fecha}
                                     </label>
                                 </Grid >
-                                <Grid item xs={8}>
+                                <Grid item xs={12}>
                                     <label>
                                         <b>Departamento:  </b>
                                         {currentForm.departamento}
                                     </label>
 
                                 </Grid >
-                                <Grid item xs={4}>
+                                <Grid item xs={12}>
                                     <label>
                                         <b>Prioridad:  </b>
                                         {currentForm.prioridad}
                                     </label>
 
                                 </Grid >
-                                <Grid item xs={6}>
+                                <Grid item xs={12}>
                                     <label>
                                         <b>Responsable:  </b>
                                         {currentForm.encargado.name}
@@ -1408,14 +1489,14 @@ export default function DashboardTecnicos() {
 
                                 </Grid >
                                
-                                <Grid item xs={6}>
+                                <Grid item xs={12}>
                                     <label>
                                         <b>Tipo:  </b>
                                         {currentForm.tipotrabajo}
                                     </label>
                                 </Grid >
                                 <Grid item xs={12}>
-                                <FormLabel id="demo-radio-buttons-group-label">Descripcion:</FormLabel>
+                                <FormLabel id="demo-radio-buttons-group-label">Descripción:</FormLabel>
                                     <TextareaAutosize
                                         style={{ textTransform: "uppercase" }}
                                         aria-label="minimum height"
@@ -1590,9 +1671,9 @@ export default function DashboardTecnicos() {
                                     disablePortal
                                     id="combo-box-demo"
                                     onChange={(event, newValue) => {
-                                        selectEquipo(newValue);
+                                        selectEquipoCalibracion(newValue);
                                     }}
-                                    options={codigosEquipo}
+                                    options={codigosEquipoCal}
                                     renderInput={(params) => <TextField {...params} fullWidth label="Código Equipo" type="text" />}
                                 />
                             </Grid>
@@ -1639,7 +1720,146 @@ export default function DashboardTecnicos() {
                         </Button>
 
                     </ModalFooter>
-                </Modal>            
+                </Modal>      
+
+
+                <Modal isOpen={modalReportexistenteCal}>
+                    <ModalHeader>
+                        <div><h4>Visualizar Reporte</h4></div>
+                    </ModalHeader>
+                    <ModalBody style={{height:500,overflowY:"scroll"}}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <div className="name-outlined">{currentReporte.id}</div>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Id Orden:  </b>
+                                    {currentReporte.orden_id}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Técnico: </b>
+                                    {currentReporte.tecnico}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Equipo:  </b>
+                                    {currentReporte.equipo}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Código:</b>
+                                    {currentReporte.codigo_equipo}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Tipo:  </b>
+                                    {currentReporte.tipom}
+                                </label>
+
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Código Calibración:  </b>
+                                    {currentReporte.codigo_calibracion}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Fecha Calibración:  </b>
+                                    {currentReporte.fecha_calibracion}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Proxima Calibración:  </b>
+                                    {currentReporte.fecha_proximacalibracion}
+                                </label>
+                            </Grid >
+                            <Grid item xs={12}>
+                                <label>
+                                    <b>Fecha Verificación:  </b>
+                                    {currentReporte.fecha_verificacion}
+                                </label>
+                            </Grid >
+                          
+
+                    
+                        </Grid>
+                    </ModalBody>
+                    <ModalFooter>
+                        {/* <Button
+                            variant="contained"
+                            className="boton-modal-pdf"
+                            startIcon={<PrintIcon />}
+                            onClick={downloadPdf} >
+                            Imprimir
+                        </Button> */}
+                        <Button
+                            variant="outlined"
+                            className="boton-modal-d"
+                            onClick={() => { setModalReportexistenteCal(false) }}
+                        >
+                            Cerrar
+                        </Button>
+                    </ModalFooter>
+                </Modal>    
+
+                <Modal isOpen={modalEditarReporteCal}>
+                <ModalHeader>
+                    <div><h5>Editar Reporte Calibraciones - {currentReporte.orden_id}</h5></div>
+                </ModalHeader>
+                <ModalBody style={{height:250,overflowY:"scroll"}}>
+                    <Grid container spacing={1}>
+                    <Grid item xs={12}>
+                                <TextField id="outlined-basic" name="codigo_calibracion" onChange={createReporte} label="Código Calibración" variant="outlined" fullWidth />
+                            </Grid>
+                        <Grid item xs={6}>
+                                <Autocomplete
+                                    disableClearable
+                                    id="combo-box-demo"
+                                    className='seleccionadortabla'
+                                    onChange={(event, newValue) => {
+                                        setRtmantenimiento(newValue);
+                                    }}
+                                    options={["CALIBRACIÓN", "VERIFICACIÓN"]}
+                                    renderInput={(params) => <TextField name="tipom"  {...params} fullWidth label="T.Mantenimiento" type="text" />}
+                                />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="fecha_verificacion" onChange={createReporte} label="Fecha Verificación" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="fecha_calibracion" onChange={createReporte} label="Fecha Calibración" variant="outlined" fullWidth />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <TextField id="outlined-basic" name="fecha_proximacalibracion" onChange={createReporte} label="Fecha Proxima Calibración" variant="outlined" fullWidth />
+                            </Grid>
+                            
+                        
+                    </Grid>
+
+                </ModalBody>
+                <ModalFooter>
+                    <Button variant="outlined"
+                        className="boton-modal-d2"
+                        disabled={btnReport} onClick={ActualizarReporteCal}>Añadir</Button>
+                    <Button
+                        variant="contained"
+                        className="boton-modal-d"
+                        onClick={() => { setModalEditarReporteCal(false) }}
+                    >
+                        Cancelar
+                    </Button>
+
+                </ModalFooter>
+            </Modal>
+  
 
 
             <Backdrop
