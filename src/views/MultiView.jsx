@@ -57,8 +57,9 @@ import PruebasPdf from "./PruebasPdf";
 import EquiposCalibracionview from "./EquiposCalibración";
 import ParametrosView from "./DeclararParametros";
 import HojaVidaCalibraciones from "./HojaVidaCalibraciones";
-import PlanCalibraciones from "./PlanCalibraciones";
+// import PlanCalibraciones from "./PlanCalibraciones"; importante eliminar esta vista
 import ActividadesView from "./DeclararActividades";
+import MantenimientoCalibraciones from "./PlanMantenimientoCalibraciones";
 
 export default function MultiView() {
     const currentUser = useSelector(state => state.auths);
@@ -408,7 +409,7 @@ export default function MultiView() {
                 <Route path="calibracion/planmantenimiento"
                     element={
                         <PrivateRoute auth={currentUser.permisions.gestionr}>
-                            <PlanCalibraciones />
+                            <MantenimientoCalibraciones />
                         </PrivateRoute>
 
                     }
