@@ -591,17 +591,46 @@ export default function Inventarioview() {
 
 	
 	
-	const crearExcel = () => {
-		console.log("hola mundo");
-		console.log(data);
-		const myHeader = ["equipo", "codigo", "marca", "modelo"];
-		const worksheet = XLSX.utils.json_to_sheet(data.filter(FilterBySituacion), { header: myHeader });
-		const workbook = XLSX.utils.book_new();
-		XLSX.utils.sheet_add_aoa(worksheet, [["Equipo", "Código", "Marca", "Modelo"]], { origin: "A1" });
-		XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-		worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
-		XLSX.writeFile(workbook, "Equipos.xlsx", { compression: true });
-	}
+	// const crearExcel = () => {
+	// 	console.log("hola mundo");
+	// 	console.log(data);
+	// 	const myHeader = ["equipo", "codigo", "marca", "modelo"];
+	// 	const worksheet = XLSX.utils.json_to_sheet(data.filter(FilterBySituacion), { header: myHeader });
+	// 	const workbook = XLSX.utils.book_new();
+	// 	XLSX.utils.sheet_add_aoa(worksheet, [["Equipo", "Código", "Marca", "Modelo"]], { origin: "A1" });
+	// 	XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+	// 	worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
+	// 	XLSX.writeFile(workbook, "Equipos.xlsx", { compression: true });
+	 // }
+
+	 const crearExcel = () => {
+
+        let aux_equipo = JSON.parse(JSON.stringify(data))
+        let crono = aux_equipo.filter(FilterBySituacion).map((item)=>{
+            let format_object = {
+                codigo_equipo: item.codigo,
+                equipo: item.equipo.nombre,
+				tipo_equipo: item.tipo_equipo.nombre,
+				ubicacion: item.ubicacion.nombre,
+                marca: item.marca,
+                modelo: item.modelo,
+                serie: item.serie,
+				propietario: item.propietario.nombre,
+				responsable: item.responsable.nombre,
+				importancia:item.importancia
+
+            }
+            return format_object
+        })
+		const myHeader = ["codigo_equipo","equipo","tipo_equipo","ubicacion","marca","modelo","serie","propietario","responsable","importancia"];
+        const worksheet = XLSX.utils.json_to_sheet(crono, { header: myHeader });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.sheet_add_aoa(worksheet, [["Código","Equipo","Tipo Equipo","Ubicación","Marca","Modelo","Serie","Propietario","Responsable","Importancia"]], { origin: "A1" });
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
+        XLSX.writeFile(workbook, "InventarioHospiRio.xlsx", { compression: true });
+
+    }
 
 	const mostrarModalReubicar = (_data) => {
 		let aux = JSON.parse(JSON.stringify(_data))
