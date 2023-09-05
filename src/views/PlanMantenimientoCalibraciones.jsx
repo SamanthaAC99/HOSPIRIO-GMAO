@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import IconButton from '@mui/material/IconButton';
 import Checkbox from '@mui/material/Checkbox';
 import Swal from 'sweetalert2';
@@ -134,7 +134,7 @@ export default function MantenimientoCalibraciones(){
 
                 })
                 try {
-                    const ref = doc(db, "ingreso", `${planes.id}`);
+                    const ref = doc(db, "ingresocalibracion", `${planes.id}`);
                     updateDoc(ref, {
                         mantenimientos: mantenimientos_edited
                     })
@@ -246,7 +246,7 @@ export default function MantenimientoCalibraciones(){
         }).then((result) => {
             if (result.isConfirmed) {
 
-                const ref = doc(db, "ingreso", `${planes.id}`);
+                const ref = doc(db, "ingresocalibracion", `${planes.id}`);
                 updateDoc(ref, {
                     mantenimientos: mantenimientos_edited
                 })
@@ -296,7 +296,7 @@ export default function MantenimientoCalibraciones(){
         }).then((result) => {
             if (result.isConfirmed) {
                 setPlanes(aux_equipo);
-                const ref = doc(db, "ingreso", `${aux_equipo.id}`);
+                const ref = doc(db, "ingresocalibracion", `${aux_equipo.id}`);
                 updateDoc(ref, {
                     mantenimientos: datos_nuevos
                 })
@@ -376,7 +376,7 @@ export default function MantenimientoCalibraciones(){
                             mantenimientos.push(objeto_mantenimiento)
                         }
                         equipo_seleccionado.mantenimientos = mantenimientos
-                        const ref = doc(db, "ingreso", `${equipo_seleccionado.id}`);
+                        const ref = doc(db, "ingresocalibracion", `${equipo_seleccionado.id}`);
                         updateDoc(ref, {
                             mantenimientos: mantenimientos,
                         });
@@ -422,7 +422,7 @@ export default function MantenimientoCalibraciones(){
                     mantenimientos.push(objeto_mantenimiento)
                 }
                 equipo_seleccionado.mantenimientos = mantenimientos
-                const ref = doc(db, "ingreso", `${equipo_seleccionado.id}`);
+                const ref = doc(db, "ingresocalibracion", `${equipo_seleccionado.id}`);
                 updateDoc(ref, {
                     mantenimientos: mantenimientos,
                 });
@@ -452,7 +452,7 @@ export default function MantenimientoCalibraciones(){
         try {
             setDeshabilitar(true)
             const mes_actual = new Date().getMonth() + 1
-            const equiposRef = await getDocs(collection(db, "ingreso"));
+            const equiposRef = await getDocs(collection(db, "ingresocalibracion"));
             let equipos_aux = []
             equiposRef.forEach((doc) => {
                 equipos_aux.push(doc.data())
@@ -972,28 +972,7 @@ export default function MantenimientoCalibraciones(){
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            {/* <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Inicio"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Final"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
-                            </Grid> */}
+            
                             <Grid item xs={6}>
                                 <Autocomplete
                                     disableClearable

@@ -538,14 +538,25 @@ export default function Inventarioview() {
 		navigate('hojadevida')
 	}
 	const agregarAccesorio = () => {
-		let accesorios_declarados = JSON.parse(JSON.stringify(currentEquipo.accesorios))
-		accesorios_declarados.push(acc1)
-		console.log(accesorios_declarados)
-		setAccesoriosEquipo(accesorios_declarados)
+		let aux_equipos = JSON.parse(JSON.stringify(data))
+		let aux_equipo = JSON.parse(JSON.stringify(currentEquipo))
+		
+		aux_equipo.accesorios.push(acc1)
+		setAccesoriosEquipo(aux_equipo.accesorios)
+		let equipos_edited = aux_equipos.map(item=>{
+			if(item.id === aux_equipo.id){
+				return aux_equipo
+			}else{
+				return item
+			}
+
+		})
+		setData(equipos_edited)
 		const ref = doc(db, "ingreso", `${currentEquipo.id}`);
 		updateDoc(ref, {
-			accesorios: accesorios_declarados,
+			accesorios: aux_equipo.accesorios,
 		});
+		
 		setReloadAuto(!reloadAuto)
 		Swal.fire({
 			icon: 'success',
