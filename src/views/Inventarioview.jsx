@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
+import Typography from '@mui/material/Typography';
 import { collection, setDoc, query, doc, deleteDoc, updateDoc,getDocs,getDoc } from "firebase/firestore";
 import { styled } from '@mui/material/styles';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
@@ -683,8 +684,11 @@ export default function Inventarioview() {
 	return (
 		<>
 			<Container style={{paddingTop:10}}>
+			<Typography component="div" variant="h3" className="princi3" >
+          INVENTARIO EQUIPOS ACTIVOS
+        </Typography>
 				<Grid container spacing={{ xs: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-
+				
 					<Grid item xs={12} md={12}>
 
 						<Button
