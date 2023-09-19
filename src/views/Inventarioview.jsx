@@ -399,7 +399,7 @@ export default function Inventarioview() {
 	};
 
 	const IngresarEquipo = async () => {
-		
+		let aux_equipos = JSON.parse(JSON.stringify(data))
 		setDeshabilitar(true)
 		let code = generateCodigo()
 		var valorNuevo = {
@@ -431,7 +431,7 @@ export default function Inventarioview() {
 			accesorios: [],
 
 		}
-		console.log(valorNuevo)
+		
 		if (file === null) {
 			valorNuevo.img = no_img
 		} else {
@@ -439,6 +439,9 @@ export default function Inventarioview() {
 			console.log(url)
 			valorNuevo.img = url
 		}
+		aux_equipos.push(valorNuevo)
+		setData(aux_equipos)
+		equipos_totales.current = aux_equipos
 		Swal.fire(
 			'Equipo Registrado',
 			'',
@@ -796,6 +799,25 @@ export default function Inventarioview() {
 							BUSCAR
 						</Button>
 					</Grid>
+					<Grid item xs={12} sm={12} md={6}>
+					<Stack spacing={2} direction={"row"} >
+						<Stack spacing={2} direction={"row"} alignItems={"center"} >
+							<strong>Editar:</strong><IconButton aria-label="edit" color='warning'><EditIcon /></IconButton>
+						</Stack>
+					
+						<Stack spacing={2} direction={"row"} alignItems={"center"} >
+							<strong>Eliminar:</strong><IconButton aria-label="delete" color='rojo'  ><DeleteIcon /></IconButton>
+						</Stack>
+						<Stack spacing={2} direction={"row"} alignItems={"center"} >
+							<strong>Deshabilitar Equipo:</strong><IconButton aria-label="baja"  color='morado'  ><PhonelinkOffIcon /></IconButton>
+						</Stack>
+						<Stack spacing={2} direction={"row"} alignItems={"center"} >
+							<strong>Reubicar:</strong><IconButton aria-label="reubicar"  color='crema'  ><EditLocationIcon /></IconButton>
+						</Stack>
+		
+					</Stack>
+
+					</Grid>
 
 
 
@@ -1055,7 +1077,7 @@ export default function Inventarioview() {
 				</ModalFooter>
 			</Modal>
 
-			<Modal className="{width:0px}" isOpen={modalInsertar}>
+			<Modal  isOpen={modalInsertar}>
 				<ModalHeader>
 					<div><h3>Ingresar Nuevo Equipo</h3></div>
 				</ModalHeader>

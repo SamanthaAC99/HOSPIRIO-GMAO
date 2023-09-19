@@ -41,6 +41,8 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { generarPdf } from "../scripts/pdfReporte";
+// dependencias para enviar correos electronicos
+import emailjs from '@emailjs/browser';
 //
 import Swal from 'sweetalert2';
 import {
@@ -90,6 +92,7 @@ export default function DashboardTecnicos() {
     const [ordenesTecnico, setOrdenesTecnico] = useState([]);
     // variables del modal reporte
     const codigos_totales = useRef([])
+    const codigos_totales_calibraciones = useRef([])
 
     const [nreporte, setNreporte] = useState(reporte_structure);
     const [nreporte2, setNreporte2] = useState(reporte_calibracion);
@@ -134,6 +137,18 @@ export default function DashboardTecnicos() {
         });
 
     }
+
+    // enviar correo
+    const sendEmail = (__orden) => {
+
+        emailjs.send("service_22xh03a", "template_o2wssge", {
+            n_orden: __orden.id,
+            asunto: __orden.asunto,
+            departamento:"Jefe de Mantenimiento",
+            to_email:__orden.correo,
+            reply_to:currentUser.email,
+        }, "Z1YvVmzlMz2V1hOEO");
+    };
 
     const calcularHoras = (data) => {
         const arreglo = data
@@ -200,9 +215,7 @@ export default function DashboardTecnicos() {
             } else {
                 setBtnReport(false);
             }
-            let aux_codigos = JSON.parse(JSON.stringify(codigos_totales.current))
-            let codigos_filter = aux_codigos.filter(item => item.departamento.nombre === data.departamento).map(item => (item.codigo))
-            setCodigosEquipo(codigos_filter)
+           
             // setModalReportin(true);
             setCurrentOrden(data);
 
@@ -224,11 +237,14 @@ export default function DashboardTecnicos() {
              
               }).then((result) => {
                 if (result.isConfirmed) {
+                    let aux_codigos = JSON.parse(JSON.stringify(codigos_totales.current))
+                    let codigos_filter = aux_codigos.filter(item => item.departamento.nombre === data.departamento).map(item => (item.codigo))
+                    setCodigosEquipo(codigos_filter)
                     setModalReportin(true)
-                } else if (
-                  /* Read more about handling dismissals below */
-                  result.dismiss === Swal.DismissReason.cancel
-                ) {
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    let aux_codigos = JSON.parse(JSON.stringify(codigos_totales_calibraciones.current))
+                    let codigos_filter = aux_codigos.filter(item => item.departamento.nombre === data.departamento).map(item => (item.codigo))
+                    setCodigosEquipoCal(codigos_filter)
                     setModalReportesCalibracion(true)
                 }
               })
@@ -394,12 +410,15 @@ export default function DashboardTecnicos() {
                         lista_tecnicos[i].tiempos = tiempos
                         lista_tecnicos[i].play = true
                         lista_tecnicos[i].pause = true
+
+                        
                     }
                     const reference = doc(db, "ordenes", `${data.id}`);
                     updateDoc(reference, {
                         tecnicos: lista_tecnicos,
                         estado: "Solventado",
                     });
+                    sendEmail(data)
                     swalWithBootstrapButtons.fire(
                         'Felicidades!',
                         'Acitividad Finalizada',
@@ -453,7 +472,7 @@ export default function DashboardTecnicos() {
                 inventarioC.push(doc.data());
             });
             var codigosC = inventarioC.map(item => item.codigo);
-            codigos_totales.current = inventarioC;
+            codigos_totales_calibraciones.current = inventarioC;
             setInventariocal(inventarioC);
             setCodigosEquipoCal(codigosC);
         });
