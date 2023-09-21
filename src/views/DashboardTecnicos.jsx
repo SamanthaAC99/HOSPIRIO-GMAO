@@ -285,22 +285,29 @@ export default function DashboardTecnicos() {
         setRowsPendientes(+event.target.value);
         setPagePendientes(0);
     };
+      
     const pause = async (data) => {
         await Swal.fire({
-            title: 'Seleccione el motivo de la pausa',
-            input: 'select',
-            inputOptions: {
-                'Suspendida': 'Suspendida',
-                'Repuestos': 'Espera de Repuestos',
-                'Disposicion': 'Disp. Área',
-                'Autorizacion': 'Autorización'
-            },
-            inputPlaceholder: 'Motivo',
+            // title: 'Seleccione el motivo de la pausa',
+            // input: 'select',
+            // inputOptions: {
+            //     'Suspendida': 'Suspendida',
+            //     'Repuestos': 'Espera de Repuestos',
+            //     'Disposicion': 'Disp. Área',
+            //     'Autorizacion': 'Autorización'
+            // },
+            // inputPlaceholder: 'Motivo',
+            input: 'textarea',
+        inputLabel: 'Motivo',
+        inputPlaceholder: 'Indique el motivo de la pausa',
+        inputAttributes: {
+          'aria-label': 'Indique el motivo de la pausa'
+        },
             showCancelButton: true,
             inputValidator: (value) => {
                 return new Promise(async (resolve) => {
                     if (value === '') {
-                        resolve('Necesita seleccionar una opción')
+                        resolve('Necesita especificar el motivo')
                     } else {
                         const reference = doc(db, "ordenes", `${data.id}`);
                         var razonparada = data.tecnicos.find(item => item.id === currentUser.uid).motivos_parada;

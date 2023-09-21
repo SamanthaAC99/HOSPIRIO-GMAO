@@ -213,12 +213,10 @@ export default function GestionOtVIew() {
         
         
         Swal.fire({
-          
             icon: 'warning',
             title: 'RECUERDE INICIAR TAREA',
             text:"¡Designar Prioridad, Tipo de Trabajo, Técnicos y Responsable!",
-            showConfirmButton: false,
-            timer: 3500
+            showConfirmButton: true,
           })
     }
     const agregarEncargado = () => {

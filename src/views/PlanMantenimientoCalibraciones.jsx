@@ -3,6 +3,7 @@ import IconButton from '@mui/material/IconButton';
 import Checkbox from '@mui/material/Checkbox';
 import Swal from 'sweetalert2';
 import Grid from "@mui/material/Grid";
+import Typography from '@mui/material/Typography';
 import { v4 } from 'uuid';
 import TextField from '@mui/material/TextField';
 import AddIcon from '@mui/icons-material/Add';
@@ -725,10 +726,11 @@ export default function MantenimientoCalibraciones(){
     return(
 
         <>
-           <Container maxWidth="lg" sx={{ paddingTop: 10 }}>
+           <Container maxWidth="lg" sx={{ paddingTop: 2 }}>
+           <Typography component="div" variant="h3" className="princi3" >
+          MANTENIMIENTO EQUIPOS MEDICIÓN
+        </Typography>
                 <Grid container spacing={2}>
-
-
                     <Grid item xs={6}>
                         <Button variant="contained" onClick={getData} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
                             LEER DATOS

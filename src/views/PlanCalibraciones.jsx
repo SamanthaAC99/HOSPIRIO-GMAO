@@ -696,10 +696,9 @@ export default function PlanCalibraciones() {
     }, [])
     return (
         <>
+        
             <Container maxWidth="lg" sx={{ paddingTop: 10 }}>
                 <Grid container spacing={2}>
-
-
                     <Grid item xs={12}>
                         <Button variant="contained" onClick={getData} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
                             LEER DATOS
