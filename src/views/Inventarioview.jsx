@@ -267,6 +267,12 @@ export default function Inventarioview() {
 				const ref = doc(db, "ingreso", `${_data.id}`);
 				let equipos_salvados = aux_equipos.filter(item=> item.id !== _data.id)
 				setData(equipos_salvados)
+				equipos_totales.current = equipos_salvados
+				let codigos = equipos_salvados.map((item, index) => {
+					return item.codigo
+				})
+				let aux_codigos = ordenarCodigos(codigos)
+				setCodigos(aux_codigos)
 				updateDoc(ref, {
 					situacion: "Inactivo",
 				});
@@ -376,6 +382,12 @@ export default function Inventarioview() {
 		}).then(async (result) => {
 			if (result.isConfirmed) {
 				let equipos_salvados = aux_equipos.filter(item=> item.id !== __dato.id)
+				equipos_totales.current = equipos_salvados
+				let codigos = equipos_salvados.map((item, index) => {
+					return item.codigo
+				})
+				let aux_codigos = ordenarCodigos(codigos)
+				setCodigos(aux_codigos)
 				setData(equipos_salvados)
 				await deleteDoc(doc(db, "ingreso", `${__dato.id}`));
 				Swal.fire(
