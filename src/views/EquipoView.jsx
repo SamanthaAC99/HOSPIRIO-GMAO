@@ -178,7 +178,6 @@ export default function EquipoView() {
                     <Grid item xs={12} md={7}>
                         <TextField id="outlined-basic" inputProps={{ style: { textTransform: "uppercase" } }} value={nombre} error={false} fullWidth label="EQUIPO" variant="outlined" onChange={(event) => { setNombre(event.target.value) }} />
                     </Grid>
-          
                     <Grid item xs={12} md={3}>
                         <Button variant="contained" sx={{ height: "100%", width: "100%" }} onClick={agregarEquipo}>Agregar Equipo</Button>
                     </Grid>

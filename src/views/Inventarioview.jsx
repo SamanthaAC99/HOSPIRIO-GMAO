@@ -142,7 +142,8 @@ export default function Inventarioview() {
 	const [equipoFilter, setEquipoFilter] = useState("");
 	//varbiables para la busqueda por codigo
 	const [codigos, setCodigos] = useState([]);
-
+	// variables para generar el excel
+	const [modalExcel,setModalExcel] = useState(false);
 	//funciones para la busqueda por codigo
 	const ordenarCodigos = (lista) => {
 		lista.sort(function (a, b) {
@@ -567,6 +568,7 @@ export default function Inventarioview() {
 			}
 
 		})
+		setCurrentEquipo(aux_equipo);
 		setData(equipos_edited)
 		const ref = doc(db, "ingreso", `${currentEquipo.id}`);
 		updateDoc(ref, {
@@ -1460,6 +1462,31 @@ export default function Inventarioview() {
 							>
 								Crear Tipo de Equipo
 							</Button>
+						</Grid>
+					</Grid>
+
+				</ModalBody>
+
+				<ModalFooter>
+
+
+					<Button
+						variant="contained"
+						onClick={() => setModalParametros(false)}
+					>
+						Cerrar
+					</Button>
+				</ModalFooter>
+			</Modal>
+
+			<Modal isOpen={modalExcel}>
+				<ModalHeader>
+					<div><h3>Crear Excel</h3></div>
+				</ModalHeader>
+				<ModalBody>
+					<Grid container spacing={2}>
+						<Grid item xs={12} >
+						
 						</Grid>
 					</Grid>
 
