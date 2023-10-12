@@ -219,8 +219,8 @@ export default function Inventarioview() {
 		setData(
 			aux_equipos.filter(item => item.situacion === "Activo")
 		);
-		equipos_totales.current = aux_equipos;
-		let codigos = aux_equipos.map((item, index) => {
+		equipos_totales.current = aux_equipos.filter(item => item.situacion === "Activo");
+		let codigos = aux_equipos.filter(item => item.situacion === "Activo").map((item, index) => {
 			return item.codigo
 		})
 		let aux_codigos = ordenarCodigos(codigos)
