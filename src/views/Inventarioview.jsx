@@ -452,7 +452,7 @@ export default function Inventarioview() {
 			console.log(url)
 			valorNuevo.img = url
 		}
-		aux_equipos.push(valorNuevo)
+		aux_equipos.unshift(valorNuevo)
 		setData(aux_equipos)
 		equipos_totales.current = aux_equipos
 		Swal.fire(
