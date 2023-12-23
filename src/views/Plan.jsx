@@ -28,7 +28,7 @@ import {
     ModalFooter,
 } from "reactstrap";
 // dependencias para las tablas
-
+import axios from "axios";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -78,8 +78,8 @@ export default function Plan() {
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     //variables para los filtros
-    const [departamentos, setDepartamentos] = useState([{ nombre: "sin cargar", codigo: 0 }]);
-    const [departamento, setDepartamento] = useState({ nombre: "", codigo: 0 });
+    const [departamentos, setDepartamentos] = useState([{ nombre: "TODOS", codigo: 1000 }]);
+    const [departamento, setDepartamento] = useState({ nombre: "TODOS", codigo: 1000 });
     const [nombresEquipo, setNombresEquipo] = useState([]);
     const [equipo, setEquipo] = useState({ nombre: "", codigo: 0 });
     // variables para la tabla de  mantenimientos
@@ -94,12 +94,13 @@ export default function Plan() {
     const [pageMan, setPageMan] = useState(0);
     const [pagesMan, setPagesMan] = useState(10);
     //variables para reporte
-    const [flagTipo,setFlagTipo] = useState(true)
-    const [flagDepartamento,setFlagDepartamento] = useState(true)
+    const [year,setYear] = useState(2023)
+    const [mesReporte,setMesReporte] = useState(1)
     const [reporteTipo,setReporteTipo] = useState(1)
     const [tipoEquipo,setTipoEquipo] = useState(1)
 
     // funciones para la tabla de mantenimientos
+    const [modalExcel,setModalExcel] = useState();
     const handleVerificacion = (__data) => {
         let aux_data = JSON.parse(JSON.stringify(__data))
         let aux_equipo = JSON.parse(JSON.stringify(planes))
@@ -170,8 +171,7 @@ export default function Plan() {
         setPagesMan(+event.target.value);
         setPageMan(0);
     };
-
-    //
+   
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -307,19 +307,7 @@ export default function Plan() {
     }
 
     // funciones para crear el plan
-    const handleReporte = (event) => {
-        if(parseInt(event.target.value) === 2){
-            setFlagTipo(false)
-            setFlagDepartamento(false)
-            setReporteTipo(2)
-        }else if(parseInt(event.target.value) === 2){
-            setFlagTipo(true)
-            setFlagDepartamento(true)
-            setReporteTipo(1)
-        }
-       
-    };
-
+    
     const handleChangePeriodicidad = (event) => {
         setEquipoPeriodicidad(parseInt(event.target.value));
     };
@@ -610,107 +598,47 @@ export default function Plan() {
 
  
     const generarReporte=()=>{
+        var fechaHoy = new Date();
+        var dia = fechaHoy.getDate();
+        var mes = fechaHoy.getMonth() + 1; // Meses en JavaScript van de 0 a 11
+        var anio = fechaHoy.getFullYear();
+        mes = mes < 10 ? '0' + mes : mes;
+        // Agregar un cero al día si es menor que 10
+        dia = dia < 10 ? '0' + dia : dia;
+        // Formatear la fecha en 'MM/DD/YYYY'
+        var fechaFormateada = `${dia}/${mes}/${anio}`;
+        const datosJson = {
+            date: fechaFormateada,
+            month: mesReporte,
+            year:year,
+            departamento: departamento.codigo,
+            tipo:tipoEquipo
+          };
+          console.log(datosJson)
+          // Realiza la solicitud GET con Axios y agrega los datos en el cuerpo
+          axios({
+            method: 'post',
+            url: 'http://ec2-18-223-113-2.us-east-2.compute.amazonaws.com/excel',
+            data: datosJson,  // Agrega los datos JSON en el cuerpo
+            headers: {
+              'Content-Type': 'application/json',  // Especifica el tipo de contenido como JSON
+            },
+          })
+            .then(response => {
+              // Manejar la respuesta del servidor
+              let aux = response.data
+              console.log(response.data);
+              var enlaceURL = aux.url;
+
+            // Abrir enlace en una nueva pestaña
+            window.open(enlaceURL, '_blank');
+            })
+            .catch(error => {
+              // Manejar errores
+              console.error(error);
+            });
+          
        
- 
-        if(mesFiltro.nombre === "TODOS"){
-            let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
-            let equipos_filtrados= []
-            let dataFilter = []
-            if(reporteTipo === 2){
-                if(tipoEquipo === 0){
-                    equipos_filtrados = equipos_mantenimiento
-                }else{
-                    equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
-                }
-            
-                if(departamento.nombre === "TODOS"){
-                    dataFilter = equipos_filtrados
-                }else{
-                    dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
-                }
-    
-            }else if(reporteTipo ===1){
-                dataFilter = equipos_mantenimiento   
-            }
-
-            let format_data = dataFilter.map((item) =>{
-                let string_fechas = ""
-                
-                item.mantenimientos.forEach(item=> {
-                    let fecha = new Date(item.start).toLocaleString('es-EC', { dateStyle: 'short'})
-                    string_fechas += fecha+" ; "
-                })
-                let data = {
-                    codigo:item.codigo,
-                    departamento : item.departamento.nombre,
-                    equipo: item.equipo.nombre,
-                    tipo_equipo: item.tipo_equipo.nombre,
-                    man_periodicidad: item.mantenimientos[0].periodicidad,
-                    man_inicio: new Date(item.mantenimientos[0].start).toLocaleString('es-EC', { dateStyle: 'short'}),
-                    fechas: string_fechas
-                }
-        
-                return data
-            })
-
-            const myHeader = ["departamento","codigo","equipo","tipo_equipo","man_periodicidad","man_inicio","fechas"];
-            const worksheet = XLSX.utils.json_to_sheet(format_data, { header: myHeader });
-            XLSX.utils.sheet_add_aoa(worksheet, [["Departamento", "Código", "Equipo","Tipo de Equipo","Periodicidad","Fecha De Inicio","Fechas"]], { origin: "A1" });
-            // XLSX.utils.sheet_add_aoa(worksheet, [[1],["hola"]], { origin: "B5" });
-            const workbook = XLSX.utils.book_new();
-           
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-            worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 },{ wch: 60 }];
-            XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
-        }else{
-            let equipos_mantenimiento = JSON.parse(JSON.stringify(eventos))
-            let equipos_filtrados= []
-            let dataFilter = []
-            if(reporteTipo === 2){
-                if(tipoEquipo === 0){
-                    equipos_filtrados = equipos_mantenimiento
-                }else{
-                    equipos_filtrados = equipos_mantenimiento.filter(item=> item.tipo_equipo.codigo === tipoEquipo)
-                }
-            
-                if(departamento.nombre === "TODOS"){
-                    dataFilter = equipos_filtrados
-                }else{
-                    dataFilter = equipos_filtrados.filter(item=> item.departamento.nombre === departamento.nombre)
-                }
-    
-            }else if(reporteTipo ===1){
-                dataFilter = equipos_mantenimiento   
-            }
-
-            let format_data = []
-            dataFilter.forEach(item=>{
-                item.mantenimientos.forEach(element=>{
-                    let data = {
-                        codigo:item.codigo,
-                        departamento : item.departamento.nombre,
-                        equipo: item.equipo.nombre,
-                        tipo_equipo: item.tipo_equipo.nombre,
-                        man_periodicidad: element.periodicidad,
-                        man_inicio: element.start
-                    }
-                    format_data.push(data)
-                })
-            })
-
-           let filter_by_mes = format_data.filter(filterbyMonth)
-            console.log(filter_by_mes)
-            const myHeader = ["departamento","codigo","equipo","tipo_equipo","man_periodicidad","man_inicio"];
-            const worksheet = XLSX.utils.json_to_sheet(filter_by_mes, { header: myHeader });
-            XLSX.utils.sheet_add_aoa(worksheet, [["Departamento", "Código", "Equipo","Tipo de Equipo","Periodicidad","Fecha De Inicio"]], { origin: "A1" });
-            // XLSX.utils.sheet_add_aoa(worksheet, [[1],["hola"]], { origin: "B5" });
-            const workbook = XLSX.utils.book_new();
-           
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-            worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 },{ wch: 60 }];
-            XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
-
-        }
         
     }
     const filterbyMonth =(item)=>{
@@ -719,7 +647,6 @@ export default function Plan() {
         if(mes === mesFiltro.codigo){
             return item
         }
-
     }
 
     useEffect(() => {
@@ -737,6 +664,7 @@ export default function Plan() {
                             LEER DATOS
                         </Button>
                     </Grid>
+                  
                     <Grid item xs={6}>
                         <Button variant="contained" onClick={()=>{setModalReportes(true)}} disabled={deshabilitar} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
                             GENERAR REPORTE
@@ -775,6 +703,7 @@ export default function Plan() {
                             Buscar
                         </Button>
                     </Grid>
+                    
                     <Grid item xs={12} md={2}>
                         <Button variant="outlined" size="large"     disabled ={deshabilitar} className="boton-plan" fullWidth startIcon={<AddIcon />} onClick={() => mostrarModalInsertar()} >
                             Crear Plan
@@ -953,55 +882,59 @@ export default function Plan() {
                 </ModalFooter>
             </Modal>
 
-            <Modal className="{width:0px}" isOpen={modalReportes}>
+            <Modal  isOpen={modalReportes}>
                 <ModalHeader>
-                    <div><h3>Generar Reporte de Mantenimiento</h3></div>
+                    <div><h5>Generar Reporte de Mantenimiento</h5></div>
                 </ModalHeader>
                 <ModalBody>
                     <FormGroup>
-                        <Grid container spacing={4}>
-                            <Grid item xs={12}>
-                            <FormControl fullWidth>
-                                    <InputLabel id="demo-simple-select-label">Generar reporte por</InputLabel>
+                        <Grid container spacing={2}>
+                            <Grid item md={6} xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Año</InputLabel>
                                     <Select
                                         labelId="demo-simple-select-label"
-                                        id="demo-simple-select"
-                                        value={reporteTipo}
-                                        label="Generar reporte por"
-                                        onChange={handleReporte}
+                                        id="demo-simple-select" 
+                                        value={year}
+                                        label="Año"
+                                        onChange={(event)=>{setYear(event.target.value)}}
                                     >
-                                        <MenuItem value={1}>Todos</MenuItem>
-                                        <MenuItem value={2}>Específico</MenuItem>
+                                        <MenuItem value={2023}>2023</MenuItem>
+                                        <MenuItem value={2024}>2024</MenuItem>
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            {/* <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Inicio"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
+                            <Grid item md={6} xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel id="demo-simple-select-label">Mes</InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select" 
+                                        value={mesReporte}
+                                        label="Año"
+                                        onChange={(event)=>{setMesReporte(event.target.value)}}
+                                    >
+                                        <MenuItem value={1}>Enero</MenuItem>
+                                        <MenuItem value={2}>Febrero</MenuItem>
+                                        <MenuItem value={3}>Marzo</MenuItem>
+                                        <MenuItem value={4}>Abril</MenuItem>
+                                        <MenuItem value={5}>Mayo</MenuItem>
+                                        <MenuItem value={6}>Junio</MenuItem>
+                                        <MenuItem value={7}>Julio</MenuItem>
+                                        <MenuItem value={8}>Agosto</MenuItem>
+                                        <MenuItem value={9}>Septiembre</MenuItem>
+                                        <MenuItem value={10}>Octubre</MenuItem>
+                                        <MenuItem value={11}>Noviembre</MenuItem>
+                                        <MenuItem value={12}>Diciembre</MenuItem>
+                                    </Select>
+                                </FormControl>
                             </Grid>
-                            <Grid item xs={6}>
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <DesktopDatePicker
-                                        label={"Final"}
-                                        inputFormat="MM/dd/yyyy"
-                                        value={time1}
-                                        onChange={SelectFecha1}
-                                        renderInput={(params) => <TextField fullWidth {...params} />}
-                                    />
-                                </LocalizationProvider>
-                            </Grid> */}
-                            <Grid item xs={6}>
+                      
+                            <Grid item xs={12}>
                                 <Autocomplete
                                     disableClearable
                                     id="combo-box-demo"
-                                    disabled = {flagDepartamento}
+                                    defaultValue={{codigo:1000,nombre:"TODOS"}}
                                     options={departamentos}
                                     getOptionLabel={(option) => {
                                         return option.nombre;
@@ -1011,7 +944,7 @@ export default function Plan() {
                                     onChange={(event, newvalue) => setDepartamento(newvalue)}
                                 />
                             </Grid>
-                            <Grid item xs={6}>
+                            <Grid item xs={12}>
                                 <FormControl fullWidth>
                                     <InputLabel id="demo-simple-select-label">Tipo de Equipo</InputLabel>
                                     <Select
@@ -1019,8 +952,7 @@ export default function Plan() {
                                         id="demo-simple-select"
                                         value={tipoEquipo}
                                         label="Tipo de Equipo"
-                                        disabled = {flagTipo}
-                                        onChange={handleTipoEquipo}
+                                        onChange={(event)=>{setTipoEquipo(event.target.value)}}
                                     >
                                         <MenuItem value={0}>TODOS</MenuItem>
                                         <MenuItem value={1}>Equipo Médico</MenuItem>
@@ -1035,20 +967,7 @@ export default function Plan() {
                                 </FormControl>
 
                             </Grid>
-                            <Grid item xs={12}>
-                                <Autocomplete
-                                    disableClearable
-                                    id="combo-box-demo"
-                                    disabled = {flagDepartamento}
-                                    options={meses}
-                                    getOptionLabel={(option) => {
-                                        return option.nombre;
-                                    }}
-                                    isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
-                                    renderInput={(params) => <TextField {...params} fullWidth label="Mes" type="text" />}
-                                    onChange={(event, newvalue) => setMesFiltro(newvalue)}
-                                />
-                            </Grid>
+                           
                         </Grid>
                     </FormGroup>
                 </ModalBody>
@@ -1133,7 +1052,7 @@ export default function Plan() {
                     </Button>
                 </ModalFooter>
             </Modal>
-
+           
             <Modal size="xl" isOpen={modalGestionar}>
                 <ModalHeader>
                     Planificacion de Mantenimientos
