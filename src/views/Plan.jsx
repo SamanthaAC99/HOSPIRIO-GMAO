@@ -10,7 +10,6 @@ import Button from '@mui/material/Button';
 import { db } from "../firebase/firebase-config";
 import SearchIcon from '@mui/icons-material/Search';
 import Autocomplete from '@mui/material/Autocomplete';
-import * as XLSX from 'xlsx';
 import Container from '@mui/material/Container';
 import ClearIcon from '@mui/icons-material/Clear';
 import InputLabel from '@mui/material/InputLabel';
@@ -41,7 +40,6 @@ import Stack from '@mui/material/Stack';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 // configuracion de los reloges
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
-import DownloadIcon from '@mui/icons-material/Download';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -52,6 +50,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 //iconos
 import SettingsIcon from '@mui/icons-material/Settings';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 export default function Plan() {
 
     const [modalEditar, setModalEditar] = useState(false);
@@ -86,21 +85,16 @@ export default function Plan() {
     const [currentPlan, setCurrentPlan] = useState({ id: '', empresa: '', end: '2/9/2023, 15:00:00', start: '2/9/2023, 15:00:00', periodicidad: 0, title: '', verificacion: false })
     const [fechaPlan, setFechanPlan] = useState("2/9/2023, 15:00:00")
     const [planes, setPlanes] = useState({ equipo: { nombre: '' }, mantenimientos: [{ start: '2/9/2023, 15:00:00' }], departamento: { nombre: '' }, verificacion: false })
-    const meses = [{nombre:"TODOS",codigo:13},{nombre:"enero",codigo:0},{nombre:"febrero",codigo:1},
-                        {nombre:"marzo",codigo:2},{nombre:"abril",codigo:3},{nombre:"mayo",codigo:4},
-                        {nombre:"junio",codigo:5},{nombre:"julio",codigo:6},{nombre:"agosto",codigo:7},
-                        {nombre:"octubre",codigo:8},{nombre:"septiembre",codigo:9},{nombre:"noviembre",codigo:10},{nombre:"diciembre",codigo:11}]
-    const [mesFiltro,setMesFiltro] = useState();
+    
+    
     const [pageMan, setPageMan] = useState(0);
     const [pagesMan, setPagesMan] = useState(10);
     //variables para reporte
     const [year,setYear] = useState(2023)
     const [mesReporte,setMesReporte] = useState(1)
-    const [reporteTipo,setReporteTipo] = useState(1)
-    const [tipoEquipo,setTipoEquipo] = useState(1)
+    const [tipoEquipo,setTipoEquipo] = useState(0)
 
     // funciones para la tabla de mantenimientos
-    const [modalExcel,setModalExcel] = useState();
     const handleVerificacion = (__data) => {
         let aux_data = JSON.parse(JSON.stringify(__data))
         let aux_equipo = JSON.parse(JSON.stringify(planes))
@@ -312,9 +306,7 @@ export default function Plan() {
         setEquipoPeriodicidad(parseInt(event.target.value));
     };
 
-    const handleTipoEquipo = (event) => {
-        setTipoEquipo(parseInt(event.target.value));
-    };
+
     const crearPlanMantenimiento = (_date) => {
 
 
@@ -447,7 +439,7 @@ export default function Plan() {
                 equipos_aux.push(doc.data())
             })
             equipos_totales.current = equipos_aux
-            let dataFilter = equipos_aux.filter(filterbysituacion);
+            let dataFilter = equipos_aux.filter(item=> item.situacion === 'Activo');
             let equipos_mantenimiento = dataFilter.filter(item => item.mantenimientos.length > 0);
             let formated_mans = equipos_mantenimiento.map((item) => {
                 let man_actual = {}
@@ -479,7 +471,7 @@ export default function Plan() {
                 setNombresEquipo(params.data().equipos);
                 let aux_departamentos =  params.data().departamentos
                 aux_departamentos.unshift({codigo:1000,nombre:"TODOS"})
-                console.log(aux_departamentos)
+              
                 setDepartamentos(aux_departamentos)
             } else {
                 console.log("No such document!");
@@ -508,13 +500,6 @@ export default function Plan() {
 
 
 
-    const filterbysituacion = (_equipo) => {
-        if (_equipo.situacion === "Activo") {
-            return _equipo
-        } else {
-            return null;
-        }
-    }
     const filterbyNombre = (_equipo) => {
         if (equipo !== "") {
             if (_equipo.equipo.nombre === equipo) {
@@ -531,7 +516,7 @@ export default function Plan() {
     const filterbyDepartamento = (_equipo) => {
         if (_equipo.departamento.nombre === departamento.nombre) {
             return _equipo
-        } else if (departamento.nombre === "") {
+        } else if (departamento.nombre === "TODOS") {
             return _equipo;
         }
 
@@ -554,7 +539,7 @@ export default function Plan() {
         let aux = aux_1.filter(filterbyNombre).filter(filterbyDepartamento)
         setEventos(aux);
         setReset(!reset);
-        setDepartamento({ nombre: "", codigo: 0 })
+        setDepartamento({ nombre: "TODOS", codigo: 1000 })
         setEquipo("")
 
 
@@ -571,30 +556,6 @@ export default function Plan() {
     }
 
     
-    const descargarExcel = () => {
-
-        let aux_equipo = JSON.parse(JSON.stringify(planes))
-        let crono = aux_equipo.mantenimientos.map((item)=>{
-            let format_object = {
-                codigo_equipo: item.codigo_equipo,
-                start: item.start,
-                periodicidad: item.periodicidad,
-                title: item.title,
-                verificacion: item.verificacion,
-                empresa: item.empresa,
-            }
-            return format_object
-        })
-       
-        const myHeader = ["title", "codigo_equipo", "start","periodicidad","empresa","verificacion"];
-        const worksheet = XLSX.utils.json_to_sheet(crono, { header: myHeader });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.sheet_add_aoa(worksheet, [["Equipo", "Código", "Fecha del Mantenimiento","Periodicidad","Empresa","Verificacion"]], { origin: "A1" });
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-        worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
-        XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
-
-    }
 
  
     const generarReporte=()=>{
@@ -618,7 +579,7 @@ export default function Plan() {
           // Realiza la solicitud GET con Axios y agrega los datos en el cuerpo
           axios({
             method: 'post',
-            url: 'http://ec2-18-223-113-2.us-east-2.compute.amazonaws.com/excel',
+            url: 'https://excelrocklion09.online/excel',
             data: datosJson,  // Agrega los datos JSON en el cuerpo
             headers: {
               'Content-Type': 'application/json',  // Especifica el tipo de contenido como JSON
@@ -641,13 +602,7 @@ export default function Plan() {
        
         
     }
-    const filterbyMonth =(item)=>{
-        let item_date = new Date(item.man_inicio)
-        let mes = item_date.getMonth()
-        if(mes === mesFiltro.codigo){
-            return item
-        }
-    }
+ 
 
     useEffect(() => {
 
@@ -666,7 +621,7 @@ export default function Plan() {
                     </Grid>
                   
                     <Grid item xs={6}>
-                        <Button variant="contained" onClick={()=>{setModalReportes(true)}} disabled={deshabilitar} size="large" className="boton-plan" startIcon={<CloudDownloadIcon />}>
+                        <Button variant="contained" color="verde" onClick={()=>{setModalReportes(true)}} disabled={deshabilitar} size="large" className="boton-plan" startIcon={<TextSnippetIcon />}>
                             GENERAR REPORTE
                         </Button>
                     </Grid>
@@ -1068,9 +1023,7 @@ export default function Plan() {
                         <Grid item xs={6}>
                             <div>
                                 <p><strong>Codigo: </strong>{planes.codigo}</p>
-                                <Button variant="outlined" size="large" className="boton-plan"  startIcon={<DownloadIcon />} onClick={descargarExcel} >
-                                EXCEL
-                            </Button>
+                              
                             </div>
                         </Grid>
                         <Grid item xs={12}>
