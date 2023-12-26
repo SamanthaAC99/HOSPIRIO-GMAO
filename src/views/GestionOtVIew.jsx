@@ -53,6 +53,7 @@ export default function GestionOtVIew() {
         cedula: '',
         departamento: '',
         codigoe: '',
+        nickname: '',
         asunto: '',
         problematica: '',
         observaciones: '',
@@ -457,7 +458,10 @@ export default function GestionOtVIew() {
                                                     <DomainIcon sx={{ color:blue[600]  }} />
                                                     <p className='p-ot'><b>Departamento: </b>{currentOrden.departamento}</p>
                                                 </li>
-
+                                                <li className='li-tv'>
+                                                    <DomainIcon sx={{ color:blue[600]  }} />
+                                                    <p className='p-ot'><b>Nombre Equipo: </b>{currentOrden.nickname}</p>
+                                                </li>
 
                                                 <li className='li-tv'>
                                                     <CommentIcon sx={{ color: blue[600] }} />

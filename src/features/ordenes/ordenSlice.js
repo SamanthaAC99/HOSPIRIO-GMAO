@@ -10,6 +10,7 @@ export const ordenSlice = createSlice({
       cedula: "",
       departamento: "",
       codigoe: "",
+      nickname: "",
       descripcion: "",
       problematica: "",
       observaciones: "",
@@ -45,6 +46,7 @@ export const ordenSlice = createSlice({
             state.departamento = action.payload.departamento
             state.codigoe = action.payload.codigoe
             state.descripcion = action.payload.descripcion
+            state.nickname = action.payload.nickname
             state.problematica = action.payload.problematica
             state.observaciones = action.payload.observaciones
             state.verificacion = action.payload.verificacion

@@ -1483,6 +1483,12 @@ export default function DashboardTecnicos() {
                                 </Grid >
                                 <Grid item xs={12}>
                                     <label>
+                                        <b>Nombre Equipo:  </b>
+                                        {currentForm.nickname}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
                                         <b>Asunto:  </b>
                                         {currentForm.asunto}
                                     </label>
@@ -1584,10 +1590,15 @@ export default function DashboardTecnicos() {
                                 </Grid >
                                 <Grid item xs={12}>
                                     <label>
+                                        <b>Nombre Equipo:  </b>
+                                        {currentForm.nickname}
+                                    </label>
+                                </Grid >
+                                <Grid item xs={12}>
+                                    <label>
                                         <b>Asunto:  </b>
                                         {currentForm.asunto}
                                     </label>
-
                                 </Grid >
                                 <Grid item xs={12}>
                                     <label>

@@ -27,6 +27,7 @@ export default function OrdenTrabajoView() {
   const [asunto,setAsunto] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [descripcion,setDescripcion] = useState('');
+  const [nickname,setNickname] = useState('');
   const [problematica, setProblematica] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [deshabilitar,setDeshabilitar] = useState(false);
@@ -66,13 +67,14 @@ export default function OrdenTrabajoView() {
     }else{
       obserAux = observaciones
     }
-    if (departamento !== '' && descripcion !== '' && problematica !== '') {
+    if (departamento !== '' && nickname !== '' && descripcion !== '' && problematica !== '') {
     let orden = {
         fecha: fechaHoy,
         indice: Date.now(),
         cedula: currentUser.indentification,
         departamento: departamento,
         descripcion: descripcion,
+        nickname: nickname,
         problematica: problematica,
         observaciones: obserAux,
         verificacion: false,
@@ -141,6 +143,7 @@ export default function OrdenTrabajoView() {
   const limpiarCampos = () =>{
     setReloadAuto(!reloadAuto);  
     setDescripcion("");
+    setNickname("");
     setProblematica("");
     setObservaciones("");
     setAsunto("");
@@ -222,6 +225,9 @@ export default function OrdenTrabajoView() {
                           onChange={(event, newvalue) => setDepartamento(newvalue)}
                           renderInput={(params) => <TextField {...params} fullWidth label="DEPARTAMENTO SOLICITANTE" color={departamento !== '' ? "gris" : "oficial"} type="text" />}
                         />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField inputProps={{ style: { maxLength: 30 } }} value={nickname} color={nickname !== '' ? "gris" : "oficial"} fullWidth label="NOMBRE DEL EQUIPO" type="text" onChange={(e) => setNickname(e.target.value)} />
                       </Grid>
             
                       <Grid item xs={12}>
