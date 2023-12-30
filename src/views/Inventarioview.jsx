@@ -924,17 +924,22 @@ export default function Inventarioview() {
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.nombre}</p>
-								</div>
-							</Grid>
-							<Grid item xs={12} md={12}>
-								<div className="i-informacion">
 									<strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin: 0 }}>{currentEquipo.tipo_equipo.nombre}</p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin: 0 }}>{currentEquipo.responsable.nombre}</p>
+									<strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.nombre}</p>
+								</div>
+							</Grid>
+							<Grid item xs={12} md={12}>
+								<div className="i-informacion">
+									<strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.responsable}</p>
+								</div>
+							</Grid>
+							<Grid item xs={12} md={12}>
+								<div className="i-informacion">
+									<strong style={{ marginRight: 4 }}>Correo:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.correo}</p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>
@@ -972,10 +977,6 @@ export default function Inventarioview() {
 								<div className="i-informacion">
 									<strong style={{ marginRight: 4 }}>Seguro:</strong><p >{currentEquipo.seguro ? "ASEGURADO" : "SIN SEGURO"}</p>
 								</div>
-							</Grid>
-
-							<Grid item xs={12} md={12}>
-
 							</Grid>
 						</Grid>
 						<Grid className="fila" item xs={12}>
@@ -1388,7 +1389,7 @@ export default function Inventarioview() {
 			</Modal>
 			<Modal isOpen={modalParametros}>
 				<ModalHeader>
-					<div><h3>AGREGUE UN PARAMETRO</h3></div>
+					<div><h3>AGREGAR PARAMETROS</h3></div>
 				</ModalHeader>
 				<ModalBody>
 					<Grid container spacing={2}>
@@ -1418,7 +1419,7 @@ export default function Inventarioview() {
 								Crear Equipo
 							</Button>
 						</Grid>
-						<Grid item xs={12} >
+						{/* <Grid item xs={12} >
 							<Button variant="outlined"
 								fullWidth
 								endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
@@ -1426,7 +1427,7 @@ export default function Inventarioview() {
 							>
 								Crear Responsable
 							</Button>
-						</Grid>
+						</Grid> */}
 						<Grid item xs={12}>
 							<Button variant="outlined"
 								fullWidth

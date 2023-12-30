@@ -25,10 +25,13 @@ export default function DepartamentoView() {
   const navigate = useNavigate();
   let params = useParams();
   const [nombre, setNombre] = useState("")
+  const [responsable, setResponsable] = useState("")
+  const [correo, setCorreo] = useState("")
   const [deshabilitar,setDeshabilitar] = useState(false);
   const [codigo, setCodigo] = useState("")
   const [modalEditar,setModalEditar] = useState(false);
   const [currentEquipo,setCurrentEquipo] = useState({})
+  const [modalAgregar, setModalAgregar] = useState(false);
   const getData = () => {
       onSnapshot(doc(db, "informacion", "parametros"), (doc) => {
           setDepartamentos(doc.data().departamentos)
@@ -59,6 +62,8 @@ export default function DepartamentoView() {
   const abrirModalEditar = (_data) =>{
       setNombre(_data.nombre)
       setCodigo(_data.codigo)
+      setResponsable(_data.responsable)
+      setCorreo(_data.correo)
       setCurrentEquipo(_data)
       setModalEditar(true)
   }
@@ -70,13 +75,17 @@ export default function DepartamentoView() {
 };
   const limpiarDatos = ()=>{
       setNombre("");
-      setCodigo("")
+      setCodigo("");
+      setResponsable("");
+      setCorreo("");
   }
   const actualizarEquipo = () =>{
       let aux = departamentos
       let temp = aux.map(item =>{
           if(item.nombre === currentEquipo.nombre){
               item.nombre = nombre.toUpperCase()
+              item.responsable = responsable.toUpperCase()
+              item.correo = correo
               item.codigo = codigo
           }
           return item
@@ -93,6 +102,8 @@ export default function DepartamentoView() {
       if (nombre !== "") {
           let check1 = aux.find(item => item.codigo === codigo)
           let check2 = aux.find(item => item.nombre === nombre)
+          let check3 = aux.find(item => item.responsable === responsable)
+          let check4 = aux.find(item => item.correo === correo)
           if (check1 === undefined && check2 === undefined) {
             
               let ordenados = aux.sort((a, b) => parseInt(b.codigo) - parseInt(a.codigo));
@@ -103,6 +114,8 @@ export default function DepartamentoView() {
               }
               let newItem = {
                   nombre: nombre.trim().toUpperCase(),
+                  responsable: responsable.trim().toUpperCase(),
+                  correo: correo,
                   codigo: numCode
               }
               temp.push(newItem)
@@ -145,36 +158,38 @@ export default function DepartamentoView() {
       <Container>
 
           <Grid container spacing={{ xs: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-          <Grid item xs={12} md={12}>
-          <Typography component="div" variant="h4" className="princicrear" >
-        CREAR DEPARTAMENTO
-      </Typography>
-      </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid item xs={12} md={1.5}>
           <Button variant="outlined"
-            sx={{height:"100%"}}
-                                    className="boton-salir"
+            sx={{height:"70%"}}
+                                    className="boton-salir2"
                                     fullWidth
                                     endIcon={<ReplyAllIcon sx={{ fontSize: 90 }} />}
                                     onClick={() => { salir() }}
                                 >Regresar</Button>
               </Grid>
-              <Grid item xs={12} md={7}>
-                  <TextField id="outlined-basic" inputProps={{ style: { textTransform: "uppercase" } }} value={nombre} error={false} fullWidth label="DEPARTAMENTO" variant="outlined" onChange={(event) => { setNombre(event.target.value) }} />
-              </Grid>
-              {/* <Grid item xs={12} md={2}>
-                  <TextField id="outlined-basic" value={codigo} fullWidth label="Código" type="number" variant="outlined" onChange={(event) => { setCodigo(event.target.value) }} />
-              </Grid> */}
-              <Grid item xs={12} md={3}>
-                  <Button variant="contained" sx={{ height: "100%", width: "100%" }} onClick={agregarItem}>Agregar Departamento</Button>
-              </Grid>
+          <Grid item xs={12} md={12}>
+          <Typography component="div" variant="h4" className="princicrear2" >
+        CREAR DEPARTAMENTO
+      </Typography>
+      </Grid>
+      <Grid item xs={12} md={12}>
+
+<Button variant="contained"
+sx={{ height: "100%" }}
+color='azul1'
+  onClick={() => { setModalAgregar(true) }}
+>AGREGAR DEPARTAMENTO</Button>
+
+</Grid>
               <Grid item xs={12} md={12}>
                 <div style={{height:500,overflow:"scroll"}}>
                   <Table className='table table-ligh table-hover'>
                       <Thead>
                           <Tr>
-                              <Th>Nombre</Th>
                               <Th>Código</Th>
+                              <Th>Departamento</Th>
+                              <Th>Responsable</Th>
+                              <Th>Correo</Th>
                               <Th>Acciones</Th>
                           </Tr>
                       </Thead>
@@ -182,8 +197,10 @@ export default function DepartamentoView() {
                       <Tbody>
                           {departamentos.map((dato, index) => (
                               <Tr key={index}>
-                                  <Td>{dato.nombre}</Td>
                                   <Td>{dato.codigo}</Td>
+                                  <Td>{dato.nombre}</Td>
+                                  <Td>{dato.responsable} </Td>
+                                  <Td>{dato.correo}</Td>
                                   <Td>
                                       <Button onClick={()=>{eliminarItem(dato)}} >Eliminar</Button>
                                       <Button onClick={()=>{abrirModalEditar(dato)}} >Editar</Button>
@@ -197,6 +214,49 @@ export default function DepartamentoView() {
           </Grid>
       </Container>
 
+      <Modal isOpen={modalAgregar}>
+  <ModalHeader>
+    <div><h3>CREAR UN DEPARTAMENTO</h3></div>
+  </ModalHeader>
+  <ModalBody>
+    <FormGroup>
+      <Grid container spacing={2}>
+      <Grid item xs={12} md={12}>
+                  <TextField id="outlined-basic" inputProps={{ style: { textTransform: "uppercase" } }} value={nombre} error={false} fullWidth label="NOMBRE DEPARTAMENTO" variant="outlined" onChange={(event) => { setNombre(event.target.value) }} />
+      </Grid>
+      <Grid item xs={12} md={12}>
+                  <TextField id="outlined-basic" inputProps={{ style: { textTransform: "uppercase" } }} value={responsable} error={false} fullWidth label="RESPONSABLE" variant="outlined" onChange={(event) => { setResponsable(event.target.value) }} />
+      </Grid>
+      <Grid item xs={12} md={12}>
+                  <TextField id="outlined-basic" inputProps={{ style: { textTransform: "uppercase" } }} value={correo} error={false} fullWidth label="CORREO" variant="outlined" onChange={(event) => { setCorreo(event.target.value) }} />
+      </Grid>
+      </Grid>
+    </FormGroup>
+  </ModalBody>
+
+  <ModalFooter>
+    <Button
+      variant="outlined"
+      className="boton-modal2"
+      onClick={agregarItem}
+    >
+      Agregar
+    </Button>
+
+    <Button
+      variant="contained"
+      className="boton-modal"
+      onClick={()=>{
+          setModalAgregar(false)
+          limpiarDatos()
+      }}      
+    >
+      Cancelar
+    </Button>
+  </ModalFooter>
+</Modal>
+
+
       <Modal isOpen={modalEditar}>
   <ModalHeader>
     <div><h3>Accesorios del Equipo</h3></div>
@@ -205,11 +265,14 @@ export default function DepartamentoView() {
     <FormGroup>
       <Grid container spacing={2}>
       <Grid item xs={12} md={12}>
-                  <TextField id="outlined-basic" value={nombre} error={false} fullWidth label="Nombre del Equipo" variant="outlined" onChange={(event) => { setNombre(event.target.value) }} />
+                  <TextField id="outlined-basic" value={nombre} error={false} fullWidth label="Nombre Departamento" variant="outlined" onChange={(event) => { setNombre(event.target.value) }} />
               </Grid>
-              {/* <Grid item xs={12} md={12}>
-                  <TextField id="outlined-basic" value={codigo} fullWidth label="Codigo" type="number" variant="outlined" onChange={(event) => { setCodigo(event.target.value) }} />
-              </Grid> */}
+              <Grid item xs={12} md={12}>
+                  <TextField id="outlined-basic" value={responsable} error={false} fullWidth label="Responsable" variant="outlined" onChange={(event) => { setResponsable(event.target.value) }} />
+              </Grid>
+              <Grid item xs={12} md={12}>
+                  <TextField id="outlined-basic" value={correo} error={false} fullWidth label="Correo" variant="outlined" onChange={(event) => { setCorreo(event.target.value) }} />
+              </Grid>
       </Grid>
     </FormGroup>
   </ModalBody>
