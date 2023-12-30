@@ -94,7 +94,7 @@ export default function Inventarioview() {
 	let params = useParams();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const [data, setData] = useState([{ codigo: "", equipo: { nombre: "" }, departamento: { nombre: "" }, responsable: { nombre: "" } }]);
+	const [data, setData] = useState([{ codigo: "", equipo: { nombre: "" }, departamento: { nombre: "" } }]);
 	const [modalActualizar, setModalactualizar] = useState(false);
 	const [modalAccesorios, setModalAccesorios] = useState(false);
 	const [reloadAuto, setReloadAuto] = useState(false);
@@ -419,7 +419,6 @@ export default function Inventarioview() {
 			//valores iniciales por defecto
 			ubicacion: ubicacion,
 			departamento: departamento,
-			responsable: responsable,
 			tipo_equipo: tipo,
 			equipo: equipo,
 			modelo: modelo,
@@ -467,9 +466,9 @@ export default function Inventarioview() {
 	}
 	const generateCodigo = () => {
 		let aux_equipos = equipos_totales.current
-		let datos_filter = aux_equipos.filter(item => item.ubicacion.codigo === ubicacion.codigo && item.responsable.codigo === responsable.codigo && item.departamento.codigo === departamento.codigo && item.equipo.codigo === equipo.codigo)
+		let datos_filter = aux_equipos.filter(item => item.ubicacion.codigo === ubicacion.codigo  && item.departamento.codigo === departamento.codigo && item.equipo.codigo === equipo.codigo)
 		let index = datos_filter.length + 1
-		let codigo = ubicacion.codigo + "-" + departamento.codigo + "-" + responsable.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-" + index.toString() + "-0"
+		let codigo = ubicacion.codigo + "-" + departamento.codigo +"-" + tipo.codigo + "-" + equipo.codigo + "-" + index.toString() + "-0"
 		return codigo
 	}
 
@@ -634,16 +633,16 @@ export default function Inventarioview() {
                 modelo: item.modelo,
                 serie: item.serie,
 				propietario: item.propietario.nombre,
-				responsable: item.responsable.nombre,
+				
 				importancia:item.importancia
 
             }
             return format_object
         })
-		const myHeader = ["codigo_equipo","equipo","tipo_equipo","ubicacion","marca","modelo","serie","propietario","responsable","importancia"];
+		const myHeader = ["codigo_equipo","equipo","tipo_equipo","ubicacion","marca","modelo","serie","propietario","importancia"];
         const worksheet = XLSX.utils.json_to_sheet(crono, { header: myHeader });
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.sheet_add_aoa(worksheet, [["Código","Equipo","Tipo Equipo","Ubicación","Marca","Modelo","Serie","Propietario","Responsable","Importancia"]], { origin: "A1" });
+        XLSX.utils.sheet_add_aoa(worksheet, [["Código","Equipo","Tipo Equipo","Ubicación","Marca","Modelo","Serie","Propietario","Importancia"]], { origin: "A1" });
         XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
         worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
         XLSX.writeFile(workbook, "InventarioHospiRio.xlsx", { compression: true });
@@ -656,7 +655,6 @@ export default function Inventarioview() {
 		setModalReubicar(true)
 		setUbicacion(aux.ubicacion)
 		setDepartamento(aux.departamento)
-		setResponsable(aux.responsable)
 		setTipo(aux.tipo_equipo)
 		setEquipo(aux.equipo)
 	}
@@ -664,9 +662,7 @@ export default function Inventarioview() {
 		let aux_equipos = JSON.parse(JSON.stringify(data))
 		let equipo_modify = JSON.parse(JSON.stringify(currentEquipo))
 		let aux_historial = equipo_modify.codigos_historial
-		console.log(aux_historial)
 		equipo_modify.ubicacion = ubicacion
-		equipo_modify.responsable = responsable
 		equipo_modify.departamento = departamento
 		equipo_modify.reubicado = true
 		console.log("aqui ya cambiamo el valor del objeto",equipo_modify)
@@ -688,9 +684,7 @@ export default function Inventarioview() {
 			codigo: newCodigo,
 			reubicado: true,
 			departamento: departamento,
-			ubicacion: ubicacion,
-			responsable:responsable,
-
+			ubicacion: ubicacion
 		});
 		setModalReubicar(false)
 
@@ -842,20 +836,28 @@ export default function Inventarioview() {
 
 					<TableContainer  sx={{ maxHeight: 410 }}>
 						<Table  stickyHeader aria-label="sticky table">
-							<TableHead>
-								<TableRow>
-									{columns.map((column, index) => (
-										<TableCell
-											key={column.id}
-											align={column.align}
-											style={{ minWidth: column.minWidth }}
-										>
-											{column.label}
-										</TableCell>
-									))}
-
-								</TableRow>
-							</TableHead>
+						<TableHead>
+                                    <TableRow>
+                                        <TableCell  align={'left'}>
+                                       Codigo
+                                        </TableCell>
+                                        <TableCell  align={'left'}>
+                                       Equipo
+                                        </TableCell>
+                                        <TableCell  align={'left'}>
+                                        Departamento
+                                        </TableCell>
+                                        <TableCell  align={'center'}>
+                                       Accesorios
+                                        </TableCell>
+                                        <TableCell  align={'center'}>
+                                        Acciones
+                                        </TableCell>
+										<TableCell  align={'center'}>
+                                        Info
+                                        </TableCell>
+                                    </TableRow>
+                                </TableHead>
 							<TableBody>
 								{data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 									.map((row, index) => {
@@ -864,7 +866,6 @@ export default function Inventarioview() {
 												<TableCell align="left">{row.codigo}</TableCell>
 												<TableCell align="left">{row.equipo.nombre}</TableCell>
 												<TableCell align="left">{row.departamento.nombre}</TableCell>
-												<TableCell align="left">{row.responsable.nombre}</TableCell>
 												<TableCell align="center">
 
 													<Button variant='contained' disabled = {deshabilitar2}  color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
@@ -924,22 +925,17 @@ export default function Inventarioview() {
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin: 0 }}>{currentEquipo.tipo_equipo.nombre}</p>
-								</div>
-							</Grid>
-							<Grid item xs={12} md={12}>
-								<div className="i-informacion">
 									<strong style={{ marginRight: 4 }}>Departamento:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.nombre}</p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.responsable}</p>
+									<strong style={{ marginRight: 4 }}>Tipo de Equipo:</strong><p style={{ margin: 0 }}>{currentEquipo.tipo_equipo.nombre}</p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Correo:</strong><p style={{ margin: 0 }}>{currentEquipo.departamento.correo}</p>
+									<strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin: 0 }}></p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>
@@ -977,6 +973,10 @@ export default function Inventarioview() {
 								<div className="i-informacion">
 									<strong style={{ marginRight: 4 }}>Seguro:</strong><p >{currentEquipo.seguro ? "ASEGURADO" : "SIN SEGURO"}</p>
 								</div>
+							</Grid>
+
+							<Grid item xs={12} md={12}>
+
 							</Grid>
 						</Grid>
 						<Grid className="fila" item xs={12}>
@@ -1134,18 +1134,7 @@ export default function Inventarioview() {
 								renderInput={(params) => <TextField {...params} fullWidth label="Ubicacion" type="text" />}
 							/>
 						</Grid>
-						<Grid item xs={6}>
-							<Autocomplete
-								disableClearable
-								id="combo-box-demo"
-								options={responsables}
-								getOptionLabel={(option) => {
-									return option.nombre;
-								}}
-								onChange={(event, newvalue) => setResponsable(newvalue)}
-								renderInput={(params) => <TextField {...params} fullWidth label="Responsable" type="text" />}
-							/>
-						</Grid>
+				
 						<Grid item xs={6}>
 							<Autocomplete
 								disableClearable
@@ -1193,7 +1182,7 @@ export default function Inventarioview() {
 							/>
 						</Grid>
 						<Grid item xs={12}>
-						<strong>Codigo Generado: </strong>{ubicacion.codigo + "-" + departamento.codigo + "-" + responsable.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-1-0"}
+						<strong>Codigo Generado: </strong>{ubicacion.codigo + "-" + departamento.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-1-0"}
 						</Grid>
 						<Grid item xs={12}>
 							<b>Importancia:    </b>
@@ -1319,7 +1308,7 @@ export default function Inventarioview() {
 				</ModalHeader>
 				<ModalBody>
 					<Grid container spacing={2}>
-						<Grid item xs={6}>
+						<Grid item xs={12}>
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
@@ -1333,21 +1322,8 @@ export default function Inventarioview() {
 								renderInput={(params) => <TextField {...params} fullWidth label="Ubicacion" type="text" />}
 							/>
 						</Grid>
-						<Grid item xs={6}>
-							<Autocomplete
-								disableClearable
-								id="combo-box-demo"
-								options={responsables}
-								isOptionEqualToValue={(option, value) => option.nombre === value.nombre}
-								value={responsable}
-								getOptionLabel={(option) => {
-									return option.nombre;
-								}}
-								onChange={(event, newvalue) => setResponsable(newvalue)}
-								renderInput={(params) => <TextField {...params} fullWidth label="Responsable" type="text" />}
-							/>
-						</Grid>
-						<Grid item xs={6}>
+						
+						<Grid item xs={12}>
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
@@ -1389,7 +1365,7 @@ export default function Inventarioview() {
 			</Modal>
 			<Modal isOpen={modalParametros}>
 				<ModalHeader>
-					<div><h3>AGREGAR PARAMETROS</h3></div>
+					<div><h3>AGREGUE UN PARAMETRO</h3></div>
 				</ModalHeader>
 				<ModalBody>
 					<Grid container spacing={2}>
@@ -1419,15 +1395,7 @@ export default function Inventarioview() {
 								Crear Equipo
 							</Button>
 						</Grid>
-						{/* <Grid item xs={12} >
-							<Button variant="outlined"
-								fullWidth
-								endIcon={<AddToQueueIcon sx={{ fontSize: 90 }} />}
-								onClick={() => navegarView("inventario/invequipos/declarar_responsable")}
-							>
-								Crear Responsable
-							</Button>
-						</Grid> */}
+						
 						<Grid item xs={12}>
 							<Button variant="outlined"
 								fullWidth
@@ -1526,7 +1494,7 @@ const initialData = {
 	//valores iniciales por defecto
 	ubicacion: "",
 	departamento: "",
-	responsable: "",
+	
 	tipo_equipo: "",
 	equipo: "",
 	modelo: "",
@@ -1550,12 +1518,3 @@ const initialData = {
 }
 
 const no_img = "https://firebasestorage.googleapis.com/v0/b/app-mantenimiento-91156.appspot.com/o/inventario%2FSP.PNG?alt=media&token=835f72e6-3ddf-4e64-bd7c-b95564da4ec8"
-const columns = [
-	{ id: 'codigo', label: 'Codigo', minWidth: 170 },
-	{ id: 'equipo', label: 'Equipo', minWidth: 100 },
-	{ id: 'departamento', label: 'Departamento', minWidth: 100 },
-	{ id: 'responsable', label: 'Responsable', minWidth: 100 },
-	{ id: 'accesoriops', label: 'Accesorios', minWidth: 100, align: 'center' },
-	{ id: 'acciones', label: 'Acciones', minWidth: 100, align: 'center' },
-	{ id: 'info', label: 'Info', minWidth: 100, align: 'center' },
-];
