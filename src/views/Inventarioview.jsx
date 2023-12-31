@@ -126,6 +126,7 @@ export default function Inventarioview() {
 	const [ubicacion, setUbicacion] = useState({codigo:0,nombre:""})
 	const [responsables, setResponsables] = useState([]);
 	const [responsable, setResponsable] = useState({codigo:0,nombre:""});
+	const [nombre,setNombre] = useState(true);
 	const [departamentos, setDepartamentos] = useState([]);
 	const [propietarios, setPropietarios] = useState([]);
 	const [modalReubicar, setModalReubicar] = useState(false);
@@ -844,6 +845,9 @@ export default function Inventarioview() {
                                         <TableCell  align={'left'}>
                                        Equipo
                                         </TableCell>
+										<TableCell  align={'left'}>
+                                       Nombre
+                                        </TableCell>
                                         <TableCell  align={'left'}>
                                         Departamento
                                         </TableCell>
@@ -865,6 +869,7 @@ export default function Inventarioview() {
 											<TableRow hover role="checkbox" tabIndex={-1} key={index}>
 												<TableCell align="left">{row.codigo}</TableCell>
 												<TableCell align="left">{row.equipo.nombre}</TableCell>
+												<TableCell align="left">{row.nombre}</TableCell>
 												<TableCell align="left">{row.departamento.nombre}</TableCell>
 												<TableCell align="center">
 
@@ -1148,15 +1153,6 @@ export default function Inventarioview() {
 							/>
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" type="int" onChange={(e) => setMarca(e.target.value)} />
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth label="Modelo" type="int" onChange={(e) => setModelo(e.target.value)} />
-						</Grid>
-						<Grid item xs={6}>
-							<TextField fullWidth label="Serie" type="int" onChange={(e) => setSerie(e.target.value)} />
-						</Grid>
-						<Grid item xs={6}>
 							{/* <TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Propietario" type="int" onChange={(e) => setPropietario(e.target.value)} /> */}
 							<Autocomplete
 								disableClearable
@@ -1180,6 +1176,18 @@ export default function Inventarioview() {
 								onChange={(event, newvalue) => setSeguro(newvalue.value)}
 								renderInput={(params) => <TextField {...params} fullWidth label="Seguro" type="text" />}
 							/>
+						</Grid>
+						<Grid item xs={6}>
+							<TextField fullWidth label="Nombre del Equipo"  inputProps={{ style: { textTransform: "uppercase" } }} type="text" onChange={(e) => setNombre(e.target.value)} />
+						</Grid>
+						<Grid item xs={6}>
+							<TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" type="int" onChange={(e) => setMarca(e.target.value)} />
+						</Grid>
+						<Grid item xs={6}>
+							<TextField fullWidth label="Modelo" type="int" onChange={(e) => setModelo(e.target.value)} />
+						</Grid>
+						<Grid item xs={6}>
+							<TextField fullWidth label="Serie" type="int" onChange={(e) => setSerie(e.target.value)} />
 						</Grid>
 						<Grid item xs={12}>
 						<strong>Codigo Generado: </strong>{ubicacion.codigo + "-" + departamento.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-1-0"}
@@ -1364,9 +1372,7 @@ export default function Inventarioview() {
 				</ModalFooter>
 			</Modal>
 			<Modal isOpen={modalParametros}>
-				<ModalHeader>
-					<div><h3>AGREGUE UN PARAMETRO</h3></div>
-				</ModalHeader>
+		
 				<ModalBody>
 					<Grid container spacing={2}>
 						<Grid item xs={12}>
@@ -1375,7 +1381,12 @@ export default function Inventarioview() {
 								fullWidth
 								onClick={() => mostrarModalInsertar()}>Ingresar Equipo</Button>
 						</Grid>
-
+						<Grid item xs={12}>
+							<Button variant="contained"
+								color='verde'
+								fullWidth
+								onClick={() => mostrarModalInsertar()}>Ingresar Equipo Calibracion</Button>
+						</Grid>
 						<Grid item xs={12} >
 							<Button variant="outlined"
 								fullWidth
