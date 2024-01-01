@@ -7,7 +7,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import StarBorder from '@mui/icons-material/StarBorder';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,13 +36,13 @@ export default function PersonalMenu(){
                         <ListItemButton  onClick={() =>Changeview('personal/registrar')} sx={{ pl: 4 }}>
                         {/* <ListItemButton target="_blank"  href="personal/registrar"  sx={{ pl: 4 }}> */}
                                 <ListItemIcon>
-                                    <StarBorder />
+                                    <KeyboardArrowRightIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="Registrar Usuario" />
                             </ListItemButton>
                             <ListItemButton  onClick={() =>Changeview('personal/datospersonal')} sx={{ pl: 4 }}>
                                 <ListItemIcon>
-                                    <StarBorder />
+                                    <KeyboardArrowRightIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="Datos Personales" />
                             </ListItemButton>

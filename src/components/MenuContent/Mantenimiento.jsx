@@ -6,7 +6,8 @@ import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import StarBorder from '@mui/icons-material/StarBorder';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import CircleIcon from '@mui/icons-material/Circle';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,7 +39,7 @@ export default function MantenimientoMenu(){
                             <ListItemButton onClick={() =>Changeview('mantenimiento/estatus')} sx={{ pl: 4 }}>
                             {/* <ListItemButton target="_blank"  href="mantenimiento/estatus" sx={{ pl: 4 }}> */}
                                 <ListItemIcon>
-                                    <StarBorder />
+                                    <KeyboardArrowRightIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="Orden de Trabajo" />
                             </ListItemButton>
@@ -53,7 +54,7 @@ export default function MantenimientoMenu(){
                             <ListItemButton   onClick={() =>Changeview('mantenimiento/mantenimiento')} sx={{ pl: 4 }}>
                             {/* <ListItemButton target="_blank"  href="mantenimiento/mantenimiento"   sx={{ pl: 4 }}> */}
                                 <ListItemIcon>
-                                    <StarBorder />
+                                    <KeyboardArrowRightIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="Plan de Mantenimiento" />
                             </ListItemButton>
@@ -62,7 +63,7 @@ export default function MantenimientoMenu(){
                             <ListItemButton  onClick={() =>Changeview('mantenimiento/contactos')} sx={{ pl: 4 }}>
                             {/* <ListItemButton target="_blank"  href="mantenimiento/contactos" sx={{ pl: 4 }}> */}
                                 <ListItemIcon>
-                                    <StarBorder />
+                                    <KeyboardArrowRightIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="Contactos Empresas" />
                             </ListItemButton>

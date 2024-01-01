@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -12,8 +12,7 @@ import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
 import ListSubheader from '@mui/material/ListSubheader';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from "react-redux";
-import { setUserState } from '../features/auth/authSlice';
+import { useSelector } from "react-redux";
 import '../css/Menu.css';
 import OdtMenu from './MenuContent/SolicitudOt';
 import ActivosMenu from './MenuContent/Activos';
@@ -26,9 +25,6 @@ import ReportesMenu from './MenuContent/Reportes';
 import TercerizadosMenu from './MenuContent/Tercerizados';
 import PersonalMenu from './MenuContent/Personal';
 import SalirMenu from './MenuContent/Salir';
-import { db } from '../firebase/firebase-config';
-import { doc, getDoc } from "firebase/firestore";
-import { useParams } from "react-router-dom";
 import Avatar from '@mui/material/Avatar';
 import DashboardJS from './MenuContent/DashboardJefeSistemas';
 import DashboardJM from './MenuContent/DashboardJefeMantenimiento';
@@ -38,111 +34,108 @@ import DashboardE from './MenuContent/DashboardE';
 import CalendarioM from './MenuContent/Calendario';
 import CalibracionMenu from './MenuContent/Calibracion';
 export default function ToolBar() {
-    let params = useParams();
+    
     const currentUser = useSelector(state => state.auths);
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [state, setState] = React.useState({
         left: false,
     });
-    const dispatch = useDispatch()
+
     const navigate = useNavigate();
 
     const menuData = [
-        // {
-        //     child: <Pruebas/>,
-        //     visibility: true,
-        //     key: 1
-        // },
+        {
+            child: <Pruebas/>,
+            visibility: false,
+            key: 1
+        },
         {
             child: <OdtMenu />,
             visibility: currentUser.permisions.otrabajo,
-            key: 1
+            key: 10
         },
         {
             child: <MantenimientoMenu />,
             visibility: currentUser.permisions.gestionm,
-            key: 5
+            key: 20
         },
         {
             child: <InventarioMenu />,
             visibility: currentUser.permisions.gestioni,
-            key: 4
+            key: 30
         },
         {
             child: <CalibracionMenu />,
-            visibility: currentUser.permisions.gestioni,
-            key: 4
-        },
-        {
-            child: <ReportesMenu />,
-            visibility: currentUser.permisions.gestionr,
-            key: 6
+            visibility: false,
+            key: 40
         },
         {
             child: <IndicadoresA />,
-            visibility: currentUser.permisions.gestioni,
-            key: 3
+            visibility: false,
+            key: 60
         },
         {
             child: <PersonalMenu />,
             visibility: currentUser.permisions.gestionp,
-            key: 8
+            key: 70
         },
         {
             child: <ActivosMenu />,
-            visibility: currentUser.permisions.gestiona,
-            key: 3
+            visibility: false,
+            key: 80
+        },
+        {
+            child: <ReportesMenu />,
+            visibility: currentUser.permisions.gestionr,
+            key: 50
         },
         {
             child: <Dashboard/>,
             visibility: currentUser.permisions.dashboardT,
-            key: 1
+            key: 90
         },
-        // {
-        //     child: <DashboardE/>,
-        //     visibility: currentUser.permisions.dashboardE,
-        //     key: 1
-        // },
+        {
+            child: <DashboardE/>,
+            visibility: false,
+            key: 91
+        },
         {
             child: <DashboardU/>,
             visibility: currentUser.permisions.dashboardU,
 
-            key: 1
+            key: 100
         },
         {
             child: <DashboardJM/>,
             visibility: currentUser.permisions.dashboardJM,
-            key: 1
+            key: 110
         },
         {
             child: <DashboardJS/>,
             visibility: currentUser.permisions.dashboardJS,
-            key: 1
+            key: 120
         },
         {
             child: <CalendarioM/>,
             visibility: currentUser.permisions.dashboardJM,
-            key: 1
+            key: 130
         },
-     
-    
-        // {
-        //     child: <ComprasMenu />,
-        //     visibility: currentUser.permisions.compras,
-        //     key: 2
-        // },
+        {
+            child: <ComprasMenu />,
+            visibility:false,
+            key: 140
+        },
         
-       
-        // {
-        //     child: <TercerizadosMenu />,
-        //     visibility: currentUser.permisions.gestiont,
-        //     key: 7
-        // },
+        {
+            child: <TercerizadosMenu />,
+            visibility: false,
+            key: 150
+        },
       
         {
             child: <SalirMenu />,
             visibility: true,
-            key: 9
+            key: 160
 
         },
     ]
@@ -264,20 +257,15 @@ export default function ToolBar() {
                     component="nav"
                     aria-labelledby="nested-list-subheader"
                     subheader={
-                        <ListSubheader component="div" id="nested-list-subheader">
-                            SOFTWARE DE MANTENIMIENTO HOSPITAL DEL RIO
+                        <ListSubheader component="div" style={{justifyContent:'center',width:'100%',textAlign:'center'}} id="nested-list-subheader">
+                           <h3>Menu</h3> 
                         </ListSubheader>
                     }
                 >
                     {menuData.filter(item => item.visibility).map((item, index) => (
-
                         <div key={index}>
                             {item.child}
                         </div>
-
-
-
-
                     ))
                     }
                 </List>

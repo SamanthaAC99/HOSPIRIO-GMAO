@@ -432,6 +432,7 @@ export default function Inventarioview() {
 			id: uuidv4(),
 			indice: Date.now(),
 			situacion: "Activo",
+			nombre:nombre,
 			//valores que cambiaran en el futuro
 			reubicado: false,
 			codigos_historial: [code],
@@ -482,6 +483,7 @@ export default function Inventarioview() {
 		setMarca(_dato.marca)
 		setSerie(_dato.serie)
 		setPropietario(_dato.propietario)
+		setNombre(_dato.nombre)
 		setModalactualizar(true);
 		setSeguro(_dato.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
 	};
@@ -501,6 +503,7 @@ export default function Inventarioview() {
 				propietario: propietario,
 				seguro: seguro.value,
 				importancia: eimportancia,
+				nombre:nombre,
 			});
 		}
 		 else {
@@ -513,6 +516,7 @@ export default function Inventarioview() {
 				propietario: propietario,
 				seguro: seguro.value,
 				importancia: eimportancia,
+				nombre:nombre,
 				img: url
 			});
 			equipo_modify.img = url
@@ -523,6 +527,7 @@ export default function Inventarioview() {
 		equipo_modify.propietario = propietario
 		equipo_modify.seguro = seguro.value
 		equipo_modify.importancia = eimportancia
+		equipo_modify.nombre = nombre
 
 		Swal.fire(
 			"¡Datos Actualizados!",
@@ -607,19 +612,6 @@ export default function Inventarioview() {
 		setAccesoriosEquipo(aux)
 	}
 
-	
-	
-	// const crearExcel = () => {
-	// 	console.log("hola mundo");
-	// 	console.log(data);
-	// 	const myHeader = ["equipo", "codigo", "marca", "modelo"];
-	// 	const worksheet = XLSX.utils.json_to_sheet(data.filter(FilterBySituacion), { header: myHeader });
-	// 	const workbook = XLSX.utils.book_new();
-	// 	XLSX.utils.sheet_add_aoa(worksheet, [["Equipo", "Código", "Marca", "Modelo"]], { origin: "A1" });
-	// 	XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-	// 	worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
-	// 	XLSX.writeFile(workbook, "Equipos.xlsx", { compression: true });
-	 // }
 
 	 const crearExcel = () => {
 
@@ -659,6 +651,7 @@ export default function Inventarioview() {
 		setTipo(aux.tipo_equipo)
 		setEquipo(aux.equipo)
 	}
+
 	const reubicarUbicado = () => {
 		let aux_equipos = JSON.parse(JSON.stringify(data))
 		let equipo_modify = JSON.parse(JSON.stringify(currentEquipo))
@@ -695,8 +688,8 @@ export default function Inventarioview() {
 
 	return (
 		<>
-			<Container style={{paddingTop:10}}>
-			<Typography component="div" variant="h3" className="princi3" >
+		<Container style={{paddingTop:10}}>
+		<Typography component="div" variant="h3" className="princi3" >
           INVENTARIO EQUIPOS ACTIVOS
         </Typography>
 				<Grid container spacing={{ xs: 2 }} columns={{ xs: 4, sm: 8, md: 12 }}>
@@ -1019,6 +1012,9 @@ export default function Inventarioview() {
 				<ModalBody>
 					<Grid container spacing={2}>
 
+						<Grid item xs={6}>
+							<TextField fullWidth label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+						</Grid>
 						<Grid item xs={6}>
 							<TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" value={marca} onChange={(e) => setMarca(e.target.value)} />
 						</Grid>
