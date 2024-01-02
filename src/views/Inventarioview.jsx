@@ -3,8 +3,6 @@ import '../css/Ordentrabajo.css';
 import '../css/Presentacion.css';
 import '../css/InventarioView.css';
 import React, { useRef, useState } from "react";
-import Stack from '@mui/material/Stack';
-import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
 import Typography from '@mui/material/Typography';
@@ -18,7 +16,6 @@ import * as XLSX from 'xlsx';
 import { db, storage } from "../firebase/firebase-config";
 import { teal } from '@mui/material/colors';
 import Autocomplete from '@mui/material/Autocomplete';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
@@ -47,7 +44,8 @@ import {
 	ModalFooter,
 } from "reactstrap";
 import { v4 as uuidv4 } from 'uuid';
-
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { useDispatch } from "react-redux";
 // dependencias para las tablas
 
@@ -59,12 +57,8 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 // iconos
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PhonelinkOffIcon from '@mui/icons-material/PhonelinkOff';
-import EditLocationIcon from '@mui/icons-material/EditLocation';
 import SearchIcon from '@mui/icons-material/Search';
-
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
 	[`&.${tableCellClasses.head}`]: {
@@ -124,14 +118,13 @@ export default function Inventarioview() {
 	const [tipoEquipo, setTipoEquipo] = useState([]);
 	const [ubicaciones, setUbicaciones] = useState([]);
 	const [ubicacion, setUbicacion] = useState({codigo:0,nombre:""})
-	const [responsables, setResponsables] = useState([]);
-	const [responsable, setResponsable] = useState({codigo:0,nombre:""});
 	const [nombre,setNombre] = useState(true);
 	const [departamentos, setDepartamentos] = useState([]);
 	const [propietarios, setPropietarios] = useState([]);
 	const [modalReubicar, setModalReubicar] = useState(false);
 	const [departamento, setDepartamento] = useState({codigo:0,nombre:""});
 	const [currentEquipo, setCurrentEquipo] = useState(initialData);
+	const [calibracion,setCalibracion] = useState(false);
 	//modals
 	const [modalParametros, setModalParametros] = useState(false);
 
@@ -198,7 +191,16 @@ export default function Inventarioview() {
 		setData(equipo_target)
 		setCodigoSeleccionado("")
 	}
-
+  //
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event,_data) => {
+    setAnchorEl(event.currentTarget);
+	setCurrentEquipo(_data);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
 	const handleChangePage = (event, newPage) => {
 		setPage(newPage);
@@ -235,7 +237,7 @@ export default function Inventarioview() {
 			setEquipos(parametros.equipos)
 			setDepartamentos(parametros.departamentos)
 			setUbicaciones(parametros.ubicaciones)
-			setResponsables(parametros.responsables)
+	
 			setAccesorios(parametros.accesorios)
 			setPropietarios(parametros.propietarios)
 		} else {
@@ -246,15 +248,13 @@ export default function Inventarioview() {
 			setDeshabilitar2(true)
 		}
 		
-	
-
-
 	}
 
 
 	//metodos para gestionar los equipos activos de los que ya no estan operativos
 
-	const DardeBaja = (_data) => {
+	const DardeBaja = () => {
+		handleClose();
 		let aux_equipos = JSON.parse(JSON.stringify(data))
 		Swal.fire({
 			title: "Dar equipo de Baja",
@@ -266,8 +266,8 @@ export default function Inventarioview() {
 			confirmButtonText: 'Sí',
 		}).then((result) => {
 			if (result.isConfirmed) {
-				const ref = doc(db, "ingreso", `${_data.id}`);
-				let equipos_salvados = aux_equipos.filter(item=> item.id !== _data.id)
+				const ref = doc(db, "ingreso", `${currentEquipo.id}`);
+				let equipos_salvados = aux_equipos.filter(item=> item.id !== currentEquipo.id)
 				setData(equipos_salvados)
 				equipos_totales.current = equipos_salvados
 				let codigos = equipos_salvados.map((item, index) => {
@@ -324,9 +324,9 @@ export default function Inventarioview() {
 	};
 	
 
-	const mostrarModalAccesorios = (_data) => {
-		setCurrentEquipo(_data)
-		setAccesoriosEquipo(_data.accesorios)
+	const mostrarModalAccesorios = () => {
+		handleClose()
+		setAccesoriosEquipo(currentEquipo.accesorios)
 		setModalAccesorios(true);
 	};
 	const limpiarCampos = () => {
@@ -338,9 +338,9 @@ export default function Inventarioview() {
 	}
 
 
-	const mostrarModalInformacion = (_dato) => {
-		setCurrentEquipo(_dato)
-		setAccesoriosEquipo(_dato.accesorios)
+	const mostrarModalInformacion = () => {
+		handleClose()
+		setAccesoriosEquipo(currentEquipo.accesorios)
 		setModalinformacion(true);
 	};
 
@@ -371,6 +371,7 @@ export default function Inventarioview() {
 
 
 	const eliminar = (__dato) => {
+		handleClose();
 		let aux_equipos = JSON.parse(JSON.stringify(data))
 
 		Swal.fire({
@@ -383,7 +384,7 @@ export default function Inventarioview() {
 			confirmButtonText: 'Sí'
 		}).then(async (result) => {
 			if (result.isConfirmed) {
-				let equipos_salvados = aux_equipos.filter(item=> item.id !== __dato.id)
+				let equipos_salvados = aux_equipos.filter(item=> item.id !== currentEquipo.id)
 				equipos_totales.current = equipos_salvados
 				let codigos = equipos_salvados.map((item, index) => {
 					return item.codigo
@@ -391,7 +392,7 @@ export default function Inventarioview() {
 				let aux_codigos = ordenarCodigos(codigos)
 				setCodigos(aux_codigos)
 				setData(equipos_salvados)
-				await deleteDoc(doc(db, "ingreso", `${__dato.id}`));
+				await deleteDoc(doc(db, "ingreso", `${currentEquipo.id}`));
 				Swal.fire(
 					'Equipo eliminado!',
 					'',
@@ -433,6 +434,7 @@ export default function Inventarioview() {
 			indice: Date.now(),
 			situacion: "Activo",
 			nombre:nombre,
+			calibracion:calibracion,
 			//valores que cambiaran en el futuro
 			reubicado: false,
 			codigos_historial: [code],
@@ -475,17 +477,16 @@ export default function Inventarioview() {
 	}
 
 
-	const mostrarModalActualizar = (_dato) => {
-	
-		setCurrentEquipo(_dato);
-		setEimportancia(_dato.importancia)
-		setModelo(_dato.modelo)
-		setMarca(_dato.marca)
-		setSerie(_dato.serie)
-		setPropietario(_dato.propietario)
-		setNombre(_dato.nombre)
+	const mostrarModalActualizar = () => {
+		handleClose();
+		setEimportancia(currentEquipo.importancia);
+		setModelo(currentEquipo.modelo);
+		setMarca(currentEquipo.marca);
+		setSerie(currentEquipo.serie);
+		setPropietario(currentEquipo.propietario);
+		setNombre(currentEquipo.nombre);
 		setModalactualizar(true);
-		setSeguro(_dato.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
+		setSeguro(currentEquipo.seguro ?   {label:'Asegurado',value:true}: { label: 'Sin seguro',value:false})
 	};
 
 
@@ -551,8 +552,9 @@ export default function Inventarioview() {
 	}
 
 
-	const hojavida = (data) => {
-		let aux = JSON.parse(JSON.stringify(data))
+	const hojavida = () => {
+		handleClose();
+		let aux = JSON.parse(JSON.stringify(currentEquipo))
 		let temp = aux.codigos_historial
 		temp.unshift('TODOS')
 
@@ -642,8 +644,9 @@ export default function Inventarioview() {
 
     }
 
-	const mostrarModalReubicar = (_data) => {
-		let aux = JSON.parse(JSON.stringify(_data))
+	const mostrarModalReubicar = () => {
+		handleClose();
+		let aux = JSON.parse(JSON.stringify(currentEquipo))
 		setCurrentEquipo(aux)
 		setModalReubicar(true)
 		setUbicacion(aux.ubicacion)
@@ -653,6 +656,7 @@ export default function Inventarioview() {
 	}
 
 	const reubicarUbicado = () => {
+		handleClose();
 		let aux_equipos = JSON.parse(JSON.stringify(data))
 		let equipo_modify = JSON.parse(JSON.stringify(currentEquipo))
 		let aux_historial = equipo_modify.codigos_historial
@@ -801,25 +805,7 @@ export default function Inventarioview() {
 							BUSCAR
 						</Button>
 					</Grid>
-					<Grid item xs={12} sm={12} md={6}>
-					<Stack spacing={2} direction={"row"} >
-						<Stack spacing={2} direction={"row"} alignItems={"center"} >
-							<strong>Editar:</strong><IconButton aria-label="edit" color='warning'><EditIcon /></IconButton>
-						</Stack>
-					
-						<Stack spacing={2} direction={"row"} alignItems={"center"} >
-							<strong>Eliminar:</strong><IconButton aria-label="delete" color='rojo'  ><DeleteIcon /></IconButton>
-						</Stack>
-						<Stack spacing={2} direction={"row"} alignItems={"center"} >
-							<strong>Deshabilitar Equipo:</strong><IconButton aria-label="baja"  color='morado'  ><PhonelinkOffIcon /></IconButton>
-						</Stack>
-						<Stack spacing={2} direction={"row"} alignItems={"center"} >
-							<strong>Reubicar:</strong><IconButton aria-label="reubicar"  color='crema'  ><EditLocationIcon /></IconButton>
-						</Stack>
-		
-					</Stack>
-
-					</Grid>
+				
 
 
 
@@ -844,15 +830,14 @@ export default function Inventarioview() {
                                         <TableCell  align={'left'}>
                                         Departamento
                                         </TableCell>
-                                        <TableCell  align={'center'}>
-                                       Accesorios
+										<TableCell  align={'left'}>
+                                        Calibracion
                                         </TableCell>
-                                        <TableCell  align={'center'}>
+                                   
+                                        <TableCell  align={'right'}>
                                         Acciones
                                         </TableCell>
-										<TableCell  align={'center'}>
-                                        Info
-                                        </TableCell>
+										
                                     </TableRow>
                                 </TableHead>
 							<TableBody>
@@ -864,24 +849,9 @@ export default function Inventarioview() {
 												<TableCell align="left">{row.equipo.nombre}</TableCell>
 												<TableCell align="left">{row.nombre}</TableCell>
 												<TableCell align="left">{row.departamento.nombre}</TableCell>
-												<TableCell align="center">
-
-													<Button variant='contained' disabled = {deshabilitar2}  color='dark' onClick={() => mostrarModalAccesorios(row)}>Accesorios</Button>
-
-												</TableCell>
-												<TableCell align="center">
-													<Stack direction="row" spacing={1}>
-														<IconButton aria-label="edit" onClick={() => mostrarModalActualizar(row)} color='warning' disabled = {deshabilitar2}><EditIcon /></IconButton>
-														<IconButton aria-label="delete" onClick={() => eliminar(row)} color='rojo' disabled = {deshabilitar2} ><DeleteIcon /></IconButton>
-														<IconButton aria-label="baja" onClick={() => DardeBaja(row)} color='morado' disabled = {deshabilitar2} ><PhonelinkOffIcon /></IconButton>
-														<IconButton aria-label="reubicar" onClick={() => { mostrarModalReubicar(row) }} color='crema' disabled = {deshabilitar2} ><EditLocationIcon /></IconButton>
-													</Stack>
-												</TableCell>
-												<TableCell align="center">
-													<Stack direction="row" spacing={1}>
-														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {mostrarModalInformacion(row)}} disabled = {deshabilitar2} ><InfoIcon /></IconButton>
-														<IconButton aria-label="delete" sx={{ color: teal[200] }} onClick={() => {hojavida(row)}} disabled = {deshabilitar2} ><AssignmentIcon /></IconButton>
-													</Stack>
+												<TableCell align="left">{row.calibracion ? 'Calibracion':'Normal'}</TableCell>
+												<TableCell align="right">
+														<IconButton aria-label="delete" disabled = {deshabilitar2}  sx={{ color: teal[200] }}  ><MoreVertIcon  id="basic-button" onClick={(event)=>{handleClick(event,row)}} /></IconButton>
 												</TableCell>
 											</TableRow>
 										);
@@ -905,8 +875,8 @@ export default function Inventarioview() {
 			<Modal isOpen={modalInformacion}>
 
 				<ModalHeader>
-					<div><h1>Información Equipo</h1></div>
-					<h1>David</h1>
+					<div><h4>Información de {currentEquipo.nombre}</h4></div>
+					
 				</ModalHeader>
 				<ModalBody>
 					<FormGroup>
@@ -1203,6 +1173,20 @@ export default function Inventarioview() {
 							</RadioGroup>
 						</Grid>
 						<Grid item xs={12}>
+							<b>Es un Equipo de:    </b>
+							<RadioGroup
+								row
+								aria-labelledby="demo-radio-buttons-group-label"
+								defaultValue="Normal"
+								onChange={(event, newValue) => { setCalibracion(newValue) }}
+								value={calibracion}
+								name="radio-buttons-group"
+							>
+								<FormControlLabel value={false} control={<Radio />} label="Normal" />
+								<FormControlLabel value={true} control={<Radio />} label="Calibracion" />
+							</RadioGroup>
+						</Grid>
+						<Grid item xs={12}>
 							<div >
 								<label className="form-label">Cargar Fotografía</label>
 								<input className="form-control" style={{ margin: 0 }} onChange={buscarImagen} type="file" id="formFile" />
@@ -1377,12 +1361,7 @@ export default function Inventarioview() {
 								fullWidth
 								onClick={() => mostrarModalInsertar()}>Ingresar Equipo</Button>
 						</Grid>
-						<Grid item xs={12}>
-							<Button variant="contained"
-								color='verde'
-								fullWidth
-								onClick={() => mostrarModalInsertar()}>Ingresar Equipo Calibracion</Button>
-						</Grid>
+						
 						<Grid item xs={12} >
 							<Button variant="outlined"
 								fullWidth
@@ -1485,6 +1464,23 @@ export default function Inventarioview() {
 			>
 				<CircularProgress color="inherit" />
 			</Backdrop>
+			<Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          'aria-labelledby': 'basic-button',
+        }}
+      >
+        <MenuItem onClick={mostrarModalActualizar}>Editar</MenuItem>
+        <MenuItem onClick={mostrarModalReubicar}>Reubicar</MenuItem>
+		<MenuItem onClick={DardeBaja}>Deshabilitar</MenuItem>
+		<MenuItem onClick={mostrarModalAccesorios}>Accesorios</MenuItem>
+		<MenuItem onClick={mostrarModalInformacion}>Informacion</MenuItem>
+		<MenuItem onClick={hojavida}>Hoja De Vida</MenuItem>
+        <MenuItem onClick={eliminar}>Eliminar</MenuItem>
+      </Menu>
 		</>
 	);
 

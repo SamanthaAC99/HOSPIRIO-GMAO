@@ -126,7 +126,7 @@ export default function HojaVidaView() {
         navigate(`/${params.uid}/${ruta}`);
     }
     const salir = () => {
-        navegarView('calibracion/equipos');
+        navegarView('inventario/equipos_activos');
     };
 
 

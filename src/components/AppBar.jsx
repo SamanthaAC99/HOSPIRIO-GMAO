@@ -258,7 +258,7 @@ export default function ToolBar() {
                     aria-labelledby="nested-list-subheader"
                     subheader={
                         <ListSubheader component="div" style={{justifyContent:'center',width:'100%',textAlign:'center'}} id="nested-list-subheader">
-                           <h3>Menu</h3> 
+                           <h3 style={{marginTop:'20px'}} >Menu</h3> 
                         </ListSubheader>
                     }
                 >
@@ -269,6 +269,7 @@ export default function ToolBar() {
                     ))
                     }
                 </List>
+                <p style={{color:'#ABB2B9',textAlign:'center',fontStyle:'italic'}}>v1.3</p>
             </Drawer>
         </>
     );
