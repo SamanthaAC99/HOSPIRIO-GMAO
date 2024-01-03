@@ -2,6 +2,7 @@ import '../css/Tabla.css'
 import '../css/Ordentrabajo.css';
 import '../css/Presentacion.css';
 import '../css/InventarioView.css';
+import Stack from '@mui/material/Stack';
 import React, { useRef, useState } from "react";
 import IconButton from '@mui/material/IconButton';
 import { uploadBytes, ref, getDownloadURL } from "firebase/storage";
@@ -136,8 +137,7 @@ export default function Inventarioview() {
 	const [equipoFilter, setEquipoFilter] = useState("");
 	//varbiables para la busqueda por codigo
 	const [codigos, setCodigos] = useState([]);
-	// variables para generar el excel
-	const [modalExcel,setModalExcel] = useState(false);
+
 	//funciones para la busqueda por codigo
 	const ordenarCodigos = (lista) => {
 		lista.sort(function (a, b) {
@@ -348,10 +348,7 @@ export default function Inventarioview() {
 		setModalinformacion(false);
 	};
 
-	const cerrarModalActualizar = () => {
-		setModalactualizar(false);
-	};
-
+	
 	const cerrarModalAccesorios = () => {
 		setModalAccesorios(false);
 	};
@@ -692,7 +689,7 @@ export default function Inventarioview() {
 
 	return (
 		<>
-		<Container style={{paddingTop:10}}>
+		<Container style={{padding:10}}>
 		<Typography component="div" variant="h3" className="princi3" >
           INVENTARIO EQUIPOS ACTIVOS
         </Typography>
@@ -716,11 +713,13 @@ export default function Inventarioview() {
 							disablePortal
 							disabled = {deshabilitar2}
 							id="combo-box-demo"
+							size="small"
 							key={reset}
 							options={departamentos}
 							getOptionLabel={(option) => {
 								return option.nombre;
 							}}
+							fullWidth
 							onChange={(event, newvalue) => setDepartamentoFilter(newvalue.nombre)}
 							renderInput={(params) => <TextField {...params} label="Departamento" type="text" />}
 						/>
@@ -729,12 +728,14 @@ export default function Inventarioview() {
 						<Autocomplete
 							disablePortal
 							disabled = {deshabilitar2}
+							size="small"
 							id="combo-box-demo"
 							key={reset}
 							options={equipos}
 							getOptionLabel={(option) => {
 								return option.nombre;
 							}}
+							fullWidth
 							onChange={(event, newvalue) => setEquipoFilter(newvalue.nombre)}
 							renderInput={(params) => <TextField {...params} label="Equipos" type="text" />}
 						/>
@@ -787,9 +788,10 @@ export default function Inventarioview() {
 							disablePortal
 							disabled = {deshabilitar2}
 							key={reset}
+							size="small"
 							id="combo-box-demo"
 							options={codigos}
-							sx={{ width: 300 }}
+							fullWidth
 							onChange={(event, newvalue) => setCodigoSeleccionado(newvalue)}
 							renderInput={(params) => <TextField {...params} label="Buscar Codigo" />}
 						/>
@@ -903,7 +905,7 @@ export default function Inventarioview() {
 							</Grid>
 							<Grid item xs={12} md={12}>
 								<div className="i-informacion">
-									<strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin: 0 }}></p>
+									<strong style={{ marginRight: 4 }}>Responsable:</strong>{currentEquipo.departamento.responsable}<p style={{ margin: 0 }}></p>
 								</div>
 							</Grid>
 							<Grid item xs={12} md={12}>
@@ -983,21 +985,22 @@ export default function Inventarioview() {
 					<Grid container spacing={2}>
 
 						<Grid item xs={6}>
-							<TextField fullWidth label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+							<TextField  size='small' fullWidth label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" value={marca} onChange={(e) => setMarca(e.target.value)} />
+							<TextField size='small' fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" value={marca} onChange={(e) => setMarca(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth label="Modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} />
+							<TextField size='small' fullWidth label="Modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth label="Serie" value={serie} onChange={(e) => setSerie(e.target.value)} />
+							<TextField size='small' fullWidth label="Serie" value={serie} onChange={(e) => setSerie(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
 							{/* <TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Propietario" value={propietario} type="int" onChange={(e) => setPropietario(e.target.value)} /> */}
 							<Autocomplete
 								disableClearable
+								size='small'
 								id="combo-box-demo"
 								defaultValue={{nombre:"HOSPITAL DEL RIO",codigo:1}}
 								value={propietario}
@@ -1014,6 +1017,7 @@ export default function Inventarioview() {
 							<Autocomplete
 								disablePortal
 								id="combo-box-demo"
+								size='small'
 								value={seguro}
 								options={tseguro}
 								isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -1038,7 +1042,7 @@ export default function Inventarioview() {
 						</Grid>
 						<Grid item xs={12}>
 							<div >
-								<label className="form-label">Actualizar Fotografía</label>
+								<strong >Actualizar Fotografía</strong>
 								<input className="form-control" style={{ margin: 0 }} onChange={buscarImagen} type="file" id="formFile" />
 							</div>
 						</Grid>
@@ -1046,26 +1050,28 @@ export default function Inventarioview() {
 				</ModalBody>
 
 				<ModalFooter>
-					<Button
-						variant="outlined"
-						className="boton-modal2"
-						onClick={() => ActualizarEquipo()}
-					>
-						Editar
-					</Button>
-					<Button
-						variant="contained"
-						className="boton-modal"
-						onClick={() => cerrarModalActualizar()}
-					>
-						Cancelar
-					</Button>
+					<Stack spacing={2} direction={"row"}>
+						<Button
+							variant="outlined"
+					
+							onClick={() => ActualizarEquipo()}
+						>
+							Editar
+						</Button>
+						<Button
+							variant="contained"
+			
+							onClick={() => setModalactualizar(false)}
+						>
+							Cancelar
+						</Button>
+					</Stack>
 				</ModalFooter>
 			</Modal>
 
 			<Modal  isOpen={modalInsertar}>
 				<ModalHeader>
-					<div><h3>Ingresar Nuevo Equipo</h3></div>
+					<div><h5>Ingresar Nuevo Equipo</h5></div>
 				</ModalHeader>
 				<ModalBody>
 					<Grid container spacing={2}>
@@ -1074,6 +1080,8 @@ export default function Inventarioview() {
 								disableClearable
 								id="combo-box-demo"
 								options={tipoEquipo}
+								size='small'
+								fullWidth
 								getOptionLabel={(option) => {
 									return option.nombre;
 								}}
@@ -1086,6 +1094,8 @@ export default function Inventarioview() {
 								disableClearable
 								id="combo-box-demo"
 								options={equipos}
+								size='small'
+								fullWidth
 								getOptionLabel={(option) => {
 									return option.nombre;
 								}}
@@ -1097,6 +1107,8 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
+								size='small'
+								fullWidth
 								options={ubicaciones}
 								getOptionLabel={(option) => {
 									return option.nombre;
@@ -1110,6 +1122,8 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
+								size='small'
+								fullWidth
 								options={departamentos}
 								getOptionLabel={(option) => {
 									return option.nombre;
@@ -1123,6 +1137,8 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
+								size='small'
+								fullWidth
 								options={propietarios}
 								getOptionLabel={(option) => {
 									return option.nombre;
@@ -1135,6 +1151,8 @@ export default function Inventarioview() {
 							<Autocomplete
 								disableClearable
 								id="combo-box-demo"
+								size='small'
+								fullWidth
 								getOptionLabel={(option) => {
 									return option.label;
 								}}
@@ -1144,21 +1162,21 @@ export default function Inventarioview() {
 							/>
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth label="Nombre del Equipo"  inputProps={{ style: { textTransform: "uppercase" } }} type="text" onChange={(e) => setNombre(e.target.value)} />
+							<TextField size='small' fullWidth label="Nombre del Equipo"  inputProps={{ style: { textTransform: "uppercase" } }} type="text" onChange={(e) => setNombre(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" type="int" onChange={(e) => setMarca(e.target.value)} />
+							<TextField  size='small' fullWidth inputProps={{ style: { textTransform: "uppercase" } }} label="Marca" type="int" onChange={(e) => setMarca(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth label="Modelo" type="int" onChange={(e) => setModelo(e.target.value)} />
+							<TextField  size='small' fullWidth label="Modelo" type="int" onChange={(e) => setModelo(e.target.value)} />
 						</Grid>
 						<Grid item xs={6}>
-							<TextField fullWidth label="Serie" type="int" onChange={(e) => setSerie(e.target.value)} />
+							<TextField  size='small' fullWidth label="Serie" type="int" onChange={(e) => setSerie(e.target.value)} />
 						</Grid>
 						<Grid item xs={12}>
 						<strong>Codigo Generado: </strong>{ubicacion.codigo + "-" + departamento.codigo + "-" + tipo.codigo + "-" + equipo.codigo + "-1-0"}
 						</Grid>
-						<Grid item xs={12}>
+						<Grid item xs={12} >
 							<b>Importancia:    </b>
 							<RadioGroup
 								row
@@ -1172,8 +1190,8 @@ export default function Inventarioview() {
 								<FormControlLabel value="Normal" control={<Radio />} label="Normal" />
 							</RadioGroup>
 						</Grid>
-						<Grid item xs={12}>
-							<b>Es un Equipo de:    </b>
+						<Grid item xs={12} >
+							<b>Equipo de:    </b>
 							<RadioGroup
 								row
 								aria-labelledby="demo-radio-buttons-group-label"
@@ -1182,13 +1200,13 @@ export default function Inventarioview() {
 								value={calibracion}
 								name="radio-buttons-group"
 							>
-								<FormControlLabel value={false} control={<Radio />} label="Normal" />
-								<FormControlLabel value={true} control={<Radio />} label="Calibracion" />
+								<FormControlLabel value={false} control={<Radio />} label="Operación" />
+								<FormControlLabel value={true} control={<Radio />} label="Verificación" />
 							</RadioGroup>
 						</Grid>
 						<Grid item xs={12}>
 							<div >
-								<label className="form-label">Cargar Fotografía</label>
+								<strong>Cargar Fotografía</strong>
 								<input className="form-control" style={{ margin: 0 }} onChange={buscarImagen} type="file" id="formFile" />
 							</div>
 						</Grid>
@@ -1217,7 +1235,7 @@ export default function Inventarioview() {
 
 			<Modal isOpen={modalAccesorios}>
 				<ModalHeader>
-					<div><h3>Accesorios del Equipo</h3></div>
+					<div><h5>Accesorios del Equipo</h5></div>
 				</ModalHeader>
 				<ModalBody>
 
@@ -1226,6 +1244,7 @@ export default function Inventarioview() {
 
 							<Autocomplete
 								disableClearable
+								size='small'
 								id="combo-box-demo"
 								options={accesorios}
 								key={reloadAuto}
@@ -1284,6 +1303,7 @@ export default function Inventarioview() {
 					<Button
 						variant="contained"
 						onClick={() => cerrarModalAccesorios()}
+						color='rojo'
 					>
 						Cerrar
 					</Button>
@@ -1325,15 +1345,7 @@ export default function Inventarioview() {
 								renderInput={(params) => <TextField {...params} fullWidth label="Departamento" type="text" />}
 							/>
 						</Grid>
-						<Grid item xs={12} >
-							<Button
-								variant="contained"
-								fullWidth
-								onClick={() => { reubicarUbicado() }}
-							>
-								REUBICAR EQUIPO
-							</Button>
-						</Grid>
+					
 						<Grid item xs={12} >
 						</Grid>
 					</Grid>
@@ -1342,13 +1354,24 @@ export default function Inventarioview() {
 
 				<ModalFooter>
 
-
+				<Stack spacing={2} direction={"row"}>
+					
 					<Button
+								variant="contained"
+								fullWidth
+								onClick={() => { reubicarUbicado() }}
+							>
+							GUARDAR
+							</Button>
+							<Button
 						variant="contained"
+						color='rojo'
 						onClick={() => setModalReubicar(false)}
+						fullWidth
 					>
-						Cerrar
+						cancelar
 					</Button>
+					</Stack>
 				</ModalFooter>
 			</Modal>
 			<Modal isOpen={modalParametros}>
@@ -1434,30 +1457,7 @@ export default function Inventarioview() {
 				</ModalFooter>
 			</Modal>
 
-			<Modal isOpen={modalExcel}>
-				<ModalHeader>
-					<div><h3>Crear Excel</h3></div>
-				</ModalHeader>
-				<ModalBody>
-					<Grid container spacing={2}>
-						<Grid item xs={12} >
-						
-						</Grid>
-					</Grid>
-
-				</ModalBody>
-
-				<ModalFooter>
-
-
-					<Button
-						variant="contained"
-						onClick={() => setModalParametros(false)}
-					>
-						Cerrar
-					</Button>
-				</ModalFooter>
-			</Modal>
+	
 			<Backdrop
 				sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
 				open={deshabilitar}

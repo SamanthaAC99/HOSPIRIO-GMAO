@@ -252,7 +252,7 @@ const hojavida = (data) => {
                 <Td>{dato.codigo}</Td>
                 <Td>{dato.equipo.nombre}</Td>
                 <Td>{dato.departamento.nombre}</Td>
-                <Td>{dato.responsable.nombre}</Td>
+                <Td>{dato.departamento.responsable}</Td>
                 <Td> <Button variant="contained" color='morado' onClick={()=> {ActivarN(dato)}} >Activar</Button>
                 </Td>
                 <Td>
@@ -297,7 +297,7 @@ const hojavida = (data) => {
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentEquipo.responsable.nombre}</p>
+                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentEquipo.departamento.responsable}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>

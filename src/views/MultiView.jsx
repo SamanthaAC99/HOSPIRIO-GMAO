@@ -90,6 +90,8 @@ export default function MultiView() {
     return (
         <>
             <ToolBar />
+            <div style={{overflowY:"scroll",height:"90vh" }}>
+
             <Routes>
 
                 <Route path="home"
@@ -417,8 +419,8 @@ export default function MultiView() {
                 <Route path="calibracion/planmantenimiento/declarar_actividades"
                     element={<PrivateRoute auth={currentUser.permisions.gestioni}><ActividadesView /></PrivateRoute>}
                     />
-
             </Routes>
+            </div>
         </>
     );
 }

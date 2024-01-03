@@ -133,7 +133,7 @@ export default function EquiposReubicadosView() {
               </Grid>
               <Grid item xs={12} md={12}>
                 <div className="i-informacion">
-                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentform.responsable.nombre}</p>
+                  <strong style={{ marginRight: 4 }}>Responsable:</strong><p style={{ margin:0 }}>{currentform.departamento.responsable}</p>
                 </div>
               </Grid>
               <Grid item xs={12} md={12}>

@@ -41,7 +41,7 @@ export default function MantenimientoMenu(){
                                 <ListItemIcon>
                                     <KeyboardArrowRightIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="Orden de Trabajo" />
+                                <ListItemText primary="Ordenes de Trabajo" />
                             </ListItemButton>
 
                             {/* <ListItemButton onClick={() =>Changeview('mantenimiento/cards')} sx={{ pl: 4 }}>

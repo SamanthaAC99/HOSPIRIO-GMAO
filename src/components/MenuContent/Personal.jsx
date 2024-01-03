@@ -44,7 +44,7 @@ export default function PersonalMenu(){
                                 <ListItemIcon>
                                     <KeyboardArrowRightIcon />
                                 </ListItemIcon>
-                                <ListItemText primary="Datos Personales" />
+                                <ListItemText primary="Usuarios" />
                             </ListItemButton>
                         </List>
                     </Collapse>

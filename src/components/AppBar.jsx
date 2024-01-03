@@ -195,14 +195,14 @@ export default function ToolBar() {
 
     return (
         <>
-            <AppBar className="bts" position="static">
+            <AppBar style={{zIndex:10}} position='static' >
                 <Toolbar>
                     <IconButton
                         size="large"
                         edge="start"
                         color="inherit"
                         aria-label="menu"
-                        sx={{ mr: 2 }}
+                   
                         onClick={toggleDrawer('left', true)}
                     >
                         
@@ -269,7 +269,7 @@ export default function ToolBar() {
                     ))
                     }
                 </List>
-                <p style={{color:'#ABB2B9',textAlign:'center',fontStyle:'italic'}}>v1.3</p>
+                <p style={{color:'#ABB2B9',textAlign:'center',fontStyle:'italic'}}>v1.4</p>
             </Drawer>
         </>
     );
