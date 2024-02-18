@@ -315,7 +315,7 @@ export default function ReportesInternosView(){
             else {
                 return null;
             }
-        }else{
+        }else{ 
             return _reporte;
         }
     }
@@ -386,16 +386,41 @@ export default function ReportesInternosView(){
     }
 
     const generarReporte =()=>{
+        console.log(reporteTipo)
         let aux_datos = JSON.parse(JSON.stringify(reportes.current))
-        console.log(departamento)
+        console.log(aux_datos)
+        if (reporteTipo === 1) {
+            let datos = aux_datos
+                console.log(datos)
+                let datos_formated = datos.map(item=>{
+                    let aux = {
+                        tipo: item.tipo,
+                        codigo:item.codigo_equipo,
+                        equipo:item.equipo,
+                        departamento:item.departamento,
+                        fecha:item.fecha,
+                        tipo_mantenimiento:item.tipo,
+                        mantenimiento:item.mantenimiento,
+                        falla:item.falla,
+                        actividades:item.actividades
+                    }
+                    return aux
+            })
+                const myHeader = ["tipo", "codigo", "equipo","departamento","fecha","tipo_mantenimiento","mantenimiento","falla","actividades"];
+                const worksheet = XLSX.utils.json_to_sheet(datos_formated, { header: myHeader });
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.sheet_add_aoa(worksheet, [["TIPO", "COD", "EQUIPO","DEPARTAMENTO","FECHA","TIPO DE MANTENIMIENTO","MANTENIMIENTO","FALLA","ACTIVIDADES"]], { origin: "A1" });
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+                worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
+                XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+        } else{
         let filter_reportes = aux_datos.filter(filteryByTipo).filter(filterbyDepa).filter(filterbyMonth)
         let datos_modify = agruparPorCodigo(filter_reportes)
-      
 
             console.log(datos_modify[0])
             let datos_formated = datos_modify[0].map(item=>{
                 let aux = {
-                    tipo: "externo",
+                    tipo: item.tipo,
                     codigo:item.codigo_equipo,
                     equipo:item.equipo,
                     departamento:item.departamento,
@@ -414,6 +439,7 @@ export default function ReportesInternosView(){
             XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
             worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
             XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
+        }
     }
 
     const abrirReporteExterno = ()=>{
@@ -429,6 +455,8 @@ export default function ReportesInternosView(){
             setFlagTipo(true)
             setFlagDepartamento(true)
             setReporteTipo(1)
+            // setDepartamento({codigo: 1000, nombre: 'TODOS'})
+            // setMesFiltro({nombre: 'TODOS', codigo: 13})
         }
        
     };
@@ -450,7 +478,7 @@ export default function ReportesInternosView(){
             <Grid container spacing={2}>
             <Grid item xs={12}>
                 <Typography component="div" variant="h3" className="princi3" >
-                GESTIÓN DE REPORTES INTERNOS Y EXTERNOS
+                GESTIÓN DE REPORTES INTERNOS Y EXTERNOS 
                 </Typography>
                 </Grid >
                 <Grid item xs={4} >
