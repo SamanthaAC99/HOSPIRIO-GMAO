@@ -106,7 +106,6 @@ export default function ReportesInternosView(){
         setPage(newPage);
     };
 
-
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
@@ -117,7 +116,6 @@ export default function ReportesInternosView(){
     const handleTipoEquipo = (event) => {
         setTipoEquipo(parseInt(event.target.value));
     };
-
 
     const agruparPorCodigo =(datos)=> {
         const grupos = {};
