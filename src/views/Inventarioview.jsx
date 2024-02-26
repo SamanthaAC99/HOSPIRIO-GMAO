@@ -619,6 +619,7 @@ export default function Inventarioview() {
             let format_object = {
                 codigo_equipo: item.codigo,
                 equipo: item.equipo.nombre,
+				sobrenombre: item.nombre,
 				tipo_equipo: item.tipo_equipo.nombre,
 				ubicacion: item.ubicacion.nombre,
                 marca: item.marca,
@@ -631,10 +632,10 @@ export default function Inventarioview() {
             }
             return format_object
         })
-		const myHeader = ["codigo_equipo","equipo","tipo_equipo","ubicacion","marca","modelo","serie","propietario","importancia"];
+		const myHeader = ["codigo_equipo","equipo","sobrenombre","tipo_equipo","ubicacion","marca","modelo","serie","propietario","importancia"];
         const worksheet = XLSX.utils.json_to_sheet(crono, { header: myHeader });
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.sheet_add_aoa(worksheet, [["Código","Equipo","Tipo Equipo","Ubicación","Marca","Modelo","Serie","Propietario","Importancia"]], { origin: "A1" });
+        XLSX.utils.sheet_add_aoa(worksheet, [["Código","Equipo","Nombre","Tipo Equipo","Ubicación","Marca","Modelo","Serie","Propietario","Importancia"]], { origin: "A1" });
         XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
         worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
         XLSX.writeFile(workbook, "InventarioHospiRio.xlsx", { compression: true });
