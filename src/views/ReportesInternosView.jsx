@@ -400,14 +400,15 @@ export default function ReportesInternosView(){
                         tipo_mantenimiento:item.tipo,
                         mantenimiento:item.mantenimiento,
                         falla:item.falla,
-                        actividades:item.actividades
+                        actividades:item.actividades,
+                        orden:item.orden_id,
                     }
                     return aux
             })
-                const myHeader = ["tipo", "codigo", "equipo","departamento","fecha","tipo_mantenimiento","mantenimiento","falla","actividades"];
+                const myHeader = ["codigo", "equipo","departamento","fecha","tipo_mantenimiento","mantenimiento","orden","falla","actividades"];
                 const worksheet = XLSX.utils.json_to_sheet(datos_formated, { header: myHeader });
                 const workbook = XLSX.utils.book_new();
-                XLSX.utils.sheet_add_aoa(worksheet, [["TIPO", "COD", "EQUIPO","DEPARTAMENTO","FECHA","TIPO DE MANTENIMIENTO","MANTENIMIENTO","FALLA","ACTIVIDADES"]], { origin: "A1" });
+                XLSX.utils.sheet_add_aoa(worksheet, [["CODIGO", "EQUIPO","DEPARTAMENTO","FECHA","TIPO DE MTTO.","MANTENIMIENTO","N° ORDEN","FALLA","ACTIVIDADES"]], { origin: "A1" });
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
                 worksheet["!cols"] = [{ wch: 50 }, { wch: 30 }, { wch: 30 }];
                 XLSX.writeFile(workbook, "MantenimientosHospiRio.xlsx", { compression: true });
